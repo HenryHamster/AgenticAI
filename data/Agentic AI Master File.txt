@@ -1,0 +1,25 @@
+﻿Phase 1: Design Document
+Our team (4 units, agent track) is tackling a project of text-based role playing game where multiple agents interact competitively to manage resources and maximize an objective. 
+MVP Concept
+Environment
+The world will be tile-based, with each tile containing a brief verbal description of its state. The description is then fed to the LLM whenever the player takes an action. The descriptions are then updated to match player actions (e.g. a forest tile becomes scorched after a player burns it).
+Green Agent (Controller / Dungeon Master)
+The green agent will be responsible for:
+1. Generating the initial environment
+2. Planning events and managing the economy
+3. Evaluating player actions and updating the global state.
+
+
+White Agent (Player)
+White agents will be players who take turn-based actions to complete the objective. The green agent will assign an initial state to each player. Each player will track personal statistics (e.g. health), inventory, and global location.
+
+
+Turn Mechanisms
+Players submit their desired actions each turn as a short sentence. The controller resolves the cumulative action, updates each player’s state, and prompts all players for their next action.
+
+
+Game Objective
+Agents attempt to maximize their wealth in the local economy through exploration and trade.
+________________
+File System
+Player Fields:
