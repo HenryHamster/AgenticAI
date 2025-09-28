@@ -4,18 +4,21 @@ import openai
 from typing import Optional
 from ..AiServicesBase import AiServicesBase
 from ...core.settings import ai_config
+from ..responseParser.parser import DnDResponseParser, ParsedResponse
 
 class OpenAiService(AiServicesBase):
-    def __init__(self, chat_id: str, history: list[dict], constraints: list = None):
-        super().__init__(chat_id, history, constraints or [])
+    def __init__(self, chat_id: str, history: list[dict]):
+        super().__init__(chat_id, history)
         self.client = openai.OpenAI(api_key=ai_config.openai_api_key)
+        self.parser = DnDResponseParser()
 
     def ask_ai_response(self, message: str) -> Optional[str]:
         """Get AI response from OpenAI API"""
         try:
-            # Prepare messages with system prompt
+            # Prepare messages with system prompt and schema instruction
+            system_content = ai_config.system_prompt + self.parser.get_schema_prompt()
             messages = [
-                {"role": "system", "content": ai_config.system_prompt}
+                {"role": "system", "content": system_content}
             ]
             
             # Add history
@@ -49,10 +52,18 @@ class OpenAiService(AiServicesBase):
             self.history.append({"role": "assistant", "content": ai_response})
             
             return ai_response
-            
+
         except Exception as e:
             print(f"OpenAI API error: {e}")
             return None
+
+    def ask_ai_response_structured(self, message: str) -> Optional[ParsedResponse]:
+        """Get structured AI response with parsed D&D data"""
+        raw_response = self.ask_ai_response(message)
+        if raw_response is None:
+            return None
+
+        return self.parser.parse_response(raw_response)
 
     def delete_chat(self):
         """Clear chat history"""

@@ -3,7 +3,8 @@
 # possibly add create with the history of another AiService
 
 from dataclasses import dataclass
-from src.services.Action import Action
+from typing import Optional
+from src.services.stateServices.Action import Action
 
 @dataclass
 class AiServicesBase:
@@ -15,7 +16,9 @@ class AiServicesBase:
         self.history = history
 
     def ask_ai_response(self, action: Action):
+        pass
 
+    def ask_ai_response_structured(self, message: str):
         pass
 
     def delete_chat(self):

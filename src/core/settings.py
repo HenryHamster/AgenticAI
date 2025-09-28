@@ -42,7 +42,7 @@ class AIConfig:
     
     # General AI settings
     max_tokens: int = 1000
-    system_prompt: str = "You are an AI agent in a text-based RPG. Make strategic decisions to maximize your wealth."
+    system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions following D&D rules."
 
 # Global configuration instances
 game_config = GameConfig()

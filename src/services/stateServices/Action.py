@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Callable
-from src.services.GameState import GameState
+from typing import Callable, Optional, Dict, Any
+from src.services.stateServices.GameState import GameState
 from src.services.AiServicesBase import AiServicesBase
 
 function = Callable[[], str]
@@ -20,6 +20,7 @@ class Action:
     next_game_state: GameState
     ai_service: AiServicesBase
     timestamp: str
+    extracted_stats: Optional[Dict[str, Any]] = None
 
 
     def __init__(self, id: str, message: str, functions: list[function]):
@@ -34,3 +35,4 @@ class Action:
         self.game_state = None
         self.next_game_state = None
         self.ai_service = None
+        self.extracted_stats = None
