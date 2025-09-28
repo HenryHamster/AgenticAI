@@ -40,7 +40,7 @@ class Player(Savable):
     position: tuple[int,int]
     _responses: list[str]
     def __init__(self, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o"):
-        self.model = AiServicesBase() #Temporary base model instantiation
+        self.model = AiServicesBase(chat_id="0",history = []) #Temporary base model instantiation
         self.position = position
         if player_class not in PLAYER_CLASSES:
             raise ValueError(f"Invalid player class {player_class}")

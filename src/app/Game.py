@@ -6,7 +6,7 @@ from src.app.DungeonMaster import DungeonMaster
 from typing import override,overload
 import json
 import asyncio
-from config import NUM_RESPONSES, PLAYER_NUM, WORLD_SIZE, PLAYER_VISION
+from src.app.config import NUM_RESPONSES, PLAYER_NUM, WORLD_SIZE, PLAYER_VISION
 
 class Game(Savable):
     players: list[Player]
@@ -22,7 +22,7 @@ class Game(Savable):
     async def step(self):
         player_responses, verdict = [], ""
         for _ in range(NUM_RESPONSES):
-            results = await asyncio.gather(*[
+            player_responses = await asyncio.gather(*[
                 p.get_action({"Tiles": self.get_viewable_tiles(p.position, PLAYER_VISION),
                               "Verdict": verdict})
                 for p in self.players
