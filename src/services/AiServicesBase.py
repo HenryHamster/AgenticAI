@@ -18,9 +18,6 @@ class AiServicesBase:
     def ask_ai_response(self, action: Action):
         pass
 
-    def ask_ai_response_structured(self, message: str):
-        pass
-
     def delete_chat(self):
         pass
 
