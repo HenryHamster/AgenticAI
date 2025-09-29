@@ -9,30 +9,39 @@ import asyncio
 from src.app.config import NUM_RESPONSES, PLAYER_NUM, WORLD_SIZE, PLAYER_VISION
 
 class Game(Savable):
-    players: list[Player]
+    players: dict[str,Player]
     dm: DungeonMaster
     file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
 
-    def __init__(self):
+    def __init__(self, player_info:dict[str,dict]):
         self.dm = DungeonMaster()
         self.file_manager = FileManager()
-        self.players = [Player() for _ in range(PLAYER_NUM)]
+        self.players = {}
+        for uid, pdata in player_info.items():
+            if not isinstance(pdata, dict):
+                raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
+            p = Player(uid)
+            p.load(pdata)
+            if p.UID != uid:
+                p.UID = uid  # enforce key ↔ object UID consistency
+            self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-WORLD_SIZE, WORLD_SIZE + 1) for j in range(-WORLD_SIZE, WORLD_SIZE + 1)}
     async def step(self):
         player_responses, verdict = [], ""
+        sorted_uids = sorted(self.players.keys())
         for _ in range(NUM_RESPONSES):
             player_responses = await asyncio.gather(*[
-                p.get_action({"Tiles": self.get_viewable_tiles(p.position, PLAYER_VISION),
-                              "Verdict": verdict})
-                for p in self.players
+                self.players[UID].get_action({"Tiles": self.get_viewable_tiles(self.players[UID].position, PLAYER_VISION),
+                              "Verdict": verdict, "UID": UID, "Position": self.players[UID].position})
+                for UID in sorted_uids
             ]) #return_exception = True
             verdict = await self.dm.respond_actions({"Responses": player_responses, "Verdict": verdict})    
         self.handle_verdict(verdict)
     @override
     def save(self) -> str:
         return Savable.toJSON({
-            "players": [Savable.fromJSON(p.save()) for p in self.players],  # list of dicts
+            "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
             "dm": Savable.fromJSON(self.dm.save()),                         # dict
             "tiles": {json.dumps(k): Savable.fromJSON(v.save())             # dict: "[x,y]" -> dict
                     for k, v in self.tiles.items()}
@@ -41,11 +50,15 @@ class Game(Savable):
     @override
     def load(self, loaded_data: dict | str):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
-        self.players = []
-        for pdata in loaded_data["players"]:
-            p = Player()
+        self.players = {}
+        for UID, pdata in loaded_data["players"].items():
+            if not isinstance(pdata, dict):
+                raise ValueError(f"Player data for {UID} must be a dict, got {type(pdata)}")
+            if UID is None or UID == "INVALID":
+                raise ValueError("Player UID is missing or invalid in loaded data.")
+            p = Player(UID)
             p.load(pdata)
-            self.players.append(p)
+            self.players[UID] = p
 
         # dm
         self.dm = DungeonMaster()     # or your concrete type

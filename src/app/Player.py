@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import overload,override
+from typing import override
 from src.database.fileManager import Savable
 from src.services.AiServicesBase import AiServicesBase #Using base temporarily, I assume we'll have a wrapper in the future which can pass in the right model
 @dataclass(frozen=True, slots=True)
@@ -35,12 +35,14 @@ PLAYER_CLASSES = {
 
 class Player(Savable):
     model: AiServicesBase
+    UID: str #User ID (string)
     values: PlayerValues
     player_class: PlayerClass
     position: tuple[int,int]
     _responses: list[str]
-    def __init__(self, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o"):
+    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o"): #Force UID to exist
         self.model = AiServicesBase(chat_id="0",history = []) #Temporary base model instantiation
+        self.UID = UID
         self.position = position
         if player_class not in PLAYER_CLASSES:
             raise ValueError(f"Invalid player class {player_class}")
@@ -57,6 +59,7 @@ class Player(Savable):
     def save(self) -> str:
         data = {
             "position": list(self.position),  # JSON-friendly
+            "UID": self.UID,
             "player_class": self.player_class.name,          # store the key, not the object
             "values": Savable.fromJSON(self.values.save()),  # dict, not string
             "responses": list(getattr(self, "_responses", [])),
@@ -79,6 +82,7 @@ class Player(Savable):
             v_dict = v
 
         # PlayerValues.load expects a JSON string
+        self.UID = loaded_data.get("UID", "INVALID")
         self.values = getattr(self, "values", PlayerValues())
         self.values.load(Savable.toJSON(v_dict))
 
