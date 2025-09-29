@@ -96,37 +96,3 @@ class WorldStateSchema:
         "hazards": []
     }
 
-def get_system_prompt_schema_instruction() -> str:
-    """Returns the schema instruction to add to system prompts"""
-    return """
-IMPORTANT: You must include at the end of your response a JSON object with the following structure:
-
-{
-    "character_state": {
-        "money": <integer>,
-        "skill_level": <integer>,
-        "attributes": {
-            "strength": <1-20>,
-            "dexterity": <1-20>,
-            "intelligence": <1-20>,
-            "wisdom": <1-20>,
-            "constitution": <1-20>,
-            "charisma": <1-20>
-        },
-        "position": [x, y],
-        "current_action": "<string>",
-        "inventory": ["<item1>", "<item2>"],
-        "health": <integer>,
-        "experience": <integer>
-    },
-    "world_state": {
-        "environment_type": "<string>",
-        "description": "<string>",
-        "available_actions": ["<action1>", "<action2>"],
-        "npcs": ["<npc1>", "<npc2>"],
-        "treasures": ["<treasure1>"],
-        "hazards": ["<hazard1>"]
-    },
-    "narrative": "<your response text>"
-}
-"""

@@ -4,76 +4,40 @@ import openai
 from typing import Optional
 from ..AiServicesBase import AiServicesBase
 from ...core.settings import ai_config
-from ..responseParser.parser import DnDResponseParser, ParsedResponse
 
 class OpenAiService(AiServicesBase):
-    def __init__(self, chat_id: str, history: list[dict]):
-        super().__init__(chat_id, history)
+    def __init__(self, chat_id: str, history: list[dict] = None, system_prompt: str = ""):
+        super().__init__(chat_id, history, system_prompt)
         self.client = openai.OpenAI(api_key=ai_config.openai_api_key)
-        self.parser = DnDResponseParser()
 
     def ask_ai_response(self, message: str) -> Optional[str]:
-        """Get AI response from OpenAI API"""
         try:
-            # Prepare messages with system prompt and schema instruction
-            system_content = ai_config.system_prompt + self.parser.get_schema_prompt()
-            messages = [
-                {"role": "system", "content": system_content}
-            ]
-            
-            # Add history
+            messages = [{"role": "system", "content": self.system_prompt}]
             messages.extend(self.history)
-            
-            # Add current message
             messages.append({"role": "user", "content": message})
-            
-            # Apply constraints to the message
-            for constraint in self.constraints:
-                if constraint.is_active:
-                    message = constraint.modify_input_message(message)
-            
-            # Make API call
+
             response = self.client.chat.completions.create(
                 model=ai_config.openai_model,
                 messages=messages,
                 max_tokens=ai_config.max_tokens,
                 temperature=ai_config.openai_temperature
             )
-            
+
             ai_response = response.choices[0].message.content
-            
-            # Apply constraints to the response
-            for constraint in self.constraints:
-                if constraint.is_active:
-                    ai_response = constraint.modify_response(ai_response)
-            
-            # Add to history
+
             self.history.append({"role": "user", "content": message})
             self.history.append({"role": "assistant", "content": ai_response})
-            
-            return ai_response
 
+            return ai_response
         except Exception as e:
             print(f"OpenAI API error: {e}")
             return None
 
-    def ask_ai_response_structured(self, message: str) -> Optional[ParsedResponse]:
-        """Get structured AI response with parsed D&D data"""
-        raw_response = self.ask_ai_response(message)
-        if raw_response is None:
-            return None
-
-        return self.parser.parse_response(raw_response)
-
     def delete_chat(self):
-        """Clear chat history"""
         self.history = []
 
     def reset_history(self):
-        """Reset chat history"""
         self.history = []
 
     def get_history(self) -> list[dict]:
-        """Get chat history"""
         return self.history.copy()
-    

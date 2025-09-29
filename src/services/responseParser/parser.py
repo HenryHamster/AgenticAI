@@ -157,16 +157,3 @@ class DnDResponseParser:
             raw_response=response,
             parse_errors=errors
         )
-
-    def get_schema_prompt(self) -> str:
-        """Get the schema instruction for system prompts"""
-        from .schema import get_system_prompt_schema_instruction
-        return get_system_prompt_schema_instruction()
-
-    def validate_response_format(self, response: str) -> bool:
-        """Quick validation to check if response follows expected format"""
-        try:
-            json_data = self._extract_json(response)
-            return json_data is not None and "character_state" in json_data
-        except Exception:
-            return False
