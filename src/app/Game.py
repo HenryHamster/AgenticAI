@@ -30,7 +30,7 @@ class Game(Savable):
     async def step(self):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
-        for _ in range(GameConfig.player_vision):
+        for _ in range(GameConfig.num_responses):
             player_responses = await asyncio.gather(*[
                 self.players[UID].get_action({"Tiles": self.get_viewable_tiles(self.players[UID].position, GameConfig.player_vision),
                               "Verdict": verdict, "UID": UID, "Position": self.players[UID].position})

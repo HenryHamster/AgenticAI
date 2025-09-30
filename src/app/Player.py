@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import override, overload
+from typing import override
 from src.database.fileManager import Savable
 from src.core.settings import GameConfig
 from src.services.AiServicesBase import AiServicesBase #Using base temporarily, I assume we'll have a wrapper in the future which can pass in the right model
@@ -71,18 +71,11 @@ class Player(Savable):
         return self.values
     #endregion
     #region: Modifier functions
-    @overload
     def update_position(self, change: tuple[int,int]):
         if (self.position[0]+change[0] < -GameConfig.world_size or self.position[0]+change[0] > GameConfig.world_size or
             self.position[1]+change[1] < -GameConfig.world_size or self.position[1]+change[1] > GameConfig.world_size):
             raise ValueError("Position change out of world bounds.")
         self.position = self.position+change
-    @overload
-    def update_position(self, x_change: int, y_change: int):
-        if (self.position[0]+x_change < -GameConfig.world_size or self.position[0]+x_change > GameConfig.world_size or
-            self.position[1]+y_change < -GameConfig.world_size or self.position[1]+y_change > GameConfig.world_size):
-            raise ValueError("Position change out of world bounds.")
-        self.position = (self.position[0]+x_change, self.position[1]+y_change)
     #endregion
 
     @override
