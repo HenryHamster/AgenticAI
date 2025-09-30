@@ -6,16 +6,15 @@ from ..AiServicesBase import AiServicesBase
 from ...core.settings import ai_config
 
 class OpenAiService(AiServicesBase):
-    def __init__(self, chat_id: str, history: list[dict], constraints: list = None):
-        super().__init__(chat_id, history, constraints or [])
+    def __init__(self, chat_id: str, history: list[dict], system_prompt: str):
+        super().__init__(chat_id, history)
         self.client = openai.OpenAI(api_key=ai_config.openai_api_key)
-
+        self.system_prompt = system_prompt
     def ask_ai_response(self, message: str) -> Optional[str]:
         """Get AI response from OpenAI API"""
         try:
-            # Prepare messages with system prompt
             messages = [
-                {"role": "system", "content": ai_config.system_prompt}
+                {"role": "system", "content": self.system_prompt}
             ]
             
             # Add history
@@ -49,10 +48,11 @@ class OpenAiService(AiServicesBase):
             self.history.append({"role": "assistant", "content": ai_response})
             
             return ai_response
-            
+
         except Exception as e:
             print(f"OpenAI API error: {e}")
             return None
+
 
     def delete_chat(self):
         """Clear chat history"""
