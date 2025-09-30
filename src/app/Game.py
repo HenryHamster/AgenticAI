@@ -81,11 +81,20 @@ class Game(Savable):
             for y in range(-vision+x,vision-x+1):
                 tiles.append(self.get_tile((position[0]+x,position[1]+y)))
         return tiles
+    def handle_verdict(self,verdict:str):
+        pass
+    #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
         if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:
             return Tile("This is an invalid tile. You cannot interact with or enter this tile.", position=position)
         if position not in self.tiles:
             self.tiles[position] = self.dm.generate_tile(position)
         return self.tiles[position]
-    def handle_verdict(self,verdict:str):
-        pass
+    def get_all_tiles(self) -> dict[tuple[int,int],Tile]:   
+        return self.tiles   
+    def get_player(self, UID: str) -> Player:   
+        return self.players[UID]
+    def get_all_players(self) -> dict[str,Player]:  
+        return self.players
+    def get_dm(self) -> DungeonMaster:  
+        return self.dm

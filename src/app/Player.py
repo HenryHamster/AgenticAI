@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import override
+from typing import override, overload
 from src.database.fileManager import Savable
+from src.core.settings import GameConfig
 from src.services.AiServicesBase import AiServicesBase #Using base temporarily, I assume we'll have a wrapper in the future which can pass in the right model
 @dataclass(frozen=True, slots=True)
 class PlayerClass:
@@ -17,9 +18,10 @@ class PlayerValues(Savable):
         self.health = health
     def update_money(self, change: int):
         self.money = max(self.money+change,0)
+        if self.money < 0:
+            raise ValueError("Money is below zero.")
     def update_health(self, change: int):
         self.health = max(self.health+change,0)
-
     @override
     def save(self) -> str:
         return Savable.toJSON({"money": self.money, "health": self.health})
@@ -54,7 +56,35 @@ class Player(Savable):
         response = await self.model.ask_ai_response(context) #Assumes wrapper will have some additional context prompting
         self._responses.append(response)
         return response
-    
+    #region: Accessor functions
+    def get_UID(self) -> str:
+        return self.UID
+    def get_position(self) -> tuple[int,int]:
+        return self.position
+    def get_model(self) -> AiServicesBase:
+        return self.model
+    def get_class(self) -> PlayerClass:
+        return self.player_class
+    def get_responses_history(self) -> list[str]:
+        return self._responses
+    def get_values(self) -> PlayerValues:
+        return self.values
+    #endregion
+    #region: Modifier functions
+    @overload
+    def update_position(self, change: tuple[int,int]):
+        if (self.position[0]+change[0] < -GameConfig.world_size or self.position[0]+change[0] > GameConfig.world_size or
+            self.position[1]+change[1] < -GameConfig.world_size or self.position[1]+change[1] > GameConfig.world_size):
+            raise ValueError("Position change out of world bounds.")
+        self.position = self.position+change
+    @overload
+    def update_position(self, x_change: int, y_change: int):
+        if (self.position[0]+x_change < -GameConfig.world_size or self.position[0]+x_change > GameConfig.world_size or
+            self.position[1]+y_change < -GameConfig.world_size or self.position[1]+y_change > GameConfig.world_size):
+            raise ValueError("Position change out of world bounds.")
+        self.position = (self.position[0]+x_change, self.position[1]+y_change)
+    #endregion
+
     @override
     def save(self) -> str:
         data = {
