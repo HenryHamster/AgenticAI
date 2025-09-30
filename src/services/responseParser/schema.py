@@ -10,19 +10,7 @@ class DnDCharacterSchema:
         "type": "object",
         "properties": {
             "money": {"type": "integer", "minimum": 0},
-            "skill_level": {"type": "integer", "minimum": 1},
-            "attributes": {
-                "type": "object",
-                "properties": {
-                    "strength": {"type": "integer", "minimum": 1, "maximum": 20},
-                    "dexterity": {"type": "integer", "minimum": 1, "maximum": 20},
-                    "intelligence": {"type": "integer", "minimum": 1, "maximum": 20},
-                    "wisdom": {"type": "integer", "minimum": 1, "maximum": 20},
-                    "constitution": {"type": "integer", "minimum": 1, "maximum": 20},
-                    "charisma": {"type": "integer", "minimum": 1, "maximum": 20}
-                },
-                "required": ["strength", "dexterity", "intelligence", "wisdom", "constitution", "charisma"]
-            },
+            "health": {"type": "integer", "minimum": 0},
             "position": {
                 "type": "array",
                 "items": {"type": "integer"},
@@ -30,32 +18,44 @@ class DnDCharacterSchema:
                 "maxItems": 2
             },
             "current_action": {"type": "string"},
-            "inventory": {
-                "type": "array",
-                "items": {"type": "string"}
-            },
-            "health": {"type": "integer", "minimum": 0},
-            "experience": {"type": "integer", "minimum": 0}
+            # "skill_level": {"type": "integer", "minimum": 1},
+            # "attributes": {
+            #     "type": "object",
+            #     "properties": {
+            #         "strength": {"type": "integer", "minimum": 1, "maximum": 20},
+            #         "dexterity": {"type": "integer", "minimum": 1, "maximum": 20},
+            #         "intelligence": {"type": "integer", "minimum": 1, "maximum": 20},
+            #         "wisdom": {"type": "integer", "minimum": 1, "maximum": 20},
+            #         "constitution": {"type": "integer", "minimum": 1, "maximum": 20},
+            #         "charisma": {"type": "integer", "minimum": 1, "maximum": 20}
+            #     },
+            #     "required": ["strength", "dexterity", "intelligence", "wisdom", "constitution", "charisma"]
+            # },
+            # "inventory": {
+            #     "type": "array",
+            #     "items": {"type": "string"}
+            # },
+            # "experience": {"type": "integer", "minimum": 0}
         },
-        "required": ["money", "skill_level", "attributes", "position", "current_action", "health"]
+        "required": ["money", "health", "position", "current_action"] #, "skill_level", "attributes",
     }
 
     DEFAULTS = {
         "money": 100,
-        "skill_level": 1,
-        "attributes": {
-            "strength": 10,
-            "dexterity": 10,
-            "intelligence": 10,
-            "wisdom": 10,
-            "constitution": 10,
-            "charisma": 10
-        },
-        "position": [0, 0],
-        "current_action": "",
-        "inventory": [],
         "health": 100,
-        "experience": 0
+        "position": [0,0],
+        "current_action": ""
+        # "skill_level": 1,
+        # "attributes": {
+        #     "strength": 10,
+        #     "dexterity": 10,
+        #     "intelligence": 10,
+        #     "wisdom": 10,
+        #     "constitution": 10,
+        #     "charisma": 10
+        # },
+        # "inventory": [],
+        # "experience": 0
     }
 
 @dataclass
@@ -65,34 +65,34 @@ class WorldStateSchema:
     SCHEMA = {
         "type": "object",
         "properties": {
-            "environment_type": {"type": "string"},
-            "description": {"type": "string"},
-            "available_actions": {
+            "tiles": {
                 "type": "array",
-                "items": {"type": "string"}
-            },
-            "npcs": {
-                "type": "array",
-                "items": {"type": "string"}
-            },
-            "treasures": {
-                "type": "array",
-                "items": {"type": "string"}
-            },
-            "hazards": {
-                "type": "array",
-                "items": {"type": "string"}
+                "description": "List of tiles, each mapping a coordinate [x,y] to a string value",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "coord": {
+                            "type": "array",
+                            "items": {"type": "integer"},
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Coordinate [x,y]"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Tile description or type"
+                        }
+                    },
+                    "required": ["coord", "value"],
+                    "additionalProperties": False
+                }
             }
         },
-        "required": ["environment_type", "description"]
+        "required": ["tiles"]
     }
 
     DEFAULTS = {
-        "environment_type": "plains",
-        "description": "An open field with grass and scattered trees",
-        "available_actions": [],
-        "npcs": [],
-        "treasures": [],
-        "hazards": []
+        "tiles": []
     }
+
 
