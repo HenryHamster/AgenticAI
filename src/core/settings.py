@@ -4,17 +4,19 @@ Configuration settings for the AgenticAI game
 import os
 from dataclasses import dataclass
 from typing import Dict, Any
+from typing import Final
 
 @dataclass
 class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
-    world_size: tuple = (10, 10)  # (width, height)
+    world_size: int = 10
     starting_wealth: int = 100
     starting_health: int = 100
-    
+    player_vision: int = 0 #Measured in tiles away from player position
     # AI settings
+    num_responses: int = 1 #Number of verdicts per action
     max_ai_retries: int = 3
     ai_timeout: int = 30  # seconds
     
