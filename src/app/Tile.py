@@ -6,7 +6,8 @@ class Tile(Savable):
     def __init__(self, description: str = "", position: tuple[int,int] = (0,0)):
         self.description = description
         self.position = position
-
+    def update_description(self, new_description: str):
+        self.description = new_description
     @override
     def save(self) -> str:
         # Store position as a list (JSON doesn't support tuples)

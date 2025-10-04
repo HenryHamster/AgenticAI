@@ -10,8 +10,8 @@ class DungeonMaster(Savable):
     def generate_tile(self, position:tuple[int,int] = (0,0)):
         generated_description = "INSERT SOME API CALL w/ context"
         return Tile(generated_description, position)
-    def update_tile(self, tile: Tile, event):
-        tile.description = "INSERT SOME API CALL w/ context"
+    def update_tile(self, tile: Tile, event: str):
+        tile.update_description("INSERT SOME API CALL w/ context and event to generate new tile description")
     async def respond_actions(self, info: dict) -> str:
         raise Exception("Response not implemented.")
     @override

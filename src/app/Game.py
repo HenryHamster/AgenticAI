@@ -6,7 +6,7 @@ from src.app.DungeonMaster import DungeonMaster
 from typing import override,overload
 import json
 import asyncio
-from src.app.config import NUM_RESPONSES, PLAYER_NUM, WORLD_SIZE, PLAYER_VISION
+from src.core.settings import GameConfig
 
 class Game(Savable):
     players: dict[str,Player]
@@ -26,13 +26,13 @@ class Game(Savable):
             if p.UID != uid:
                 p.UID = uid  # enforce key ↔ object UID consistency
             self.players[uid] = p
-        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-WORLD_SIZE, WORLD_SIZE + 1) for j in range(-WORLD_SIZE, WORLD_SIZE + 1)}
+        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-GameConfig.world_size, GameConfig.world_size + 1) for j in range(-GameConfig.world_size, GameConfig.world_size + 1)}
     async def step(self):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
-        for _ in range(NUM_RESPONSES):
+        for _ in range(GameConfig.num_responses):
             player_responses = await asyncio.gather(*[
-                self.players[UID].get_action({"Tiles": self.get_viewable_tiles(self.players[UID].position, PLAYER_VISION),
+                self.players[UID].get_action({"Tiles": self.get_viewable_tiles(self.players[UID].position, GameConfig.player_vision),
                               "Verdict": verdict, "UID": UID, "Position": self.players[UID].position})
                 for UID in sorted_uids
             ]) #return_exception = True
@@ -81,11 +81,20 @@ class Game(Savable):
             for y in range(-vision+x,vision-x+1):
                 tiles.append(self.get_tile((position[0]+x,position[1]+y)))
         return tiles
+    def handle_verdict(self,verdict:str):
+        pass
+    #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
-        if abs(position[0]) > WORLD_SIZE or abs(position[1]) > WORLD_SIZE:
+        if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:
             return Tile("This is an invalid tile. You cannot interact with or enter this tile.", position=position)
         if position not in self.tiles:
             self.tiles[position] = self.dm.generate_tile(position)
         return self.tiles[position]
-    def handle_verdict(self,verdict:str):
-        pass
+    def get_all_tiles(self) -> dict[tuple[int,int],Tile]:   
+        return self.tiles   
+    def get_player(self, UID: str) -> Player:   
+        return self.players[UID]
+    def get_all_players(self) -> dict[str,Player]:  
+        return self.players
+    def get_dm(self) -> DungeonMaster:  
+        return self.dm
