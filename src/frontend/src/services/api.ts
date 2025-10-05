@@ -5,7 +5,6 @@ import {mockGameRuns} from '@/scripts/generateMockData';
  * API service for fetching game data
  * Currently returns mock data - will be replaced with actual API calls
  */
-console.log(mockGameRuns)
 export async function fetchGameRuns(): Promise<GameRun[]> {
   // TODO: Replace with actual API call
   // const response = await fetch('/api/game-runs');

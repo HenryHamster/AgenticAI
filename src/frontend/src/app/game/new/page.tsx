@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlayerSetup, GameCreationRequest } from "@/types/game";
-import { createGame } from "@/services/api";
+// import { createGame } from "@/services/api";
 
 // Random name pool for players
 const PLAYER_NAMES = [
@@ -121,7 +121,8 @@ export default function NewGamePage() {
     };
 
     try {
-      const gameId = await createGame(gameRequest);
+      // todo: implement create game
+      const gameId = '1231231123'
       router.push(`/game/${gameId}`);
     } catch (error) {
       console.error("Failed to create game:", error);
