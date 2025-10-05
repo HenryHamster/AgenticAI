@@ -26,9 +26,9 @@ export default function TileCell({ tile, player }: TileCellProps) {
       )}
       
       {/* Hover tooltip */}
-      <div className="absolute bottom-0 left-0 right-0 bg-black/90 text-white text-[10px] sm:text-xs p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 line-clamp-2">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[200px] max-w-[300px] bg-black/95 text-white text-base sm:text-lg px-4 py-3 sm:py-4 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg leading-relaxed rounded-md whitespace-normal pointer-events-none">
         {tile.description}
-        {player && <div className="font-bold mt-0.5">{player.name}</div>}
+        {player && <div className="font-bold mt-2">{player.name}</div>}
       </div>
       
       {/* Coordinates (subtle) */}
