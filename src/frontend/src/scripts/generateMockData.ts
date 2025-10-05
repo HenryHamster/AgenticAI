@@ -1,5 +1,6 @@
 import { GameRun, Player, Tile, Turn, PlayerAction, TerrainType } from '@/types/game';
-import { join } from 'path';
+// import { join } from 'path';
+// import fs from 'fs';
 
 // Terrain configurations
 const TERRAIN_CONFIG: Record<TerrainType, { emoji: string; descriptions: string[] }> = {
@@ -358,8 +359,7 @@ export function generateMultipleGameRuns(count: number = 3): GameRun[] {
 
 // Generate and export mock data
 const mockGameRuns = generateMultipleGameRuns(3);
-const fs = require('fs');
-const writePath = join(process.cwd(), 'src', 'scripts', 'mockGameData.json');
-fs.writeFileSync(writePath, JSON.stringify(mockGameRuns, null, 2), 'utf-8');
+// const writePath = join(process.cwd(), 'src', 'scripts', 'mockGameData.json');
+// fs.writeFileSync(writePath, JSON.stringify(mockGameRuns, null, 2), 'utf-8');
 
 export { mockGameRuns };

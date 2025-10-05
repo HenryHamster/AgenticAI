@@ -7,6 +7,7 @@ export interface Player {
   health: number;
   currency: number;
   position: { x: number; y: number };
+  class: "human";
   validityScore: number;
   creativityScore: number;
   isActive: boolean; // false if player died (health = 0)
@@ -48,4 +49,20 @@ export interface GameRun {
   turns: Turn[];
   targetCurrency: number;
   initialBoardState: Tile[][];
+}
+
+export interface PlayerSetup {
+  name: string;
+  class: 'human';
+  startingCurrency: number;
+  startingHealth: number;
+  startingPosition: 'random' | { x: number; y: number };
+  agentPrompt: string;
+}
+
+export interface GameCreationRequest {
+  numberOfPlayers: number;
+  players: PlayerSetup[];
+  maxTurns: number | 'until_win';
+  currencyGoal: number;
 }

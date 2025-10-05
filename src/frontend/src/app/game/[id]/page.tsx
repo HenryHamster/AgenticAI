@@ -7,7 +7,7 @@ import TurnTimeline from '@/components/TurnTimeline';
 import PlayerStatsPanel from '@/components/PlayerStatsPanel';
 import Link from 'next/link';
 import { GameRun } from '@/types/game';
-import mockGameDataJson from '@/scripts/mockGameData.json';
+import { mockGameRuns } from '@/scripts/generateMockData';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +24,7 @@ export default function GameDetailPage({ params }: PageProps) {
   // const gameRun = await fetchGameRunById(id);
   
   // Type assert the imported JSON to match our TypeScript types
-  const mockGameData = mockGameDataJson as GameRun[];
+  const mockGameData = mockGameRuns as GameRun[];
   
   // Mock empty state for now
   const gameRun = mockGameData.find((g: GameRun) => g.id === id);

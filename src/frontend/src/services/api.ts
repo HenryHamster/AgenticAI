@@ -1,4 +1,4 @@
-import { GameRun, Turn } from '@/types/game';
+import { GameRun, Turn, GameCreationRequest } from '@/types/game';
 import {mockGameRuns} from '@/scripts/generateMockData';
 
 /**
@@ -34,4 +34,24 @@ export async function fetchTurnByNumber(gameId: string, turnNumber: number): Pro
   if (!gameRun) return null;
   
   return gameRun.turns.find(turn => turn.turnNumber === turnNumber) || null;
+}
+
+export async function createGame(gameRequest: GameCreationRequest): Promise<string> {
+  // TODO: Replace with actual API call to backend
+  // const response = await fetch('/api/game-runs', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify(gameRequest),
+  // });
+  // const data = await response.json();
+  // return data.id;
+  
+  // Mock implementation - simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  console.log('Game creation request:', gameRequest);
+  
+  // Return a mock game ID for now
+  const mockGameId = `game-${Date.now()}`;
+  return mockGameId;
 }
