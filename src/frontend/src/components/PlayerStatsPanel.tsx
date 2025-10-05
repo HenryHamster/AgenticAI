@@ -44,22 +44,22 @@ export default function PlayerStatsPanel({ players, targetCurrency }: PlayerStat
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-1">
                 <span className="text-red-500">❤️</span>
-                <span className="font-medium">{player.health}</span>
+                <span className="font-medium text-gray-600">{player.health}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <span className="text-yellow-500">💰</span>
-                <span className="font-medium">{player.currency}</span>
+                <span className="font-medium text-gray-600">{player.currency}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <span className="text-green-500">✓</span>
-                <span className="text-xs">Validity: {player.validityScore}</span>
+                <span className="text-xs text-gray-600">Validity: {player.validityScore}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <span className="text-purple-500">✨</span>
-                <span className="text-xs">Creativity: {player.creativityScore}</span>
+                <span className="text-xs text-gray-600">Creativity: {player.creativityScore}</span>
               </div>
             </div>
             

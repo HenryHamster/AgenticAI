@@ -6,7 +6,8 @@ import GameBoard from '@/components/GameBoard';
 import TurnTimeline from '@/components/TurnTimeline';
 import PlayerStatsPanel from '@/components/PlayerStatsPanel';
 import Link from 'next/link';
-import mockGameData from '@/scripts/mockGameData.json';
+import { GameRun } from '@/types/game';
+import mockGameDataJson from '@/scripts/mockGameData.json';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,8 +23,11 @@ export default function GameDetailPage({ params }: PageProps) {
   // TODO: Fetch game data
   // const gameRun = await fetchGameRunById(id);
   
+  // Type assert the imported JSON to match our TypeScript types
+  const mockGameData = mockGameDataJson as GameRun[];
+  
   // Mock empty state for now
-  const gameRun = mockGameData.find(g => g.id === id);
+  const gameRun = mockGameData.find((g: GameRun) => g.id === id);
 
   if (!gameRun) {
     return (
@@ -53,8 +57,8 @@ export default function GameDetailPage({ params }: PageProps) {
     );
   }
 
-  const currentTurn = gameRun.turns.find(t => t.turnNumber === selectedTurnNumber) || gameRun.turns[0];
-  const winner = gameRun.players.find(p => p.id === gameRun.winnerId);
+  const currentTurn = gameRun.turns.find((t) => t.turnNumber === selectedTurnNumber) || gameRun.turns[0];
+  const winner = gameRun.players.find((p) => p.id === gameRun.winnerId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -92,10 +96,47 @@ export default function GameDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Three-panel layout */}
+        {/* Turn Slider Control */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSelectedTurnNumber(Math.max(0, selectedTurnNumber - 1))}
+              disabled={selectedTurnNumber === 0}
+              className="px-3 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition flex-shrink-0"
+            >
+              ← Prev
+            </button>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-700 flex-shrink-0">
+                  Turn {selectedTurnNumber + 1} / {gameRun.turns.length}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max={gameRun.turns.length - 1}
+                  value={selectedTurnNumber}
+                  onChange={(e) => setSelectedTurnNumber(parseInt(e.target.value))}
+                  className="flex-1 cursor-pointer"
+                />
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setSelectedTurnNumber(Math.min(gameRun.turns.length - 1, selectedTurnNumber + 1))}
+              disabled={selectedTurnNumber === gameRun.turns.length - 1}
+              className="px-3 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition flex-shrink-0"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+
+        {/* Two-panel layout: Main (Turn History) + Side (Board & Stats) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Panel: Turn Timeline */}
-          <div className="lg:col-span-3 max-h-[800px]">
+          {/* Main Panel: Turn History (wider) */}
+          <div className="lg:col-span-8">
             <TurnTimeline
               turns={gameRun.turns}
               selectedTurnNumber={selectedTurnNumber}
@@ -103,15 +144,16 @@ export default function GameDetailPage({ params }: PageProps) {
             />
           </div>
 
-          {/* Center Panel: Game Board */}
-          <div className="lg:col-span-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="mb-4 text-center">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Turn {selectedTurnNumber}
+          {/* Side Panel: Game Board + Player Stats */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Game Board */}
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="mb-3 text-center">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Game Board
                 </h2>
-                <p className="text-sm text-gray-500">
-                  Click tiles to see descriptions
+                <p className="text-xs text-gray-500">
+                  Turn {selectedTurnNumber + 1}
                 </p>
               </div>
               
@@ -119,33 +161,9 @@ export default function GameDetailPage({ params }: PageProps) {
                 boardState={currentTurn.boardState}
                 players={currentTurn.playerStates}
               />
-              
-              <div className="mt-4 flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setSelectedTurnNumber(Math.max(0, selectedTurnNumber - 1))}
-                  disabled={selectedTurnNumber === 0}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition"
-                >
-                  ← Previous Turn
-                </button>
-                
-                <span className="text-sm text-gray-600">
-                  {selectedTurnNumber + 1} / {gameRun.turns.length}
-                </span>
-                
-                <button
-                  onClick={() => setSelectedTurnNumber(Math.min(gameRun.turns.length - 1, selectedTurnNumber + 1))}
-                  disabled={selectedTurnNumber === gameRun.turns.length - 1}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition"
-                >
-                  Next Turn →
-                </button>
-              </div>
             </div>
-          </div>
 
-          {/* Right Panel: Player Stats */}
-          <div className="lg:col-span-3 max-h-[800px] overflow-y-auto">
+            {/* Player Stats */}
             <PlayerStatsPanel
               players={currentTurn.playerStates}
               targetCurrency={gameRun.targetCurrency}

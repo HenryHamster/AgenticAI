@@ -35,22 +35,22 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
         <div className="grid grid-cols-2 gap-3 text-sm mb-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Players:</span>
-            <span className="font-semibold">{gameRun.players.length}</span>
+            <span className="font-semibold text-gray-600">{gameRun.players.length}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Turns:</span>
-            <span className="font-semibold">{gameRun.turns.length}</span>
+            <span className="font-semibold text-gray-600">{gameRun.turns.length}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Duration:</span>
-            <span className="font-semibold">{duration}m</span>
+            <span className="font-semibold text-gray-600">{duration}m</span>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Target:</span>
-            <span className="font-semibold">💰 {gameRun.targetCurrency}</span>
+            <span className="font-semibold text-gray-600">💰 {gameRun.targetCurrency}</span>
           </div>
         </div>
 
