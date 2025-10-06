@@ -3,7 +3,7 @@ from src.app.Player import Player
 from src.app.Tile import Tile
 from src.database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
-from typing import override,overload
+from typing import override
 import json
 import asyncio
 from src.core.settings import GameConfig
@@ -82,7 +82,7 @@ class Game(Savable):
                 tiles.append(self.get_tile((position[0]+x,position[1]+y)))
         return tiles
     def handle_verdict(self,verdict:str):
-        pass
+        raise NotImplementedError("handle_verdict must be implemented.")
     #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
         if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:

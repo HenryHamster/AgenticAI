@@ -1,0 +1,4 @@
+import json
+from src.core.settings import AIConfig
+def format_request(prompt: str, context: dict, schema: str = AIConfig.schema_instruction) -> str:
+    return f"{prompt}\n\nContext:\n{json.dumps(context, indent=2)} \n\nSchema:\n{schema}"

@@ -2,7 +2,10 @@ from dataclasses import dataclass
 from typing import override
 from src.database.fileManager import Savable
 from src.core.settings import GameConfig
-from src.services.AiServicesBase import AiServicesBase #Using base temporarily, I assume we'll have a wrapper in the future which can pass in the right model
+from src.app.Utils import format_request
+from src.services.aiServices.wrapper import AIWrapper
+from src.services.AiServicesBase import AiServicesBase
+
 @dataclass(frozen=True, slots=True)
 class PlayerClass:
     name: str
@@ -36,14 +39,14 @@ PLAYER_CLASSES = {
 }
 
 class Player(Savable):
-    model: AiServicesBase
+    model: str
     UID: str #User ID (string)
     values: PlayerValues
     player_class: PlayerClass
     position: tuple[int,int]
     _responses: list[str]
-    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o"): #Force UID to exist
-        self.model = AiServicesBase(chat_id="0",history = []) #Temporary base model instantiation
+    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o", chat_id:str = "DefaultID"): #Force UID to exist
+        self.model = model
         self.UID = UID
         self.position = position
         if player_class not in PLAYER_CLASSES:
@@ -52,8 +55,8 @@ class Player(Savable):
 
         self.values = PlayerValues()
         self._responses = []
-    async def get_action(self,context):
-        response = await self.model.ask_ai_response(context) #Assumes wrapper will have some additional context prompting
+    async def get_action(self,context: dict) -> str:
+        response = await AIWrapper.ask(format_request("", context), self.model,self.UID)
         self._responses.append(response)
         return response
     #region: Accessor functions
@@ -62,7 +65,7 @@ class Player(Savable):
     def get_position(self) -> tuple[int,int]:
         return self.position
     def get_model(self) -> AiServicesBase:
-        return self.model
+        return AIWrapper._get_service(self.model,self.UID)
     def get_class(self) -> PlayerClass:
         return self.player_class
     def get_responses_history(self) -> list[str]:
@@ -83,6 +86,7 @@ class Player(Savable):
         data = {
             "position": list(self.position),  # JSON-friendly
             "UID": self.UID,
+            "model": self.model,
             "player_class": self.player_class.name,          # store the key, not the object
             "values": Savable.fromJSON(self.values.save()),  # dict, not string
             "responses": list(getattr(self, "_responses", [])),
@@ -106,6 +110,7 @@ class Player(Savable):
 
         # PlayerValues.load expects a JSON string
         self.UID = loaded_data.get("UID", "INVALID")
+        self.model = loaded_data.get("model", "INVALID")
         self.values = getattr(self, "values", PlayerValues())
         self.values.load(Savable.toJSON(v_dict))
 
