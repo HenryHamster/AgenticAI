@@ -83,10 +83,11 @@ Supporting assets include `data/Agentic AI Master File.txt` (concept brief) and 
 - Access to at least one supported LLM provider (OpenAI or Anthropic)
 
 ### Installation
-```bash
+```powershell
 python -m venv .venv
 .\.venv\Scripts\activate        # Windows PowerShell
 pip install -r requirements.txt
+```
 Environment Variables
 Configure provider credentials before running anything that hits an external API:
 
