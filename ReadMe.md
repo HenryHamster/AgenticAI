@@ -15,35 +15,6 @@ Agentic AI orchestrates a roguelike-inspired economy in which autonomous player 
 
 Wealth maximization is the baseline objective, but alternative victory conditions can be layered on top.
 
-## Architecture
-
-src/
-│
-├─ app/ # Gameplay orchestration, domain models, and utilities
-│ ├─ Game.py # Asynchronous turn loop and session persistence
-│ ├─ DungeonMaster.py
-│ ├─ Player.py
-│ ├─ Tile.py
-│ └─ Utils.py
-│
-├─ services/ # Service layer abstractions
-│ ├─ AiServicesBase.py
-│ ├─ aiServices/ # Concrete integrations (OpenAI, Claude) + wrapper
-│ ├─ responseParser/ # JSON scaffold + extraction utilities
-│ ├─ stateServices/ # Action + GameState (stub)
-│ └─ enviormentServices/ # Reserved for board/world helpers (stub)
-│
-├─ database/
-│ └─ fileManager.py # Savable interface + JSON file IO helpers
-│
-└─ core/
-└─ settings.py # Game + AI configuration dataclasses
-
-markdown
-
-
-Supporting assets include `data/Agentic AI Master File.txt` (concept brief) and `testing/` (exploratory scripts for parsers and AI integrations).
-
 ## Core Components
 
 - **Game (`src/app/Game.py`)**  
@@ -83,7 +54,7 @@ Supporting assets include `data/Agentic AI Master File.txt` (concept brief) and 
 - Access to at least one supported LLM provider (OpenAI or Anthropic)
 
 ### Installation
-```powershell
+```bash
 python -m venv .venv
 .\.venv\Scripts\activate        # Windows PowerShell
 pip install -r requirements.txt
@@ -98,7 +69,7 @@ Optional overrides (if you extend AIConfig) can be introduced via additional env
 Running the Game Loop
 There is no CLI entry point yet. To experiment:
 
-python
+```python
 
 from src.app.Game import Game
 
@@ -107,6 +78,9 @@ game = Game(player_info)
 
 # For demonstration; real usage should persist state and handle DM verdicts.
 await game.step()
+
+```
+
 You will need valid API keys for whichever models you target, since DungeonMaster and Player both defer to AIWrapper.ask.
 
 Testing
@@ -116,11 +90,12 @@ testing/test_parser.py exercises the response parser against canned responses, n
 testing/test_openai_integration.py demonstrates structured output parsing for OpenAI; it skips live calls if OPENAI_API_KEY isn’t set.
 Execute them with:
 
-bash
+```bash
 
 python testing/test_parser.py
 python testing/test_openai_integration.py
 (Expect the OpenAI integration script to fail gracefully when API keys are absent or incompatible with the configured model/structured-output flow.)
+```
 
 Project Status
 ✅ Modular service-oriented architecture (Game/Dungeon Master/Player abstractions)
