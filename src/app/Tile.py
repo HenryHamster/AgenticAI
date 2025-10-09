@@ -9,15 +9,29 @@ class Tile(Savable):
     def update_description(self, new_description: str):
         self.description = new_description
     @override
+    def to_dict(self) -> dict:
+        return {
+            "position": [self.position[0], self.position[1]], #Store as list for JSON compatibility
+            "description": self.description
+        }
+    @classmethod
+    def from_dict(cls, data: dict) -> "Tile":
+        pos_list = data.get("position", [0, 0])
+        if not isinstance(pos_list, (list, tuple)) or len(pos_list) != 2:
+            pos_list = [0, 0]
+        return cls(
+            description=data.get("description", ""),
+            position=(int(pos_list[0]), int(pos_list[1]))
+        )
+    @override
     def save(self) -> str:
         # Store position as a list (JSON doesn't support tuples)
-        return Savable.toJSON({
-            "position": list(self.position),
-            "description": self.description,
-        })
+        return Savable.toJSON(self.to_dict())
 
     @override
     def load(self, loaded_data: dict | str):
-        loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)       
-        self.position = tuple(loaded_data.get("position", (0, 0)))
-        self.description = loaded_data.get("description", "")
+        if isinstance(loaded_data, str):
+            loaded_data = Savable.fromJSON(loaded_data)
+        obj = Tile.from_dict(loaded_data)
+        self.description = obj.description
+        self.position = obj.position

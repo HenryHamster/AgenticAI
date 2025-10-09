@@ -3,8 +3,8 @@
 import openai
 from typing import Optional
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import MessagesPlaceholder, HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel
 from ..AiServicesBase import AiServicesBase
 from ...core.settings import ai_config

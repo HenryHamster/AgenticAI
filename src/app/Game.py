@@ -32,29 +32,33 @@ class Game(Savable):
         sorted_uids = sorted(self.players.keys())
         for _ in range(GameConfig.num_responses):
             player_responses = await asyncio.gather(*[
-                self.players[UID].get_action({"Tiles": self.get_viewable_tiles(self.players[UID].position, GameConfig.player_vision),
-                              "Verdict": verdict, "UID": UID, "Position": self.players[UID].position})
+                self.players[UID].get_action({"tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
+                              "verdict": verdict, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
             ]) #return_exception = True
             verdict = await self.dm.respond_actions({"Responses": player_responses, "Verdict": verdict})    
         self.handle_verdict(verdict)
+    @staticmethod
+    def _tile_payload(tile: Tile) -> dict:
+        """Plain-Python view of a tile for prompts/serialization."""
+        return tile.to_dict()
+    
     @override
     def save(self) -> str:
         return Savable.toJSON({
             "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
             "dm": Savable.fromJSON(self.dm.save()),                         # dict
-            "tiles": {json.dumps(k): Savable.fromJSON(v.save())             # dict: "[x,y]" -> dict
-                    for k, v in self.tiles.items()}
+            "tiles": [t.to_dict() for t in self.tiles.values()]
         })
     
     @override
     def load(self, loaded_data: dict | str):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
         self.players = {}
-        for UID, pdata in loaded_data["players"].items():
+        for UID, pdata in loaded_data.get("players", {}).items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player data for {UID} must be a dict, got {type(pdata)}")
-            if UID is None or UID == "INVALID":
+            if UID is None or UID == "INVALID": 
                 raise ValueError("Player UID is missing or invalid in loaded data.")
             p = Player(UID)
             p.load(pdata)
@@ -65,15 +69,11 @@ class Game(Savable):
         self.dm.load(loaded_data["dm"])
 
         # tiles
-        self.tiles = {}
-        for k_str, vdata in loaded_data["tiles"].items():
-            key = tuple(json.loads(k_str))  # back to tuple
-            tile = Tile()
-            tile.load(vdata)
-            if tile.position != key:
-                tile.position = key
-                print("Tiles possibly corrupted: position and key don't match.")
-            self.tiles[key] = tile
+        tiles_map: dict[tuple[int, int], Tile] = {}
+        for td in loaded_data.get("tiles", []):
+            t = Tile.from_dict(td)
+            tiles_map[(t.position[0], t.position[1])] = t
+        self.tiles = tiles_map
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []
@@ -81,6 +81,8 @@ class Game(Savable):
             for y in range(-vision+x,vision-x+1):
                 tiles.append(self.get_tile((position[0]+x,position[1]+y)))
         return tiles
+    def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
+        return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
     def handle_verdict(self,verdict:str):
         raise NotImplementedError("handle_verdict must be implemented.")
     #Accessor functions

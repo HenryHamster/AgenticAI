@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable, Optional, Dict, Any
 from src.services.stateServices.GameState import GameState
-from src.services.AiServicesBase import AiServicesBase
+import src.services.AiServicesBase as AiServicesBase
 
 function = Callable[[], str]
 
