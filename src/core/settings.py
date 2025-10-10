@@ -34,6 +34,8 @@ class AIConfig:
     """AI service configuration"""
     # OpenAI settings
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    openai_timeout: int = 30
+    openai_max_tokens: int = 1000
     openai_model: str = "gpt-4"
     openai_temperature: float = 0.7
 
@@ -43,7 +45,6 @@ class AIConfig:
     claude_temperature: float = 0.7
 
     # General AI settings
-    max_tokens: int = 1000
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions following D&D rules."
 
     # Schema instruction for structured responses

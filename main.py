@@ -42,7 +42,7 @@ class StepPrinter:
             print(f"[v] {pairs}", flush=True)
 
 
-def make_player_payload(uid: str, model: str = "GPT4o") -> Dict[str, Any]:
+def make_player_payload(uid: str, model: str = "gpt-4o") -> Dict[str, Any]:
     return {
         "position": [0, 0],
         "UID": uid,
@@ -138,7 +138,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="Local test runner for DungeonMaster/Game")
     p.add_argument("--num-players", type=int, default=2, help="Number of fake players to create")
     p.add_argument("--rounds", type=int, default=3, help="Number of game rounds to run")
-    p.add_argument("--model", type=str, default="GPT4o", help="Model id to attach to players / DM")
+    p.add_argument("--model", type=str, default="gpt-4o", help="Model id to attach to players / DM")
     p.add_argument("--openai-key", type=str, default=None, help="OpenAI API key (optional)")
     p.add_argument("--anthropic-key", type=str, default=None, help="Anthropic API key (optional)")
     p.add_argument("--mock", action="store_true", help="Enable mock LLM responses (no network)")

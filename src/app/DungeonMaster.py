@@ -5,7 +5,7 @@ from src.services.aiServices.wrapper import AIWrapper
 from typing import override
 class DungeonMaster(Savable):
     model:str
-    def __init__(self, model: str = "GPT4o", loaded_data: dict | None = None):
+    def __init__(self, model: str = "gpt-4o", loaded_data: dict | None = None):
         self.model = model
         if loaded_data is not None:
             self.load(loaded_data)

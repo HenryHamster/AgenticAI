@@ -45,7 +45,7 @@ class Player(Savable):
     player_class: PlayerClass
     position: tuple[int,int]
     _responses: list[str]
-    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o", chat_id:str = "DefaultID"): #Force UID to exist
+    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "gpt-4o", chat_id:str = "DefaultID"): #Force UID to exist
         self.model = model
         self.UID = UID
         self.position = position
