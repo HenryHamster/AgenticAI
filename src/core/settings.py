@@ -46,9 +46,10 @@ class AIConfig:
 
     # General AI settings
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions following D&D rules."
+    dm_prompt: str = "You are the Dungeon Master for a Dungeons & Dragons campaign. Describe the world, present challenges, and respond to player actions according to D&D rules. Maintain balance, consistency, and immersion while rewarding creative and strategic play."
 
     # Schema instruction for structured responses
-    schema_instruction: str = """
+    verdict_instruction: str = """
 IMPORTANT: You must include at the end of your response a JSON object with the following structure:
 
 {

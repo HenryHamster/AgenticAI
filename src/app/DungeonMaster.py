@@ -2,6 +2,8 @@ from src.app.Tile import Tile
 from src.database.fileManager import Savable
 from src.app.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
+from src.services.responseParser.dataModels import GameResponse
+from src.core.settings import AIConfig
 from typing import override
 class DungeonMaster(Savable):
     model:str
@@ -14,8 +16,14 @@ class DungeonMaster(Savable):
         return Tile(generated_description, position)
     def update_tile(self, tile: Tile, event: str):
         tile.update_description(AIWrapper.ask(format_request("", {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
-    async def respond_actions(self, info: dict) -> str:
-        return AIWrapper.ask(format_request("", info), self.model, "DungeonMaster")
+    def respond_actions(self, info: dict) -> GameResponse:
+        structured_response = AIWrapper.ask(
+            format_request(AIConfig.dm_prompt, info), 
+            self.model, 
+            "DungeonMaster", 
+            structured_output = GameResponse
+            )
+        return structured_response
     @override
     def save(self):
         return Savable.toJSON({"model": self.model})

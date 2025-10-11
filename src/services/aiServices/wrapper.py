@@ -2,6 +2,7 @@ from typing import Optional, Type
 from pydantic import BaseModel
 from ..AiServicesBase import AiServicesBase
 from .openai import OpenAiService
+from .mock import MockAiService
 from .claude import ClaudeService
 from ...core.settings import ai_config
 import uuid
@@ -68,6 +69,12 @@ class AIWrapper:
                 )
             elif "claude" in model.lower():
                 cls._services[chat_id] = ClaudeService(
+                    chat_id=chat_id,
+                    model=model,
+                    system_prompt=prompt
+                )
+            elif "mock" in model.lower():
+                cls._services[chat_id] = MockAiService(
                     chat_id=chat_id,
                     model=model,
                     system_prompt=prompt

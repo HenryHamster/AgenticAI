@@ -77,7 +77,7 @@ player_info = {"player-1": {"position": [0, 0], "UID": "player-1"}}
 game = Game(player_info)
 
 # For demonstration; real usage should persist state and handle DM verdicts.
-await game.step()
+game.step()
 
 ```
 

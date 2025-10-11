@@ -52,6 +52,11 @@ def make_player_payload(uid: str, model: str = "gpt-4o") -> Dict[str, Any]:
         "responses": []
     }
 
+def make_dm_payload(model: str = "gpt-4o-mini") -> Dict[str, Any]:
+    return {
+        "model": model
+    }
+
 
 def enable_env_keys(openai_key: str | None, anthropic_key: str | None):
     if openai_key:
@@ -60,31 +65,7 @@ def enable_env_keys(openai_key: str | None, anthropic_key: str | None):
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
 
-def install_mock_ai():
-    import asyncio
-
-    def mock_ask(message: str,
-                 model: str = "gpt-4o",
-                 chat_id: str | None = None,
-                 system_prompt: str | None = None,
-                 structured_output=None,
-                 isolated: bool = False):
-        async def _impl():
-            cid = chat_id or "mock-chat"
-            summary = f"[MOCK-{model}] ({cid})"
-            snippet = (message[:100] + "...") if message and len(message) > 100 else (message or "")
-            return f"{summary} Response -> {snippet}"
-
-        try:
-            asyncio.get_running_loop()
-            return _impl()
-        except RuntimeError:
-            return asyncio.run(_impl())
-
-    AIWrapper.ask = mock_ask  # type: ignore
-
-
-async def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
+def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
     """
     Run the game for the specified number of rounds, emitting step-by-step
     updates when verbose printing is enabled.
@@ -95,17 +76,29 @@ async def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
             # Pre-step snapshot
             vprint("Pre-step snapshot:")
             for uid, player in sorted(game.get_all_players().items()):
-                vprint.kv(uid=uid, position=player.get_position(), last=len(player.get_responses_history() or []))
+                vprint.kv(
+                    uid=uid,
+                    position=player.get_position(),
+                    money=getattr(player.values, "money", "?"),
+                    health=getattr(player.values, "health", "?"),
+                    last=len(player.get_responses_history() or []),
+                )
 
             vprint("Executing game.step() …")
-            await game.step()
+            game.step()
 
             vprint("Post-step updates:")
             for uid, player in sorted(game.get_all_players().items()):
                 pos = player.get_position()
                 hist = player.get_responses_history()
                 last = hist[-1] if hist else "(no response)"
-                vprint.kv(uid=uid, position=pos, last_response=last)
+                vprint.kv(
+                    uid=uid,
+                    position=pos,
+                    money=getattr(player.values, "money", "?"),
+                    health=getattr(player.values, "health", "?"),
+                    last_response=last,
+                )
 
             vprint.banner(f"Round {r}/{rounds} — end")
 
@@ -154,21 +147,21 @@ def main():
     enable_env_keys(args.openai_key, args.anthropic_key)
 
     if args.mock:
-        print("[INFO] Mock AI mode enabled — no external API calls will be made.")
-        install_mock_ai()
+        print("[INFO] Mock AI mode enabled — using MockAiService (no external API calls).")
+        args.model = "mock"
+
 
     player_info = {}
     for i in range(args.num_players):
         uid = f"player{i}"
         player_info[uid] = make_player_payload(uid, model=args.model)
 
-    dm = DungeonMaster(model=args.model)
+    dm_info = make_dm_payload(model=args.model)
     print("[INFO] Instantiating game (this may call the DM to generate some tiles)...")
-    game = Game(player_info)
-    game.dm.model = args.model
+    game = Game(player_info,dm_info=dm_info)
 
     try:
-        asyncio.run(run_game_rounds(game, args.rounds, vprint))
+        run_game_rounds(game, args.rounds, vprint)
     except KeyboardInterrupt:
         print("\n[INFO] Interrupted by user.")
     except Exception as e:

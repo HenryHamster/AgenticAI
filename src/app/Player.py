@@ -55,8 +55,8 @@ class Player(Savable):
 
         self.values = PlayerValues()
         self._responses = []
-    async def get_action(self,context: dict) -> str:
-        response = await AIWrapper.ask(format_request("", context), self.model,self.UID)
+    def get_action(self,context: dict) -> str:
+        response = AIWrapper.ask(format_request("", context), self.model,self.UID)
         self._responses.append(response)
         return response
     #region: Accessor functions
@@ -78,7 +78,7 @@ class Player(Savable):
         if (self.position[0]+change[0] < -GameConfig.world_size or self.position[0]+change[0] > GameConfig.world_size or
             self.position[1]+change[1] < -GameConfig.world_size or self.position[1]+change[1] > GameConfig.world_size):
             raise ValueError("Position change out of world bounds.")
-        self.position = self.position+change
+        self.position = (self.position[0]+change[0],self.position[1]+change[1])
     #endregion
 
     @override

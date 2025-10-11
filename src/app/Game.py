@@ -5,6 +5,7 @@ from src.database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import json
+from src.services.responseParser.dataModels import GameResponse, CharacterState, WorldState
 import asyncio
 from src.core.settings import GameConfig
 
@@ -14,8 +15,9 @@ class Game(Savable):
     file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
 
-    def __init__(self, player_info:dict[str,dict]):
+    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None):
         self.dm = DungeonMaster()
+        self.dm.load(dm_info if dm_info is not None else {})
         self.file_manager = FileManager()
         self.players = {}
         for uid, pdata in player_info.items():
@@ -27,16 +29,16 @@ class Game(Savable):
                 p.UID = uid  # enforce key ↔ object UID consistency
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-GameConfig.world_size, GameConfig.world_size + 1) for j in range(-GameConfig.world_size, GameConfig.world_size + 1)}
-    async def step(self):
+    def step(self):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
         for _ in range(GameConfig.num_responses):
-            player_responses = await asyncio.gather(*[
+            player_responses = [
                 self.players[UID].get_action({"tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
                               "verdict": verdict, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
-            ]) #return_exception = True
-            verdict = await self.dm.respond_actions({"Responses": player_responses, "Verdict": verdict})    
+            ]
+            verdict = self.dm.respond_actions({"Responses": player_responses, "Verdict": verdict})    
         self.handle_verdict(verdict)
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
@@ -83,8 +85,109 @@ class Game(Savable):
         return tiles
     def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
         return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
-    def handle_verdict(self,verdict:str):
-        raise NotImplementedError("handle_verdict must be implemented.")
+    def handle_verdict(self, verdict: GameResponse | dict | str | None):
+        """
+        Apply a DM verdict to game state.
+        - Accepts GameResponse (pydantic), dict-like, or JSON string.
+        - Supports multiple players via CharacterState entries keyed by uid.
+        - Ignores/records unknown or false UIDs without raising.
+        - Clamps negative money/health to 0.
+        - Applies world_state tile updates when present.
+        """
+        if verdict is None:
+            return
+
+        # --- Coerce input into a GameResponse safely (pydantic v1/v2 compatible) ---
+        def _pyd_parse_dict(model_cls, data: dict):
+            # v2: model_validate, v1: parse_obj
+            if hasattr(model_cls, "model_validate"):
+                return model_cls.model_validate(data)  # pydantic v2
+            return model_cls.parse_obj(data)          # pydantic v1
+
+        def _pyd_parse_json(model_cls, data: str):
+            # v2: model_validate_json, v1: parse_raw
+            if hasattr(model_cls, "model_validate_json"):
+                return model_cls.model_validate_json(data)  # pydantic v2
+            return model_cls.parse_raw(data)                # pydantic v1
+
+        parsed: GameResponse | None = None
+        try:
+            if isinstance(verdict, GameResponse):
+                parsed = verdict
+            elif isinstance(verdict, dict):
+                parsed = _pyd_parse_dict(GameResponse, verdict)
+            elif isinstance(verdict, str) and verdict.strip():
+                parsed = _pyd_parse_json(GameResponse, verdict)
+        except Exception as E:
+            raise ValueError(f"Failed to parse verdict into GameResponse: {E}.")
+
+        if parsed is None or not isinstance(getattr(parsed, "character_state", None), list):
+            return #Don't throw errors if state is empty
+
+        # --- Apply per-player character updates ---
+        unknown_uids: list[str] = []
+        for cs in parsed.character_state:
+            # Tolerate entries that aren't CharacterState (e.g., dicts)
+            try:
+                if not isinstance(cs, CharacterState):
+                    cs = _pyd_parse_dict(CharacterState, cs if isinstance(cs, dict) else cs.__dict__)
+            except Exception:
+                continue
+
+            uid = getattr(cs, "uid", None)
+            if not uid or uid == "INVALID":
+                print(f"[handle_verdict] Ignored CharacterState with missing/invalid UID: {cs}")
+                continue
+
+            player = self.players.get(uid)
+            if player is None:
+                unknown_uids.append(uid)
+                continue
+
+            # Position (len 2, ints). Fall back to current if malformed.
+            try:
+                pos_raw = list(getattr(cs, "position_change", []))
+                if len(pos_raw) >= 2:
+                    new_pos = (int(pos_raw[0]), int(pos_raw[1]))
+                else:
+                    new_pos = (0,0)
+            except Exception:
+                new_pos = (0,0)
+
+            # Money/Health (clamp to >= 0). Keep current if absent.
+            try:
+                money = getattr(cs, "money_change", player.values.money)
+            except Exception:
+                money = 0
+
+            try:
+                health = getattr(cs, "health_change", player.values.health)
+            except Exception:
+                health = 0
+
+            player.update_position(new_pos)
+            player.values.update_money(money)
+            player.values.update_health(health)
+
+        if unknown_uids:
+            print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")
+
+        # --- Apply world updates to tiles if provided ---
+        ws = getattr(parsed, "world_state", None)
+        tiles_payload = getattr(ws, "tiles", None) if ws else None
+        if tiles_payload:
+            for td in tiles_payload:
+                try:
+                    if isinstance(td, dict):
+                        t = Tile.from_dict(td)
+                    else:
+                        # Attribute-style fallback
+                        pos_attr = list(getattr(td, "position")) #Throw exception when invalid position
+                        desc_attr = getattr(td, "description", "")
+                        t = Tile.from_dict({"position": pos_attr, "description": desc_attr})
+                    self.tiles[(t.position[0], t.position[1])].update_description(t.description)
+                except Exception:
+                    continue
     #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
         if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:
