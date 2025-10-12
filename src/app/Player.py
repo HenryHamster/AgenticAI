@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import override
 from src.database.fileManager import Savable
-from src.core.settings import GameConfig
+from src.core.settings import AIConfig, GameConfig
 from src.app.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from src.services.AiServicesBase import AiServicesBase
@@ -35,7 +35,7 @@ class PlayerValues(Savable):
         self.health = loaded_data["health"]
 
 PLAYER_CLASSES = {
-    "human" : PlayerClass("human","Just an average human being.")
+    "human" : PlayerClass("human","A confident, exceptionally powerful human being.")
 }
 
 class Player(Savable):
@@ -45,7 +45,7 @@ class Player(Savable):
     player_class: PlayerClass
     position: tuple[int,int]
     _responses: list[str]
-    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "GPT4o", chat_id:str = "DefaultID"): #Force UID to exist
+    def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "gpt-4.1-nano", chat_id:str = "DefaultID"): #Force UID to exist
         self.model = model
         self.UID = UID
         self.position = position
@@ -55,8 +55,8 @@ class Player(Savable):
 
         self.values = PlayerValues()
         self._responses = []
-    async def get_action(self,context: dict) -> str:
-        response = await AIWrapper.ask(format_request("", context), self.model,self.UID)
+    def get_action(self,context: dict) -> str:
+        response = AIWrapper.ask(format_request(AIConfig.player_prompt, context), self.model,self.UID)
         self._responses.append(response)
         return response
     #region: Accessor functions
@@ -78,7 +78,7 @@ class Player(Savable):
         if (self.position[0]+change[0] < -GameConfig.world_size or self.position[0]+change[0] > GameConfig.world_size or
             self.position[1]+change[1] < -GameConfig.world_size or self.position[1]+change[1] > GameConfig.world_size):
             raise ValueError("Position change out of world bounds.")
-        self.position = self.position+change
+        self.position = (self.position[0]+change[0],self.position[1]+change[1])
     #endregion
 
     @override
@@ -89,7 +89,7 @@ class Player(Savable):
             "model": self.model,
             "player_class": self.player_class.name,          # store the key, not the object
             "values": Savable.fromJSON(self.values.save()),  # dict, not string
-            "responses": list(getattr(self, "_responses", [])),
+#            "responses": list(getattr(self, "_responses", [])),
         }
         return Savable.toJSON(data)
     @override
@@ -115,4 +115,4 @@ class Player(Savable):
         self.values.load(Savable.toJSON(v_dict))
 
         # responses
-        self._responses = list(loaded_data.get("responses", []))
+#        self._responses = list(loaded_data.get("responses", []))

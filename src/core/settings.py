@@ -11,13 +11,13 @@ class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
-    world_size: int = 10
+    world_size: int = 0
     starting_wealth: int = 100
     starting_health: int = 100
     player_vision: int = 0 #Measured in tiles away from player position
     # AI settings
     num_responses: int = 1 #Number of verdicts per action
-    max_ai_retries: int = 3
+    max_ai_retries: int = 0
     ai_timeout: int = 30  # seconds
     
     # File paths
@@ -34,7 +34,9 @@ class AIConfig:
     """AI service configuration"""
     # OpenAI settings
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-    openai_model: str = "gpt-4"
+    openai_timeout: int = 30
+    openai_max_tokens: int = 1000
+    openai_model: str = "gpt-4.1-nano"
     openai_temperature: float = 0.7
 
     # Claude settings
@@ -43,11 +45,46 @@ class AIConfig:
     claude_temperature: float = 0.7
 
     # General AI settings
-    max_tokens: int = 1000
-    system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions following D&D rules."
-
+    system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
+    tile_prompt: str = (
+        "You are the Dungeon Master of a tile-based fantasy world. "
+        "Describe the terrain at the given coordinates in one vivid, concise sentence. "
+        "Focus on environment and physical details only.\n\n"
+        "Ensure that all tiles are interesting and provide opportunities."
+        "Keep tone immersive and neutral-fantasy. Avoid repetition between nearby tiles.\n"
+    )
+    tile_update_prompt: str = (
+        "You are the Dungeon Master. Update the tile’s one-sentence description "
+        "to reflect a recent event. Keep tone immersive and concise. "
+        "Describe only visible environmental changes, no dialogue or story."
+    )
+    dm_prompt: str = (
+        "You are the Dungeon Master for a Dungeons & Dragons campaign. "
+        "Return one structured_response of type GameResponse as the VERDICT for players’ actions.\n\n"
+        "Rules:\n"
+        "1) Follow D&D logic with balance, consistency, and immersion.\n"
+        "2) For each player in info.players, output one CharacterState keyed by UID.\n"
+        "3) Give only CHANGES:\n"
+        "   - money_change: gold ±int\n"
+        "   - health_change: HP ±int\n"
+        "   - position_change: [dx, dy]\n"
+        "   Never output absolute totals.\n"
+        "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
+        "5) Include a one-sentence narration and boolean success.\n"
+        "6) Use exactly the given player UIDs.\n"
+        "7) If nothing changes, set all *_change = 0."
+    )
+    player_prompt: str = (
+        "You are a confident and cunning Dungeons & Dragons player who seeks to maximize your wealth and influence."
+        "You see every situation as an opportunity — act decisively and ambitiously."
+        "Given the current scenario, propose one action your character will attempt this turn."
+        "Impossible or reckless actions may still backfire, but hesitation is worse."
+        "Respond with a short phrase or single sentence describing the action only — "
+        "You may also move to a different tile, one step at a time to search for new opportunities."
+        
+    )
     # Schema instruction for structured responses
-    schema_instruction: str = """
+    verdict_instruction: str = """
 IMPORTANT: You must include at the end of your response a JSON object with the following structure:
 
 {

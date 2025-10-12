@@ -2,20 +2,28 @@ from src.app.Tile import Tile
 from src.database.fileManager import Savable
 from src.app.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
+from src.services.responseParser.dataModels import GameResponse
+from src.core.settings import AIConfig
 from typing import override
 class DungeonMaster(Savable):
     model:str
-    def __init__(self, model: str = "GPT4o", loaded_data: dict | None = None):
+    def __init__(self, model: str = "gpt-4.1-nano", loaded_data: dict | None = None):
         self.model = model
         if loaded_data is not None:
             self.load(loaded_data)
-    def generate_tile(self, position:tuple[int,int] = (0,0)):
-        generated_description = AIWrapper.ask(format_request("", {"position": position}), self.model, "DungeonMaster")
+    def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None) -> Tile:
+        generated_description = AIWrapper.ask(format_request(AIConfig.tile_prompt, {"position": position}), self.model, "DungeonMaster")
         return Tile(generated_description, position)
     def update_tile(self, tile: Tile, event: str):
-        tile.update_description(AIWrapper.ask(format_request("", {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
-    async def respond_actions(self, info: dict) -> str:
-        return AIWrapper.ask(format_request("", info), self.model, "DungeonMaster")
+        tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
+    def respond_actions(self, info: dict) -> GameResponse:
+        structured_response = AIWrapper.ask(
+            format_request(AIConfig.dm_prompt, info), 
+            self.model, 
+            "DungeonMaster", 
+            structured_output = GameResponse
+            )
+        return structured_response
     @override
     def save(self):
         return Savable.toJSON({"model": self.model})

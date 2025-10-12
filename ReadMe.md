@@ -1,114 +1,123 @@
 # Agentic AI
 
+> A turn-based, tile-centric economy simulator where LLM-powered agents explore, trade, and compete under a shared Dungeon Master.
+
 ## Overview
-THis projectis a text-led roguelike economy simulator where large-language-model agents explore a shared tile grid, trade, and compete to grow their wealth. Each tile carries a concise natural-language description that is fed back into the model loop so that actions can continuously reshape the world narrative (e.g., a forest tile becomes scorched after being burned).
 
-## Core Agents
-- **Green Agent (Controller / Dungeon Master):** bootstraps the map, orchestrates economic events, and adjudicates every player action before updating global state.
-- **White Agents (Players):** submit short, turn-based intentions, track private stats such as health and inventory, and navigate the grid to pursue profit.
+Agentic AI orchestrates a roguelike-inspired economy in which autonomous player agents pursue wealth while a Dungeon Master agent curates the world. Every tile holds a concise description; whenever an action occurs, the description feeds back into the loop so that later turns reflect accumulated history (e.g., a forest tile becomes “scorched” after a fire spell). The current implementation emphasizes modularity, making it easier to plug in different AI providers, persistence layers, or orchestration strategies as the game evolves.
 
-## Turn Cycle
-1. Players propose single-sentence actions for the current turn.
-2. The controller batches and resolves the actions against the shared world model.
-3. Updated tile descriptions and personal stats are broadcast to every participant.
-4. The loop repeats until the scenario ends or a win condition is satisfied.
+## Gameplay Loop
 
-The baseline objective is wealth maximization within a dynamic local economy, though alternative victory conditions can be layered on top of the turn loop.
+1. Player agents submit succinct intentions for the current turn.
+2. The Dungeon Master evaluates the combined actions, updates shared state, and narrates outcomes.
+3. Updated tile descriptions and per-player stats propagate back to every agent.
+4. The loop repeats until a win condition or scenario terminates.
 
-## Project Structure
-- `Main.py`: entry point that will wire together the game loop and orchestration logic.
-- `src/Game.py`: placeholder for the main simulation driver.
-- `src/Agent.py`: planned interface to the LLM backends used for both controller and player agents.
-- `src/FileManager.py`: specification for persisting world state via coordinate-to-description hashes.
-- `data/Agentic AI Master File.txt`: design document detailing the MVP concept and agent responsibilities.
-- `playground.ipynb`: scratchpad for rapid prototyping and experimentation.
+Wealth maximization is the baseline objective, but alternative victory conditions can be layered on top.
 
-## Current Implementation Status
+## Core Components
 
-### Architecture Overview
-The project has evolved into a modular, service-oriented architecture with clear separation of concerns:
+- **Game (`src/app/Game.py`)**  
+  - Builds the world by having the Dungeon Master procedurally generate tiles for the configured radius.  
+  - Manages asynchronous turn execution with `asyncio.gather`, cycling through a configurable number of verdict passes before committing state updates.  
+  - Implements the `Savable` interface for snapshotting players, tiles, and Dungeon Master state via `FileManager`.
 
-#### Core Services (`src/services/`)
-- **SessionHandler**: Manages game sessions, action execution, and state persistence
-- **AiServicesBase**: Abstract base class for AI service implementations
-- **Environment Services**: Handles game state, actions, and environment interactions
+- **Dungeon Master (`src/app/DungeonMaster.py`)**  
+  - Wraps `AIWrapper` calls to request tile descriptions, narrate action resolutions, and update tiles when events occur.
 
-#### AI Service Layer (`src/services/aiServices/`)
-- **OpenAI Service**: Implementation for OpenAI GPT models
-- **Claude Service**: Implementation for Anthropic Claude models
-- Both services extend the base `AiServicesBase` class for consistent interface
+- **Player (`src/app/Player.py`)**  
+  - Maintains identity, position, stats, class descriptors, and recent responses.  
+  - Uses `AIWrapper` to request actions within a formatted context (tiles in vision range, prior verdict summary, etc.).  
+  - Enforces world bounds through `GameConfig.world_size` and persists via `Savable`.
 
-#### Application Layer (`src/app/`)
-- **Game.py**: High-level game management functions (create_session, do_action, etc.)
-- **FileManager.py**: Handles save system and ground truth management
+- **AI Wrapper + Services (`src/services/aiServices/`)**  
+  - `AIWrapper` multiplexes model identifiers to the appropriate provider, caching conversations per `chat_id`.  
+  - `OpenAiService` and `ClaudeService` encapsulate LangChain clients for OpenAI GPT and Claude models, sharing history handling, structured output hooks, and reset utilities.  
+  - Both rely on `AiServicesBase` for interface consistency and dynamic Pydantic model generation from dict schemas.
 
-#### Configuration (`src/core/`)
-- **settings.py**: Comprehensive configuration management for game mechanics and AI settings
+- **Response Parsing (`src/services/responseParser/`)**  
+  - `DnDResponseParser` extracts JSON fragments from LLM replies, validates against schema defaults, and returns normalized character/world state plus original narrative.  
+  - Schemas (`schema.py`, `dataModels.py`) provide the blueprint for both validation and structured-output hints.
 
-### Key Data Structures
+- **Persistence (`src/database/fileManager.py`)**  
+  - `Savable` mixin standardizes `.save()`/`.load()` conversions to JSON through helper methods.  
+  - `FileManager` offers read/write utilities for JSON blobs and `Savable` instances with consistent UTF-8 encoding.
 
-#### Session Management
+- **Configuration (`src/core/settings.py`)**  
+  - `GameConfig` governs world size, vision radius, turn counts, and ensures save/data directories exist.  
+  - `AIConfig` captures API keys, default models, temperature settings, and the canonical schema instruction appended to AI prompts.
+
+## Setup
+
+### Prerequisites
+- Python 3.10+ (LangChain providers currently target modern Python releases)
+- Access to at least one supported LLM provider (OpenAI or Anthropic)
+
+### Installation
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate        # Windows PowerShell
+pip install -r requirements.txt
+```
+Environment Variables
+Configure provider credentials before running anything that hits an external API:
+
+OPENAI_API_KEY
+CLAUDE_API_KEY
+Optional overrides (if you extend AIConfig) can be introduced via additional env vars or by editing settings.py.
+
+Running the Game Loop
+There is no CLI entry point yet. To experiment:
+
 ```python
-@dataclass
-class Session:
-    id: str
-    ai_service: list[AiServicesBase]
-    history: list[Action]
+
+from src.app.Game import Game
+
+player_info = {"player-1": {"position": [0, 0], "UID": "player-1"}}
+game = Game(player_info)
+
+# For demonstration; real usage should persist state and handle DM verdicts.
+game.step()
+
 ```
 
-#### Action System
-```python
-@dataclass
-class Action:
-    id: str
-    message: str
-    functions: list[function]
-    response: str
-    done: bool
-    error: str
-    success: bool
-    game_state: GameState
-    next_game_state: GameState
-    ai_service: AiServicesBase
-    timestamp: str
+You will need valid API keys for whichever models you target, since DungeonMaster and Player both defer to AIWrapper.ask.
+
+Testing
+The testing/ directory contains exploratory scripts:
+
+testing/test_parser.py exercises the response parser against canned responses, no API calls required.
+testing/test_openai_integration.py demonstrates structured output parsing for OpenAI; it skips live calls if OPENAI_API_KEY isn’t set.
+Execute them with:
+
+```bash
+
+python testing/test_parser.py
+python testing/test_openai_integration.py
+(Expect the OpenAI integration script to fail gracefully when API keys are absent or incompatible with the configured model/structured-output flow.)
 ```
 
-#### Game State
-```python
-@dataclass
-class GameState:
-    id: str
-    state: dict
-    x: int
-    y: int
-```
+Project Status
+✅ Modular service-oriented architecture (Game/Dungeon Master/Player abstractions)
+✅ Unified AI service wrapper with LangChain providers
+✅ Response parsing pipeline + schemas
+✅ Persistence helpers via Savable + FileManager
+🔄 Game verdict handling (Game.handle_verdict) still needs implementation
+🔄 Environment/session management scaffolds (stateServices/GameState.py, SessionHandler.py, EnviormentHandler.py) are empty
+🔄 AI services reference config attributes (openai_max_tokens, claude_max_tokens, *_timeout) that are not yet defined in AIConfig
+🔄 Error handling, validation, and story/event orchestration remain rudimentary
+🔄 Automated test coverage is limited to parser and integration demos
+Roadmap
+Flesh out GameState, session orchestration, and environment services to support multi-session persistence and richer tile mechanics.
+Finalize verdict handling in Game.handle_verdict, ensuring player stats and tile descriptions update coherently.
+Align AIConfig with the parameters expected by AI service implementations (token limits, timeouts, retries).
+Introduce robust exception handling and retry/backoff logic across AI calls.
+Build a CLI or web driver so humans can monitor sessions or play alongside agents.
+Expand automated testing: mock AI services, validate persistence, and cover the async turn cycle.
+Document sample scenarios and provide scripted demonstrations using stubbed AI responses for offline testing.
+Reference Materials
+Design brief: data/Agentic AI Master File.txt
+Notes and TODOs: inline comments within src/app/Game.py, Player.py, and service stubs
+This README reflects repository contents as of October 2025; update it alongside future refactors to keep onboarding smooth.
 
-### Configuration System
-The project includes a robust configuration system with:
-- **GameConfig**: Game mechanics (max turns, world size, starting stats)
-- **AIConfig**: AI service settings (API keys, models, temperature)
-- Environment variable support for sensitive data
-- Automatic directory creation for saves and data
 
-### Current Development State
-- ✅ **Architecture**: Well-structured service-oriented design
-- ✅ **Configuration**: Comprehensive settings management
-- ✅ **Data Models**: Core data structures defined
-- ✅ **AI Integration**: Base classes and service interfaces ready
-- 🔄 **Implementation**: Core methods need completion (AI service implementations, game loop)
-- 🔄 **Testing**: No test suite currently implemented
-- 🔄 **Documentation**: Basic structure in place, needs expansion
-
-### Technical Dependencies
-- Python dataclasses for clean data modeling
-- Environment variable management for API keys
-- Modular design supporting multiple AI providers
-- Session-based state management with action history
-
-## Next Steps
-- Complete AI service implementations in `src/services/aiServices/`
-- Implement the game loop and turn orchestration in `src/app/Game.py`
-- Finish the persistence layer in `src/app/FileManager.py`
-- Add comprehensive error handling and validation
-- Implement automated testing suite
-- Create example scenarios and gameplay documentation

@@ -3,19 +3,20 @@
 import openai
 from typing import Optional
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import MessagesPlaceholder, HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel
 from ..AiServicesBase import AiServicesBase
 from ...core.settings import ai_config
 import uuid
+import inspect
 
 class OpenAiService(AiServicesBase):
 
     llm: ChatOpenAI
     chat_prompt: ChatPromptTemplate
 
-    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "gpt-4o", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
+    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "gpt-4.1-nano", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
         """
         Initialize the OpenAI service.
         Args:
@@ -110,8 +111,8 @@ class OpenAiService(AiServicesBase):
     def ask_ai_response_with_structured_output(self, message: str, structured_output_class: BaseModel) -> Optional[str]:
         """Get AI response from OpenAI API with structured output, system prompt and chat history"""
 
-        if BaseModel.model_validate(structured_output_class) is None:
-            raise ValueError("Structured output class is not valid")
+        if not (inspect.isclass(structured_output_class) and issubclass(structured_output_class, BaseModel)):
+            raise TypeError("structured_output_class must be a subclass of pydantic.BaseModel")
 
         try:
             # Convert history to LangChain message format
