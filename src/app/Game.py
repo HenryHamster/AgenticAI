@@ -33,12 +33,12 @@ class Game(Savable):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
         for _ in range(GameConfig.num_responses):
-            player_responses = [
-                self.players[UID].get_action({"tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
+            player_responses = {
+                UID: self.players[UID].get_action({"Self":self.players[UID].save(), "Players (excluding self)": {id: self.players[id].save() for id in sorted_uids if id != UID}, "tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
                               "verdict": verdict, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
-            ]
-            verdict = self.dm.respond_actions({"Responses": player_responses, "Verdict": verdict})    
+            }
+            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
         self.handle_verdict(verdict)
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
@@ -83,6 +83,7 @@ class Game(Savable):
             for y in range(-vision+x,vision-x+1):
                 tiles.append(self.get_tile((position[0]+x,position[1]+y)))
         return tiles
+    
     def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
         return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
     def handle_verdict(self, verdict: GameResponse | dict | str | None):

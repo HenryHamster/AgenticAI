@@ -7,15 +7,15 @@ from src.core.settings import AIConfig
 from typing import override
 class DungeonMaster(Savable):
     model:str
-    def __init__(self, model: str = "gpt-4o", loaded_data: dict | None = None):
+    def __init__(self, model: str = "gpt-4.1-nano", loaded_data: dict | None = None):
         self.model = model
         if loaded_data is not None:
             self.load(loaded_data)
-    def generate_tile(self, position:tuple[int,int] = (0,0)):
-        generated_description = AIWrapper.ask(format_request("", {"position": position}), self.model, "DungeonMaster")
+    def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None) -> Tile:
+        generated_description = AIWrapper.ask(format_request(AIConfig.tile_prompt, {"position": position}), self.model, "DungeonMaster")
         return Tile(generated_description, position)
     def update_tile(self, tile: Tile, event: str):
-        tile.update_description(AIWrapper.ask(format_request("", {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
+        tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
     def respond_actions(self, info: dict) -> GameResponse:
         structured_response = AIWrapper.ask(
             format_request(AIConfig.dm_prompt, info), 
