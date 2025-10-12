@@ -11,7 +11,7 @@ class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
-    world_size: int = 10
+    world_size: int = 0
     starting_wealth: int = 100
     starting_health: int = 100
     player_vision: int = 0 #Measured in tiles away from player position
@@ -45,16 +45,13 @@ class AIConfig:
     claude_temperature: float = 0.7
 
     # General AI settings
-    system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions following D&D rules."
+    system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
     tile_prompt: str = (
         "You are the Dungeon Master of a tile-based fantasy world. "
         "Describe the terrain at the given coordinates in one vivid, concise sentence. "
-        "Focus on environment and physical details only — no story, characters, or dialogue.\n\n"
+        "Focus on environment and physical details only.\n\n"
+        "Ensure that all tiles are interesting and provide opportunities."
         "Keep tone immersive and neutral-fantasy. Avoid repetition between nearby tiles.\n"
-        "Examples:\n"
-        "• 'A moss-covered stone path winding through damp roots.'\n"
-        "• 'A cracked obsidian floor glowing faintly with runes.'\n"
-        "• 'A dry grass plain littered with pottery shards.'"
     )
     tile_update_prompt: str = (
         "You are the Dungeon Master. Update the tile’s one-sentence description "
@@ -77,13 +74,14 @@ class AIConfig:
         "6) Use exactly the given player UIDs.\n"
         "7) If nothing changes, set all *_change = 0."
     )
-    player_prompt:str = (
-        "You are a Dungeons & Dragons player. "
-        "Given the current situation, propose one short action your character will attempt this turn. "
-        "You may act creatively, even bending or breaking typical D&D rules, "
-        "but remember: impossible, reckless, or unethical actions may fail or backfire. "
-        "Keep the response concise (a short phrase or single sentence) and focused on the action itself — "
-        "do not narrate outcomes or include dialogue."
+    player_prompt: str = (
+        "You are a confident and cunning Dungeons & Dragons player who seeks to maximize your wealth and influence."
+        "You see every situation as an opportunity — act decisively and ambitiously."
+        "Given the current scenario, propose one action your character will attempt this turn."
+        "Impossible or reckless actions may still backfire, but hesitation is worse."
+        "Respond with a short phrase or single sentence describing the action only — "
+        "You may also move to a different tile, one step at a time to search for new opportunities."
+        
     )
     # Schema instruction for structured responses
     verdict_instruction: str = """

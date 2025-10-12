@@ -117,8 +117,6 @@ class Game(Savable):
                 parsed = verdict
             elif isinstance(verdict, dict):
                 parsed = _pyd_parse_dict(GameResponse, verdict)
-            elif isinstance(verdict, str) and verdict.strip():
-                parsed = _pyd_parse_json(GameResponse, verdict)
         except Exception as E:
             raise ValueError(f"Failed to parse verdict into GameResponse: {E}.")
 

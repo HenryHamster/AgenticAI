@@ -35,7 +35,7 @@ class PlayerValues(Savable):
         self.health = loaded_data["health"]
 
 PLAYER_CLASSES = {
-    "human" : PlayerClass("human","Just an average human being.")
+    "human" : PlayerClass("human","A confident, exceptionally powerful human being.")
 }
 
 class Player(Savable):
