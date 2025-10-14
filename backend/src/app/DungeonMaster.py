@@ -7,8 +7,10 @@ from src.core.settings import AIConfig
 from typing import override
 class DungeonMaster(Savable):
     model:str
+    _responses: list[str]
     def __init__(self, model: str = "gpt-4.1-nano", loaded_data: dict | None = None):
         self.model = model
+        self._responses = []
         if loaded_data is not None:
             self.load(loaded_data)
     def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None) -> Tile:
@@ -23,7 +25,10 @@ class DungeonMaster(Savable):
             "DungeonMaster", 
             structured_output = GameResponse
             )
+        self._responses.append(str(structured_response))
         return structured_response
+    def get_responses_history(self) -> list[str]:
+        return self._responses
     @override
     def save(self):
         return Savable.toJSON({"model": self.model})
