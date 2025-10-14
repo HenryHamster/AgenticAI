@@ -4,7 +4,7 @@ from ..AiServicesBase import AiServicesBase
 from .openai import OpenAiService
 from .mock import MockAiService
 from .claude import ClaudeService
-from ...core.settings import ai_config
+from core.settings import ai_config
 import uuid
 import inspect
 import sys, traceback

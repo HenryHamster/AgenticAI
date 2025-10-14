@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import override
-from src.database.fileManager import Savable
-from src.core.settings import AIConfig, GameConfig
-from src.app.Utils import format_request
+from database.fileManager import Savable
+from core.settings import AIConfig, GameConfig
+from src.services.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from src.services.AiServicesBase import AiServicesBase
 

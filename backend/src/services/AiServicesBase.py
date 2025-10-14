@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from abc import abstractmethod
 from pydantic import BaseModel, create_model, Field
 from typing import Optional, Dict, Any, Type, Union, List
-from src.services.stateServices.Action import Action
 import json
 
 @dataclass
@@ -21,11 +20,11 @@ class AiServicesBase:
         self.system_prompt = system_prompt
 
     @abstractmethod
-    def ask_ai_response(self, action: Action):
+    def ask_ai_response(self, message: str):
         raise NotImplementedError("ask_ai_response method not implemented")
 
     @abstractmethod
-    def ask_ai_response_with_structured_output(self, action: Action, structured_output_class: BaseModel):
+    def ask_ai_response_with_structured_output(self, message: str, structured_output_class: BaseModel):
         """
         Ask the AI service to respond with a structured output. Example:
         class Joke(BaseModel):
@@ -39,7 +38,7 @@ class AiServicesBase:
         raise NotImplementedError("ask_ai_response_with_structured_output method not implemented")
 
     @abstractmethod
-    def ask_isolated_ai_response(self, action: Action):
+    def ask_isolated_ai_response(self, message: str):
         raise NotImplementedError("ask_isolated_ai_response method not implemented")
 
     @abstractmethod

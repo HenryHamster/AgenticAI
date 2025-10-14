@@ -12,14 +12,21 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# append the parent directory to the path BEFORE imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+load_dotenv()
 
 # Imports from your project
 from src.app.Game import Game
 from src.app.Player import Player
 from src.app.DungeonMaster import DungeonMaster
 from src.services.aiServices.wrapper import AIWrapper
-from src.database.fileManager import Savable
+from database.fileManager import Savable
 
 
 # ------------------ Verbose printing helper ------------------
