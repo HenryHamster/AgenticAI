@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel
 from ..AiServicesBase import AiServicesBase
-from ...core.settings import ai_config
+from core.settings import ai_config
 import uuid
 import inspect
 

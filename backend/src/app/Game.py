@@ -1,13 +1,13 @@
 #Handles game logic and loop
 from src.app.Player import Player
 from src.app.Tile import Tile
-from src.database.fileManager import FileManager, Savable
+from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import json
-from src.services.responseParser.dataModels import GameResponse, CharacterState, WorldState
+from schema.dataModels import GameResponse, CharacterState, WorldState
 import asyncio
-from src.core.settings import GameConfig
+from core.settings import GameConfig
 
 class Game(Savable):
     players: dict[str,Player]
