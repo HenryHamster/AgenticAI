@@ -50,7 +50,9 @@ class Game(Savable):
         return Savable.toJSON({
             "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
             "dm": Savable.fromJSON(self.dm.save()),                         # dict
-            "tiles": [t.to_dict() for t in self.tiles.values()]
+            "tiles": [t.to_dict() for t in self.tiles.values()],
+            "player_responses": {UID: self.players[UID].get_responses_history()[-1] for UID in self.players.keys()},
+            "dungeon_master_verdict": self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
         })
     
     @override
@@ -86,6 +88,15 @@ class Game(Savable):
     
     def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
         return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
+    def _get_responses_at_frame(self, frame:int) -> dict[str,str]:
+        responses = {}
+        for uid, player in self.players.items():
+            hist = player.get_responses_history()
+            if hist and len(hist) > frame:
+                responses[uid] = hist[frame]
+        if self.dm._responses and len(self.dm._responses) > frame:
+            responses["DM"] = self.dm._responses[frame]
+        return responses
     def handle_verdict(self, verdict: GameResponse | dict | str | None):
         """
         Apply a DM verdict to game state.
