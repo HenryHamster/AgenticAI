@@ -13,7 +13,7 @@ import asyncio
 import json
 import os
 from typing import Dict, Any
-
+from datetime import datetime
 # Imports from your project
 from src.app.Game import Game
 from src.app.Player import Player
@@ -70,6 +70,7 @@ def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
     Run the game for the specified number of rounds, emitting step-by-step
     updates when verbose printing is enabled.
     """
+    game_index = datetime.now().strftime("%d_%H%M%S")
     for r in range(1, rounds + 1):
         vprint.banner(f"Round {r}/{rounds} — begin")
         try:
@@ -84,47 +85,49 @@ def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
                     last=len(player.get_responses_history() or []),
                 )
 
-            vprint("Executing game.step() …")
+            vprint(f"Executing game.step() {r} …")
             game.step()
 
-            vprint("Post-step updates:")
-            for uid, player in sorted(game.get_all_players().items()):
-                pos = player.get_position()
-                hist = player.get_responses_history()
-                last = hist[-1] if hist else "(no response)"
-                vprint.kv(
-                    uid=uid,
-                    position=pos,
-                    money=getattr(player.values, "money", "?"),
-                    health=getattr(player.values, "health", "?"),
-                    last_response=last,
-                )
-
+            # vprint("Post-step updates:")
+            # for uid, player in sorted(game.get_all_players().items()):
+            #     pos = player.get_position()
+            #     hist = player.get_responses_history()
+            #     last = hist[-1] if hist else "(no response)"
+            #     vprint.kv(
+            #         uid=uid,
+            #         position=pos,
+            #         money=getattr(player.values, "money", "?"),
+            #         health=getattr(player.values, "health", "?"),
+            #         last_response=last,
+            #     )
             vprint.banner(f"Round {r}/{rounds} — end")
+            save_game_to_file(game, path=f"data/game_save_{game_index}.json")
+            save_game_to_file(game, path=f"data/rounds/rounds_game_save_{r}_{game_index}.json")
 
         except Exception as e:
             print(f"[ERROR] Exception during game step: {e}")
             raise
 
 
-def save_game_to_file(game: Game, path: str = "game_save.json"):
-    try:
-        payload = game.save()
-        if isinstance(payload, str):
-            try:
-                obj = Savable.fromJSON(payload)
-            except Exception:
-                with open(path, "w", encoding="utf-8") as f:
-                    f.write(payload)
-                print(f"Saved raw game string to {path}")
-                return
-        else:
-            obj = payload
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(obj, f, indent=2)
-        print(f"Game saved to {path}")
-    except Exception as e:
-        print(f"[WARN] Failed to save game: {e}")
+def save_game_to_file(game: "Game", path: str = "data/game_save.json") -> None:
+    # Materialize current game's JSON object (keep this simple)
+    payload = game.save()
+    obj = json.loads(payload) if isinstance(payload, str) else payload
+
+    # Ensure parent directory exists
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+
+    if os.path.exists(path):
+        # Assume: file contains a clean JSON list of timestep-indexed dicts
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.append(obj)
+    else:
+        data = [obj]
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 
 
 def parse_args():
