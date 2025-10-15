@@ -14,7 +14,8 @@ class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
-    world_size: int = 0
+
+    world_size: int = 1
     starting_wealth: int = 100
     starting_health: int = 100
     player_vision: int = 0 #Measured in tiles away from player position
