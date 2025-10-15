@@ -1,5 +1,5 @@
 from src.database.fileManager import Savable
-from typing import override, overload
+from typing import overload
 class Tile(Savable):
     position: tuple[int,int]
     description: str #Just a basic string
@@ -8,7 +8,6 @@ class Tile(Savable):
         self.position = position
     def update_description(self, new_description: str):
         self.description = new_description
-    @override
     def to_dict(self) -> dict:
         return {
             "position": [self.position[0], self.position[1]], #Store as list for JSON compatibility
@@ -23,12 +22,10 @@ class Tile(Savable):
             description=data.get("description", ""),
             position=(int(pos_list[0]), int(pos_list[1]))
         )
-    @override
     def save(self) -> str:
         # Store position as a list (JSON doesn't support tuples)
         return Savable.toJSON(self.to_dict())
 
-    @override
     def load(self, loaded_data: dict | str):
         if isinstance(loaded_data, str):
             loaded_data = Savable.fromJSON(loaded_data)

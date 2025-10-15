@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import override
 from src.database.fileManager import Savable
 from src.core.settings import AIConfig, GameConfig
 from src.app.Utils import format_request
@@ -25,10 +24,8 @@ class PlayerValues(Savable):
             raise ValueError("Money is below zero.")
     def update_health(self, change: int):
         self.health = max(self.health+change,0)
-    @override
     def save(self) -> str:
         return Savable.toJSON({"money": self.money, "health": self.health})
-    @override
     def load(self,loaded_data:str | dict):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
         self.money = loaded_data["money"]
@@ -81,7 +78,6 @@ class Player(Savable):
         self.position = (self.position[0]+change[0],self.position[1]+change[1])
     #endregion
 
-    @override
     def save(self) -> str:
         data = {
             "position": list(self.position),  # JSON-friendly
@@ -92,7 +88,6 @@ class Player(Savable):
 #            "responses": list(getattr(self, "_responses", [])),
         }
         return Savable.toJSON(data)
-    @override
     def load(self, loaded_data: dict | str):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
         self.position = tuple(loaded_data.get("position", (0, 0)))

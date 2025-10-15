@@ -3,7 +3,6 @@ from src.app.Player import Player
 from src.app.Tile import Tile
 from src.database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
-from typing import override
 import json
 from src.services.responseParser.dataModels import GameResponse, CharacterState, WorldState
 import asyncio
@@ -30,22 +29,22 @@ class Game(Savable):
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-GameConfig.world_size, GameConfig.world_size + 1) for j in range(-GameConfig.world_size, GameConfig.world_size + 1)}
     def step(self):
-        player_responses, verdict = [], ""
+        player_responses, verdict, narrative = {}, None, ""
         sorted_uids = sorted(self.players.keys())
         for _ in range(GameConfig.num_responses):
             player_responses = {
                 UID: self.players[UID].get_action({"Self":self.players[UID].save(), "Players (excluding self)": {id: self.players[id].save() for id in sorted_uids if id != UID}, "tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
-                              "verdict": verdict, "uid": UID, "position": self.players[UID].position})
+                              "narrative": narrative, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
             }
-            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
+            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Narrative": narrative})
+            narrative = getattr(verdict, "narrative", "") if verdict else ""
         self.handle_verdict(verdict)
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
         return tile.to_dict()
     
-    @override
     def save(self) -> str:
         return Savable.toJSON({
             "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
@@ -53,7 +52,6 @@ class Game(Savable):
             "tiles": [t.to_dict() for t in self.tiles.values()]
         })
     
-    @override
     def load(self, loaded_data: dict | str):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
         self.players = {}

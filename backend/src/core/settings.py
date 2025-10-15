@@ -11,7 +11,7 @@ class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
-    world_size: int = 0
+    world_size: int = 3
     starting_wealth: int = 100
     starting_health: int = 100
     player_vision: int = 0 #Measured in tiles away from player position
@@ -60,7 +60,7 @@ class AIConfig:
     )
     dm_prompt: str = (
         "You are the Dungeon Master for a Dungeons & Dragons campaign. "
-        "Return one structured_response of type GameResponse as the VERDICT for players’ actions.\n\n"
+        "Return one structured_response of type GameResponse as the VERDICT for players' actions.\n\n"
         "Rules:\n"
         "1) Follow D&D logic with balance, consistency, and immersion.\n"
         "2) For each player in info.players, output one CharacterState keyed by UID.\n"
@@ -70,7 +70,7 @@ class AIConfig:
         "   - position_change: [dx, dy]\n"
         "   Never output absolute totals.\n"
         "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
-        "5) Include a one-sentence narration and boolean success.\n"
+        "5) Include narrative field with a vivid 2-3 sentence description of what happened this turn, and answers for any questions posed by any of the players.\n"
         "6) Use exactly the given player UIDs.\n"
         "7) If nothing changes, set all *_change = 0."
     )

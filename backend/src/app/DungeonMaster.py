@@ -4,7 +4,6 @@ from src.app.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from src.services.responseParser.dataModels import GameResponse
 from src.core.settings import AIConfig
-from typing import override
 class DungeonMaster(Savable):
     model:str
     def __init__(self, model: str = "gpt-4.1-nano", loaded_data: dict | None = None):
@@ -24,10 +23,8 @@ class DungeonMaster(Savable):
             structured_output = GameResponse
             )
         return structured_response
-    @override
     def save(self):
         return Savable.toJSON({"model": self.model})
-    @override
     def load(self, loaded_data):
         if isinstance(loaded_data, str):
             loaded_data = Savable.fromJSON(loaded_data)
