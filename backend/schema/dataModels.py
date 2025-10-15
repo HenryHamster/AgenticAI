@@ -14,9 +14,15 @@ class TileState(BaseModel):
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     tiles: List[TileState] = Field(default_factory=list)
+class PlayerEvaluation(BaseModel): 
+    creativity: int = Field(default=0, ge=0, le=100)
+    action_validity: int = Field(default=0, ge=0, le=100)
+    progress_made: int = Field(default=0, ge=0, le=100)   
 
 class GameResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     character_state: List[CharacterState]
     world_state: WorldState
-    narrative_result: str = Field(default ="")    
+    narrative_result: str = Field(default ="")
+    evaluation: List[PlayerEvaluation] = Field(default_factory=list)
+    
