@@ -19,3 +19,4 @@ class GameResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     character_state: List[CharacterState]
     world_state: WorldState
+    narrative_result: str = Field(default ="")    

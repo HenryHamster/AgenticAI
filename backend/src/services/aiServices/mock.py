@@ -44,7 +44,8 @@ class MockAiService(AiServicesBase):
                 {"uid": "player0", "position_change": [1, 0], "money_change": 2, "health_change": -2},
                 {"uid": "player1", "position_change": [0, -1], "money_change": 5, "health_change": 1},
             ],
-            "world_state": {"tiles": []}
+            "world_state": {"tiles": []},
+            "narrative_result": "[MOCK] This is a mock narrative."
         }
 
         try:
