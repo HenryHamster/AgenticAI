@@ -13,6 +13,7 @@ class Savable:
     @staticmethod
     def fromJSON(data: str) -> dict:
         return FileManager.fromJSON(data)
+        
 class FileManager:
     FILE_ENCODING = "utf-8"
     def writeToFile(self, file_name: str, contents: str):
