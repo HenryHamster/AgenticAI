@@ -246,7 +246,7 @@ def example_6_turn_tracking():
     print(f"Found {len(turns)} turns")
     
     for turn in turns:
-        print(f"  Turn {turn.turn_number}: {turn.verdict}")
+        print(f"  Turn {turn.turn_number}: created at {turn.created_at}")
     
     # Load game state from turn 3
     print("\nLoading game state from turn 3...")
@@ -293,7 +293,6 @@ def example_7_turn_replay():
         game_state = repo.load_game_from_turn(session_id, turn_num)
         
         print(f"\nTurn {turn_num}:")
-        print(f"  Verdict: {turn.verdict}")
         print(f"  Timestamp: {turn.created_at}")
         
         # Show player states

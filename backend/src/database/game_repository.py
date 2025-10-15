@@ -33,6 +33,9 @@ class GameRepository:
         """
         Save a Game instance to the database.
         
+        If session_id is provided, updates the game state by saving a new turn (turn 0).
+        Otherwise, creates a new session and saves the initial state as turn 0.
+        
         Args:
             game: Game instance to save
             session_name: Optional name for the game session
@@ -51,13 +54,32 @@ class GameRepository:
                 if game_session is None:
                     raise ValueError(f"Game session with id {session_id} not found")
                 
-                # Update the game state
+                # Update the game state by saving/updating turn 0
                 game_state_json = game.save()
-                game_session.game_state = game_state_json
+                game_state_dict = json.loads(game_state_json)
+                
+                # Check if turn 0 exists
+                turn_0 = db_session.query(Turn).filter(
+                    Turn.game_session_id == session_id,
+                    Turn.turn_number == 0
+                ).first()
+                
+                if turn_0:
+                    # Update existing turn 0
+                    turn_0.game_state = game_state_json
+                    turn_0.created_at = datetime.utcnow()
+                else:
+                    # Create turn 0
+                    turn_0 = Turn(
+                        game_session_id=session_id,
+                        turn_number=0,
+                        game_state=game_state_json
+                    )
+                    db_session.add(turn_0)
+                
                 game_session.updated_at = datetime.utcnow()
                 
                 # Update metadata from the state
-                game_state_dict = json.loads(game_state_json)
                 if "players" in game_state_dict:
                     game_session.num_players = len(game_state_dict["players"])
                 
@@ -68,11 +90,19 @@ class GameRepository:
                 
                 game_session = GameSession(
                     name=session_name,
-                    game_state=game_state_json,
                     turn_count=0,
                     num_players=len(game_state_dict.get("players", {}))
                 )
                 db_session.add(game_session)
+                db_session.flush()  # Get the ID
+                
+                # Save initial state as turn 0
+                turn_0 = Turn(
+                    game_session_id=game_session.id,
+                    turn_number=0,
+                    game_state=game_state_json
+                )
+                db_session.add(turn_0)
             
             db_session.flush()  # Ensure ID is generated
             db_session.refresh(game_session)  # Load all attributes
@@ -83,6 +113,8 @@ class GameRepository:
         """
         Load a Game instance from the database.
         
+        Loads the game state from the latest turn (or turn 0 if no other turns exist).
+        
         Args:
             session_id: ID of the game session to load
             
@@ -90,7 +122,7 @@ class GameRepository:
             Game instance
             
         Raises:
-            ValueError: If session not found
+            ValueError: If session not found or no turns exist
         """
         with self.db_manager.session_scope() as db_session:
             game_session = db_session.query(GameSession).filter(
@@ -100,8 +132,16 @@ class GameRepository:
             if game_session is None:
                 raise ValueError(f"Game session with id {session_id} not found")
             
-            # Parse the game state
-            game_state_dict = json.loads(game_session.game_state)
+            # Load from the latest turn
+            latest_turn = db_session.query(Turn).filter(
+                Turn.game_session_id == session_id
+            ).order_by(Turn.turn_number.desc()).first()
+            
+            if latest_turn is None:
+                raise ValueError(f"No turns found for game session {session_id}")
+            
+            # Parse the game state from the turn
+            game_state_dict = json.loads(latest_turn.game_state)
             
             # Extract player and dm info
             player_info = game_state_dict.get("players", {})

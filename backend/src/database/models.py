@@ -33,10 +33,6 @@ class GameSession(Base):
         onupdate=datetime.utcnow
     )
     
-    # Game state as JSON blob
-    # This will contain: {"players": {...}, "dm": {...}, "tiles": [...]}
-    game_state: Mapped[str] = mapped_column(Text, nullable=False)
-    
     # Optional metadata fields
     turn_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     num_players: Mapped[Optional[int]] = mapped_column(Integer, default=0)
