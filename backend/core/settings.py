@@ -5,12 +5,16 @@ import os
 from dataclasses import dataclass
 from typing import Dict, Any
 from typing import Final
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass
 class GameConfig:
     """Game configuration settings"""
     # Game mechanics
     max_turns: int = 100
+
     world_size: int = 1
     starting_wealth: int = 100
     starting_health: int = 100

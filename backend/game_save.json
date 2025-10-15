@@ -1,0 +1,277 @@
+[
+  {
+    "players": {
+      "player0": {
+        "position": [
+          0,
+          0
+        ],
+        "UID": "player0",
+        "model": "gpt-4.1-nano",
+        "player_class": "human",
+        "values": {
+          "money": 0,
+          "health": 100
+        }
+      },
+      "player1": {
+        "position": [
+          0,
+          0
+        ],
+        "UID": "player1",
+        "model": "gpt-4.1-nano",
+        "player_class": "human",
+        "values": {
+          "money": 0,
+          "health": 100
+        }
+      }
+    },
+    "dm": {
+      "model": "gpt-4.1-nano"
+    },
+    "tiles": [
+      {
+        "position": [
+          0,
+          0
+        ],
+        "description": "The tile at (0, 0) is a sun-drenched marshland with jagged reeds and scattered, moss-covered stones, promising hidden secrets beneath its shimmering surface."
+      }
+    ],
+    "player_responses": {
+      "player0": "I draw a small, enchanted mirror from my pack and carefully toss it into the marsh, aiming to reveal hidden treasures or dangers beneath the surface.",
+      "player1": "I quickly scout the surrounding tiles, looking for a promising route to a treasure or a hidden passage—then I prepare to move east to investigate further."
+    },
+    "dungeon_master_verdict": "None"
+  },
+  {
+    "players": {
+      "player0": {
+        "position": [
+          0,
+          0
+        ],
+        "UID": "player0",
+        "model": "gpt-4.1-nano",
+        "player_class": "human",
+        "values": {
+          "money": 0,
+          "health": 100
+        }
+      },
+      "player1": {
+        "position": [
+          0,
+          0
+        ],
+        "UID": "player1",
+        "model": "gpt-4.1-nano",
+        "player_class": "human",
+        "values": {
+          "money": 0,
+          "health": 100
+        }
+      }
+    },
+    "dm": {
+      "model": "gpt-4.1-nano"
+    },
+    "tiles": [
+      {
+        "position": [
+          0,
+          0
+        ],
+        "description": "At the origin (0,0), a lush, emerald-green glade is nestled amidst towering, ancient oaks whose twisted branches form a natural canopy, while a shimmering, crystal-clear spring burbles softly at its center, inviting exploration and offering resources."
+      }
+    ],
+    "player_responses": {
+      "player0": "I draw my dagger and stealthily investigate the spring for hidden valuables or concealed exits.",
+      "player1": "I quietly search the roots of the ancient oak for buried treasure or hidden valuables."
+    },
+    "dungeon_master_verdict": ""
+  },
+  {
+    "id": "default_game",
+    "name": "Untitled Game",
+    "description": "",
+    "status": "active",
+    "game_state": {
+      "players": {
+        "player0": {
+          "uid": "player0",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "I will carefully examine the rune-carved stones for hidden valuables or magical traps."
+          ]
+        },
+        "player1": {
+          "uid": "player1",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "I will uncover one of the rune-carved stones to see if it hides any treasure or secret passage."
+          ]
+        }
+      },
+      "dm": {
+        "responses": []
+      },
+      "tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "description": "At the origin (0,0), a dense, moss-covered grove surrounds a shimmering, crystal-clear pond, its banks dotted with ancient, rune-carved stones that hint at forgotten rituals."
+        }
+      ],
+      "player_responses": {
+        "player0": "I will carefully examine the rune-carved stones for hidden valuables or magical traps.",
+        "player1": "I will uncover one of the rune-carved stones to see if it hides any treasure or secret passage."
+      },
+      "dungeon_master_verdict": ""
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "default_game",
+    "name": "Untitled Game",
+    "description": "",
+    "status": "active",
+    "game_state": {
+      "players": {
+        "player0": {
+          "uid": "player0",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Dig fiercely at the mossy ground, searching for hidden riches beneath."
+          ]
+        },
+        "player1": {
+          "uid": "player1",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
+          ]
+        }
+      },
+      "dm": {
+        "responses": []
+      },
+      "tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "description": "The tile at (0, 0) features a secluded, moss-covered clearing encircled by ancient, towering oaks whose gnarled roots weave through a carpet of vibrant wildflowers, hinting at hidden treasures beneath the soil."
+        }
+      ],
+      "player_responses": {
+        "player0": "Dig fiercely at the mossy ground, searching for hidden riches beneath.",
+        "player1": "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
+      },
+      "dungeon_master_verdict": ""
+    },
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": "default_game",
+    "name": "Untitled Game",
+    "description": "",
+    "status": "active",
+    "game_state": {
+      "players": {
+        "player0": {
+          "uid": "player0",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "I will carefully examine the shimmering pools for hidden valuables or potential leverage."
+          ]
+        },
+        "player1": {
+          "uid": "player1",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": []
+        }
+      },
+      "dm": {
+        "responses": []
+      },
+      "tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "description": "A lush, emerald meadow cradled by ancient oaks, dotted with shimmering pools and hidden burrows, offering abundant resources and secret passages."
+        }
+      ],
+      "player_responses": {
+        "player0": "I will carefully examine the shimmering pools for hidden valuables or potential leverage.",
+        "player1": ""
+      },
+      "dungeon_master_verdict": ""
+    },
+    "created_at": null,
+    "updated_at": null
+  }
+]

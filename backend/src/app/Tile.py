@@ -1,5 +1,8 @@
 from database.fileManager import Savable
 from typing import override, overload
+from schema.tileModel import TileModel
+from lib.database.tileService import save_tile_to_database, load_tile_from_database
+
 class Tile(Savable):
     position: tuple[int,int]
     description: str #Just a basic string
@@ -25,13 +28,43 @@ class Tile(Savable):
         )
     @override
     def save(self) -> str:
-        # Store position as a list (JSON doesn't support tuples)
-        return Savable.toJSON(self.to_dict())
+        # Create TileModel for validation
+        tile_data = {
+            "position": list(self.position),
+            "description": self.description
+        }
+        
+        # Validate with TileModel
+        tile_model = TileModel(**tile_data)
+        
+        # Save to database using lib function
+        saved_id = save_tile_to_database(tile_model)
+        
+        # Return JSON string for compatibility
+        return Savable.toJSON(tile_model.model_dump())
 
     @override
-    def load(self, loaded_data: dict | str):
-        if isinstance(loaded_data, str):
-            loaded_data = Savable.fromJSON(loaded_data)
-        obj = Tile.from_dict(loaded_data)
-        self.description = obj.description
-        self.position = obj.position
+    def load(self, loaded_data: dict | str | None = None, tile_id: str | None = None):
+        # If tile_id is provided, load from database using lib function
+        if tile_id:
+            try:
+                tile_model = load_tile_from_database(tile_id)
+            except ValueError as e:
+                raise ValueError(f"Failed to load tile {tile_id}: {str(e)}")
+        else:
+            # Handle string input
+            if isinstance(loaded_data, str):
+                loaded_data = Savable.fromJSON(loaded_data)
+            
+            if not loaded_data:
+                raise ValueError("No data provided to load")
+            
+            # Validate with TileModel
+            try:
+                tile_model = TileModel(**loaded_data)
+            except Exception as e:
+                raise ValueError(f"Invalid tile data format: {str(e)}")
+        
+        # Load properties
+        self.position = tuple(tile_model.position)
+        self.description = tile_model.description
