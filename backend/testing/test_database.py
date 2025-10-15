@@ -26,7 +26,7 @@ def test_database_creation():
     print("\n=== Test 1: Database Creation ===")
     
     # Use a test database
-    test_db_path = "data/test_game_state.db"
+    test_db_path = "testing/test_game_state.db"
     
     # Remove old test db if exists
     if os.path.exists(test_db_path):
@@ -290,7 +290,6 @@ def test_turn_tracking(db_manager):
             game,
             session_id=session_id,
             turn_number=turn_num,
-            verdict=f"Turn {turn_num} completed successfully"
         )
         print(f"✓ Saved turn {turn_num} (ID: {turn.id})")
     
@@ -362,7 +361,7 @@ def test_turn_relationship(db_manager):
     
     # Add turns
     for i in range(1, 4):
-        repo.save_turn(game, session.id, i, verdict=f"Turn {i}")
+        repo.save_turn(game, session.id, i)
     
     # Verify relationship via SQLAlchemy
     with db_manager.session_scope() as db_session:

@@ -1,6 +1,6 @@
 openai==1.109.1
 anthropic>=0.7.0
-dotenv>=0.9.9
+python-dotenv>=0.9.9
 typing_extensions>=4.15.0
 langchain-openai==0.3.33
 langchain-core>=0.3.0

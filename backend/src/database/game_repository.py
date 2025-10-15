@@ -273,7 +273,6 @@ class GameRepository:
                 game_session_id=session_id,
                 turn_number=turn_number,
                 game_state=game_state_json,
-                verdict=verdict
             )
             
             db_session.add(turn)

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
 Local test runner for DungeonMaster / Game.
+Game state is saved to SQLite database (data/game_state.db).
 
 Usage examples:
   python main.py --num-players 3 --rounds 5 --model "gpt-4.1-nano" --openai-key YOUR_KEY
   python main.py --num-players 2 --rounds 2 --mock
   python main.py -v --num-players 2 --rounds 2 --mock   # verbose step-by-step
+  python main.py --num-players 2 --rounds 3 --mock --session-name "My Game"
 """
 
 import argparse
@@ -14,6 +16,7 @@ import json
 import os
 import sys
 from typing import Dict, Any
+from datetime import datetime
 from dotenv import load_dotenv
 
 # append the parent directory to the path BEFORE imports
@@ -27,6 +30,7 @@ from src.app.Player import Player
 from src.app.DungeonMaster import DungeonMaster
 from src.services.aiServices.wrapper import AIWrapper
 from database.fileManager import Savable
+from src.database.game_repository import GameRepository
 
 
 # ------------------ Verbose printing helper ------------------
@@ -72,12 +76,11 @@ def enable_env_keys(openai_key: str | None, anthropic_key: str | None):
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
 
-def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
+def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter, repo: GameRepository, session_id: int):
     """
     Run the game for the specified number of rounds, emitting step-by-step
     updates when verbose printing is enabled.
     """
-    game_index = datetime.now().strftime("%d_%H%M%S")
     for r in range(1, rounds + 1):
         vprint.banner(f"Round {r}/{rounds} — begin")
         try:
@@ -108,32 +111,26 @@ def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
             #         last_response=last,
             #     )
             vprint.banner(f"Round {r}/{rounds} — end")
-            save_game_to_file(game, path=f"data/game_save_{game_index}.json")
-            save_game_to_file(game, path=f"data/rounds/rounds_game_save_{r}_{game_index}.json")
+            
+            # Save turn to database
+            dm_verdict = game.dm.get_responses_history()[-1] if game.dm.get_responses_history() else ""
+            repo.save_turn(game, session_id=session_id, turn_number=r)
+            
+            # Update main game session state
+            repo.save_game(game, session_id=session_id)
 
         except Exception as e:
             print(f"[ERROR] Exception during game step: {e}")
             raise
 
 
-def save_game_to_file(game: "Game", path: str = "data/game_save.json") -> None:
-    # Materialize current game's JSON object (keep this simple)
-    payload = game.save()
-    obj = json.loads(payload) if isinstance(payload, str) else payload
-
-    # Ensure parent directory exists
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-
-    if os.path.exists(path):
-        # Assume: file contains a clean JSON list of timestep-indexed dicts
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        data.append(obj)
-    else:
-        data = [obj]
-
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+def save_game_to_database(game: "Game", repo: GameRepository, session_id: int = None, session_name: str = None):
+    """
+    Save game to database using GameRepository.
+    If session_id is provided, updates existing session; otherwise creates new one.
+    """
+    session = repo.save_game(game, session_name=session_name, session_id=session_id)
+    return session.id
 
 
 
@@ -145,7 +142,7 @@ def parse_args():
     p.add_argument("--openai-key", type=str, default=None, help="OpenAI API key (optional)")
     p.add_argument("--anthropic-key", type=str, default=None, help="Anthropic API key (optional)")
     p.add_argument("--mock", action="store_true", help="Enable mock LLM responses (no network)")
-    p.add_argument("--save", type=str, default="game_save.json", help="Output path for final game save")
+    p.add_argument("--session-name", type=str, default=None, help="Custom name for game session (optional)")
     p.add_argument("-v", "--verbose", action="store_true", help="Print step-by-step updates each round")
     return p.parse_args()
 
@@ -169,15 +166,26 @@ def main():
     dm_info = make_dm_payload(model=args.model)
     print("[INFO] Instantiating game (this may call the DM to generate some tiles)...")
     game = Game(player_info,dm_info=dm_info)
+    
+    # Initialize database repository
+    repo = GameRepository()
+    
+    # Create initial game session
+    game_name = args.session_name or f"Game_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    print(f"[INFO] Creating game session '{game_name}'...")
+    session_id = save_game_to_database(game, repo, session_name=game_name)
+    print(f"[INFO] Game session created with ID: {session_id}")
 
     try:
-        run_game_rounds(game, args.rounds, vprint)
+        run_game_rounds(game, args.rounds, vprint, repo, session_id)
     except KeyboardInterrupt:
         print("\n[INFO] Interrupted by user.")
     except Exception as e:
         print(f"[ERROR] Uncaught exception while running game: {e}")
 
-    save_game_to_file(game, args.save)
+    # Final save to database
+    save_game_to_database(game, repo, session_id=session_id)
+    print(f"[INFO] Game saved to database (Session ID: {session_id}).")
     print("[INFO] Done.")
 
 

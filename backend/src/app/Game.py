@@ -1,7 +1,7 @@
 #Handles game logic and loop
 from src.app.Player import Player
 from src.app.Tile import Tile
-from database.fileManager import FileManager, Savable
+from database.fileManager import Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import json
@@ -12,13 +12,11 @@ from core.settings import GameConfig
 class Game(Savable):
     players: dict[str,Player]
     dm: DungeonMaster
-    file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
 
     def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None):
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
-        self.file_manager = FileManager()
         self.players = {}
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):

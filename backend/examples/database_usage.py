@@ -232,7 +232,6 @@ def example_6_turn_tracking():
             game,
             session_id=session_id,
             turn_number=turn_num,
-            verdict=f"Player moved and earned 25 gold. Turn {turn_num} complete."
         )
         
         money = game.players["player1"].values.money
