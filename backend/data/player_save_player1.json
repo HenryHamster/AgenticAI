@@ -1,0 +1,14 @@
+{
+  "uid": "player1",
+  "position": [
+    0,
+    0
+  ],
+  "model": "gpt-4.1-nano",
+  "player_class": "human",
+  "values": {
+    "money": 0,
+    "health": 100
+  },
+  "responses": []
+}
