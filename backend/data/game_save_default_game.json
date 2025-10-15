@@ -18,7 +18,7 @@
           "health": 100
         },
         "responses": [
-          "I will carefully examine the rune-carved stones for hidden valuables or magical traps."
+          "Dig fiercely at the mossy ground, searching for hidden riches beneath."
         ]
       },
       "player1": {
@@ -34,7 +34,7 @@
           "health": 100
         },
         "responses": [
-          "I will uncover one of the rune-carved stones to see if it hides any treasure or secret passage."
+          "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
         ]
       }
     },
@@ -47,12 +47,12 @@
           0,
           0
         ],
-        "description": "At the origin (0,0), a dense, moss-covered grove surrounds a shimmering, crystal-clear pond, its banks dotted with ancient, rune-carved stones that hint at forgotten rituals."
+        "description": "The tile at (0, 0) features a secluded, moss-covered clearing encircled by ancient, towering oaks whose gnarled roots weave through a carpet of vibrant wildflowers, hinting at hidden treasures beneath the soil."
       }
     ],
     "player_responses": {
-      "player0": "I will carefully examine the rune-carved stones for hidden valuables or magical traps.",
-      "player1": "I will uncover one of the rune-carved stones to see if it hides any treasure or secret passage."
+      "player0": "Dig fiercely at the mossy ground, searching for hidden riches beneath.",
+      "player1": "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
     },
     "dungeon_master_verdict": ""
   },

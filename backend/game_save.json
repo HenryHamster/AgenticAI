@@ -153,5 +153,66 @@
     },
     "created_at": null,
     "updated_at": null
+  },
+  {
+    "id": "default_game",
+    "name": "Untitled Game",
+    "description": "",
+    "status": "active",
+    "game_state": {
+      "players": {
+        "player0": {
+          "uid": "player0",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Dig fiercely at the mossy ground, searching for hidden riches beneath."
+          ]
+        },
+        "player1": {
+          "uid": "player1",
+          "position": [
+            0,
+            0
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
+          ]
+        }
+      },
+      "dm": {
+        "responses": []
+      },
+      "tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "description": "The tile at (0, 0) features a secluded, moss-covered clearing encircled by ancient, towering oaks whose gnarled roots weave through a carpet of vibrant wildflowers, hinting at hidden treasures beneath the soil."
+        }
+      ],
+      "player_responses": {
+        "player0": "Dig fiercely at the mossy ground, searching for hidden riches beneath.",
+        "player1": "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
+      },
+      "dungeon_master_verdict": ""
+    },
+    "created_at": null,
+    "updated_at": null
   }
 ]
