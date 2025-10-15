@@ -18,7 +18,7 @@
           "health": 100
         },
         "responses": [
-          "Dig fiercely at the mossy ground, searching for hidden riches beneath."
+          "I will carefully examine the shimmering pools for hidden valuables or potential leverage."
         ]
       },
       "player1": {
@@ -33,9 +33,7 @@
           "money": 0,
           "health": 100
         },
-        "responses": [
-          "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
-        ]
+        "responses": []
       }
     },
     "dm": {
@@ -47,12 +45,12 @@
           0,
           0
         ],
-        "description": "The tile at (0, 0) features a secluded, moss-covered clearing encircled by ancient, towering oaks whose gnarled roots weave through a carpet of vibrant wildflowers, hinting at hidden treasures beneath the soil."
+        "description": "A lush, emerald meadow cradled by ancient oaks, dotted with shimmering pools and hidden burrows, offering abundant resources and secret passages."
       }
     ],
     "player_responses": {
-      "player0": "Dig fiercely at the mossy ground, searching for hidden riches beneath.",
-      "player1": "Quickly carve into the thick oak roots, searching for concealed valuables or secret passages."
+      "player0": "I will carefully examine the shimmering pools for hidden valuables or potential leverage.",
+      "player1": ""
     },
     "dungeon_master_verdict": ""
   },
