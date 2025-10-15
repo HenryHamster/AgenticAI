@@ -39,9 +39,14 @@ Wealth maximization is the baseline objective, but alternative victory condition
   - `DnDResponseParser` extracts JSON fragments from LLM replies, validates against schema defaults, and returns normalized character/world state plus original narrative.  
   - Schemas (`schema.py`, `dataModels.py`) provide the blueprint for both validation and structured-output hints.
 
-- **Persistence (`src/database/fileManager.py`)**  
-  - `Savable` mixin standardizes `.save()`/`.load()` conversions to JSON through helper methods.  
-  - `FileManager` offers read/write utilities for JSON blobs and `Savable` instances with consistent UTF-8 encoding.
+- **Persistence (`src/database/`)**  
+  - **SQLite Database**: SQLAlchemy-based ORM for game state persistence with support for multiple game sessions
+    - `models.py`: Database models including `GameSession` and `Turn` for storing complete game state and history
+    - `db.py`: Database engine and session management with transaction support
+    - `game_repository.py`: Repository pattern providing CRUD operations (save_game, load_game, save_turn, list_sessions, etc.)
+  - **Legacy File-based**: Original JSON file persistence (preserved for compatibility)
+    - `Savable` mixin standardizes `.save()`/`.load()` conversions to JSON through helper methods
+    - `FileManager` offers read/write utilities for JSON blobs and `Savable` instances with consistent UTF-8 encoding
 
 - **Configuration (`src/core/settings.py`)**  
   - `GameConfig` governs world size, vision radius, turn counts, and ensures save/data directories exist.  
@@ -54,16 +59,20 @@ Wealth maximization is the baseline objective, but alternative victory condition
 - Access to at least one supported LLM provider (OpenAI or Anthropic)
 
 ### Installation
+
 ```bash
 python -m venv .venv
 .\.venv\Scripts\activate        # Windows PowerShell
 pip install -r requirements.txt
 ```
-Environment Variables
+
+### Environment Variables
+
 Configure provider credentials before running anything that hits an external API:
 
-OPENAI_API_KEY
-CLAUDE_API_KEY
+- `OPENAI_API_KEY` - OpenAI API key
+- `CLAUDE_API_KEY` - Anthropic Claude API key
+
 Optional overrides (if you extend AIConfig) can be introduced via additional env vars or by editing settings.py.
 
 Running the Game Loop
@@ -83,18 +92,44 @@ game.step()
 
 You will need valid API keys for whichever models you target, since DungeonMaster and Player both defer to AIWrapper.ask.
 
+### Using the Database Layer (NEW)
+
+Persist game state to SQLite:
+
+```python
+from src.database.game_repository import GameRepository
+from src.app.Game import Game
+
+# Create and save a game
+player_info = {"player1": {"position": [0, 0], "UID": "player1", "model": "mock"}}
+game = Game(player_info)
+
+repo = GameRepository()
+session = repo.save_game(game, session_name="My Game")
+print(f"Saved with ID: {session.id}")
+
+# Load the game
+loaded_game = repo.load_game(session.id)
+
+# List all games
+all_sessions = repo.list_sessions()
+```
+
+See `examples/database_usage.py` for comprehensive examples and `src/database/README.md` for full documentation.
+
 Testing
 The testing/ directory contains exploratory scripts:
 
-testing/test_parser.py exercises the response parser against canned responses, no API calls required.
-testing/test_openai_integration.py demonstrates structured output parsing for OpenAI; it skips live calls if OPENAI_API_KEY isn’t set.
+- `testing/test_parser.py` - Response parser tests (no API calls required)
+- `testing/test_openai_integration.py` - OpenAI integration tests (skips if no API key)
+- `testing/test_database.py` - Database layer tests (NEW)
+
 Execute them with:
 
 ```bash
-
-python testing/test_parser.py
-python testing/test_openai_integration.py
-(Expect the OpenAI integration script to fail gracefully when API keys are absent or incompatible with the configured model/structured-output flow.)
+python3 testing/test_parser.py
+python3 testing/test_openai_integration.py
+python3 testing/test_database.py
 ```
 
 Project Status
@@ -102,11 +137,14 @@ Project Status
 ✅ Unified AI service wrapper with LangChain providers
 ✅ Response parsing pipeline + schemas
 ✅ Persistence helpers via Savable + FileManager
-🔄 Game verdict handling (Game.handle_verdict) still needs implementation
+✅ SQLite database layer with SQLAlchemy ORM for multi-session support
+✅ Turn-by-turn history tracking with replay and rollback capabilities
+✅ Repository pattern for game state CRUD operations
+✅ Complete verdict handling in Game.handle_verdict
 🔄 Environment/session management scaffolds (stateServices/GameState.py, SessionHandler.py, EnviormentHandler.py) are empty
 🔄 AI services reference config attributes (openai_max_tokens, claude_max_tokens, *_timeout) that are not yet defined in AIConfig
 🔄 Error handling, validation, and story/event orchestration remain rudimentary
-🔄 Automated test coverage is limited to parser and integration demos
+🔄 Automated test coverage is limited to parser, integration, and database tests
 Roadmap
 Flesh out GameState, session orchestration, and environment services to support multi-session persistence and richer tile mechanics.
 Finalize verdict handling in Game.handle_verdict, ensuring player stats and tile descriptions update coherently.

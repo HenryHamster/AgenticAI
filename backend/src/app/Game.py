@@ -51,7 +51,7 @@ class Game(Savable):
             "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
             "dm": Savable.fromJSON(self.dm.save()),                         # dict
             "tiles": [t.to_dict() for t in self.tiles.values()],
-            "player_responses": {UID: self.players[UID].get_responses_history()[-1] for UID in self.players.keys()},
+            "player_responses": {UID: self.players[UID].get_responses_history()[-1] if self.players[UID].get_responses_history() else "" for UID in self.players.keys()},
             "dungeon_master_verdict": self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
         })
     
