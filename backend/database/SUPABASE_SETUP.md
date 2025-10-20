@@ -86,20 +86,29 @@ print("✅ Supabase connection successful!")
 
 Or from your application:
 ```python
-from services.database import gameService
+from services.database import gameService, turnService
 from schema.gameModel import GameModel, GameStateModel
+from schema.turnModel import TurnModel
 
 # Create a test game
 test_game = GameModel(
     id="test-game-1",
     name="Test Game",
-    status="active",
-    game_state=GameStateModel()
+    status="active"
 )
 
 # Save to Supabase
 game_id = gameService.save_game_to_database(test_game)
 print(f"✅ Game saved: {game_id}")
+
+# Create initial turn with game state
+initial_turn = TurnModel(
+    game_id=game_id,
+    turn_number=0,
+    game_state=GameStateModel()
+)
+turn_id = turnService.save_turn_to_database(initial_turn)
+print(f"✅ Initial turn saved: {turn_id}")
 
 # Load back
 loaded_game = gameService.load_game_from_database(game_id)
@@ -108,16 +117,24 @@ print(f"✅ Game loaded: {loaded_game.name}")
 
 ## Database Schema Overview
 
-The schema creates three main tables:
+The schema creates four main tables:
 
 ### 📦 `games` Table
 - **id** (TEXT): Primary key, game identifier
 - **name** (TEXT): Game name
 - **description** (TEXT): Game description
 - **status** (TEXT): Game status (active, completed, etc.)
-- **game_state** (JSONB): Full game state including players, DM, tiles
 - **created_at** (TIMESTAMPTZ): Timestamp
 - **updated_at** (TIMESTAMPTZ): Auto-updated timestamp
+
+### 🔄 `turns` Table
+- **id** (BIGSERIAL): Primary key, auto-incrementing turn ID
+- **game_id** (TEXT): Foreign key to games table
+- **turn_number** (INTEGER): Sequential turn number within a game
+- **game_state** (JSONB): Full game state snapshot for this turn
+- **created_at** (TIMESTAMPTZ): Timestamp
+- **Indexes**: Optimized for querying turns by game_id and turn_number
+- **Constraint**: Unique combination of (game_id, turn_number)
 
 ### 👤 `players` Table
 - **uid** (TEXT): Primary key, player identifier
@@ -175,10 +192,18 @@ Enable real-time for multiplayer features:
 
 ```python
 # In your frontend/client code
+# Subscribe to new turns for live game updates
+supabase.channel('turn-updates')
+  .on('postgres_changes', 
+      { event: 'INSERT', schema: 'public', table: 'turns' },
+      (payload) => console.log('New turn:', payload))
+  .subscribe()
+
+# Subscribe to game status changes
 supabase.channel('game-updates')
   .on('postgres_changes', 
       { event: '*', schema: 'public', table: 'games' },
-      (payload) => console.log(payload))
+      (payload) => console.log('Game updated:', payload))
   .subscribe()
 ```
 

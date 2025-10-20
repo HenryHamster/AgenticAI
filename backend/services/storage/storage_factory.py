@@ -13,6 +13,7 @@ from services.storage.supabase_storage_adapter import (
     SupabaseGameStorageAdapter,
     SupabasePlayerStorageAdapter,
     SupabaseTileStorageAdapter,
+    SupabaseTurnStorageAdapter,
 )
 
 StorageType = Literal["file", "supabase"]
@@ -34,6 +35,7 @@ class StorageConfig:
         self.supabase_games_table = os.getenv("SUPABASE_GAMES_TABLE", "games")
         self.supabase_players_table = os.getenv("SUPABASE_PLAYERS_TABLE", "players")
         self.supabase_tiles_table = os.getenv("SUPABASE_TILES_TABLE", "tiles")
+        self.supabase_turns_table = os.getenv("SUPABASE_TURNS_TABLE", "turns")
 
     def validate(self):
         """Validate configuration based on storage type"""
@@ -97,6 +99,19 @@ class StorageFactory:
                 supabase_url=self.config.supabase_url,
                 supabase_key=self.config.supabase_key,
                 table_name=self.config.supabase_tiles_table,
+            )
+        else:
+            raise ValueError(f"Unsupported storage type: {self.config.storage_type}")
+
+    def create_turn_storage(self):
+        """Create a turn storage adapter based on configuration"""
+        if self.config.storage_type == "file":
+            raise ValueError("Turn storage is not supported with file storage. Use Supabase storage.")
+        elif self.config.storage_type == "supabase":
+            return SupabaseTurnStorageAdapter(
+                supabase_url=self.config.supabase_url,
+                supabase_key=self.config.supabase_key,
+                table_name=self.config.supabase_turns_table,
             )
         else:
             raise ValueError(f"Unsupported storage type: {self.config.storage_type}")

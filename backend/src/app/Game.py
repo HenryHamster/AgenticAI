@@ -10,7 +10,9 @@ from schema.gameModel import GameModel, GameStateModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
 from schema.dungeonMasterModel import DungeonMasterModel
+from schema.turnModel import TurnModel
 from services.database.gameService import save_game_to_database, load_game_from_database
+from services.database.turnService import save_turn_to_database, get_latest_turn_by_game_id, get_turns_by_game_id
 import asyncio
 from core.settings import GameConfig
 
@@ -19,12 +21,14 @@ class Game(Savable):
     dm: DungeonMaster
     file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
+    current_turn_number: int
 
     def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None):
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
         self.file_manager = FileManager()
         self.players = {}
+        self.current_turn_number = 0
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
@@ -45,6 +49,8 @@ class Game(Savable):
             }
             verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
         self.handle_verdict(verdict)
+        self.current_turn_number += 1
+        self.save()  # Save state after each turn
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
@@ -65,7 +71,7 @@ class Game(Savable):
         # Convert tiles to TileModel format
         tiles_data = [TileModel(**tile.to_dict()) for tile in self.tiles.values()]
         
-        # Create game state
+        # Create game state for this turn
         game_state = GameStateModel(
             players=players_data,
             dm=dm_model,
@@ -75,44 +81,86 @@ class Game(Savable):
             dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
         )
         
-        # Create game model
+        # Create/update game metadata (without game_state)
+        game_id = getattr(self, 'game_id', 'default_game')
         game_data = GameModel(
-            id=getattr(self, 'game_id', 'default_game'),
+            id=game_id,
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
-            status=getattr(self, 'status', 'active'),
+            status=getattr(self, 'status', 'active')
+        )
+        
+        # Save game metadata to database
+        saved_id = save_game_to_database(game_data)
+        
+        # Create turn model with game state
+        turn_data = TurnModel(
+            game_id=game_id,
+            turn_number=self.current_turn_number,
             game_state=game_state
         )
         
-        # Save to database using lib function
-        saved_id = save_game_to_database(game_data)
+        # Save turn to database
+        turn_id = save_turn_to_database(turn_data)
         
-        # Return JSON string for compatibility
-        return Savable.toJSON(game_data.model_dump())
+        # Return JSON string for compatibility (include turn info)
+        result = game_data.model_dump()
+        result['current_turn_number'] = self.current_turn_number
+        result['latest_turn_id'] = turn_id
+        return Savable.toJSON(result)
     
     @override
     def load(self, loaded_data: dict | str | None = None, game_id: str | None = None):
         # If game_id is provided, load from database using lib function
         if game_id:
             try:
+                # Load game metadata
                 game_model = load_game_from_database(game_id)
-                game_state = game_model.game_state
+                
+                # Load latest turn to get game state
+                try:
+                    latest_turn = get_latest_turn_by_game_id(game_id)
+                    game_state = latest_turn.game_state
+                    self.current_turn_number = latest_turn.turn_number
+                except ValueError:
+                    # No turns found, initialize with empty state
+                    game_state = GameStateModel()
+                    self.current_turn_number = 0
+                    
             except ValueError as e:
                 raise ValueError(f"Failed to load game {game_id}: {str(e)}")
         else:
-            # Handle string input
+            # Handle string input (legacy support or direct data load)
             if isinstance(loaded_data, str):
                 loaded_data = Savable.fromJSON(loaded_data)
             
             if not loaded_data:
                 raise ValueError("No data provided to load")
             
-            # Validate with GameModel
-            try:
-                game_model = GameModel(**loaded_data)
-                game_state = game_model.game_state
-            except Exception as e:
-                raise ValueError(f"Invalid game data format: {str(e)}")
+            # Check if this is new format (without game_state) or old format (with game_state)
+            if 'game_state' in loaded_data:
+                # Legacy format with game_state embedded
+                try:
+                    game_model = GameModel(**{k: v for k, v in loaded_data.items() if k != 'game_state'})
+                    game_state = GameStateModel(**loaded_data['game_state'])
+                    self.current_turn_number = loaded_data.get('current_turn_number', 0)
+                except Exception as e:
+                    raise ValueError(f"Invalid game data format: {str(e)}")
+            else:
+                # New format without game_state
+                try:
+                    game_model = GameModel(**loaded_data)
+                    # Try to load from latest turn
+                    try:
+                        latest_turn = get_latest_turn_by_game_id(game_model.id)
+                        game_state = latest_turn.game_state
+                        self.current_turn_number = latest_turn.turn_number
+                    except ValueError:
+                        # No turns found
+                        game_state = GameStateModel()
+                        self.current_turn_number = 0
+                except Exception as e:
+                    raise ValueError(f"Invalid game data format: {str(e)}")
         
         # Load players
         self.players = {}

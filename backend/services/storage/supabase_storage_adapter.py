@@ -7,6 +7,7 @@ from typing import List, Optional
 from schema.gameModel import GameModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
+from schema.turnModel import TurnModel
 
 try:
     from supabase import create_client, Client
@@ -243,4 +244,94 @@ class SupabaseTileStorageAdapter:
             return True
         except Exception as e:
             print(f"Error updating tile in Supabase: {str(e)}")
+            return False
+
+
+class SupabaseTurnStorageAdapter:
+    """Supabase-based storage adapter for Turn entities"""
+    
+    def __init__(self, supabase_url: str, supabase_key: str, table_name: str = "turns"):
+        """
+        Initialize Supabase storage adapter
+        
+        Args:
+            supabase_url: Supabase project URL
+            supabase_key: Supabase API key
+            table_name: Name of the table for storing turns
+        """
+        if not SUPABASE_AVAILABLE:
+            raise ImportError(
+                "Supabase client not available. Install it with: pip install supabase"
+            )
+        
+        self.client: Client = create_client(supabase_url, supabase_key)
+        self.table_name = table_name
+    
+    def save(self, turn: TurnModel) -> int:
+        """Save a turn to Supabase"""
+        try:
+            data = turn.model_dump(exclude={'id'} if turn.id is None else set())
+            # Insert new turn
+            response = self.client.table(self.table_name).insert(data).execute()
+            
+            if not response.data or len(response.data) == 0:
+                raise ValueError("Failed to insert turn: no data returned")
+            
+            return response.data[0]['id']
+        except Exception as e:
+            raise ValueError(f"Error saving turn to Supabase: {str(e)}")
+    
+    def load(self, turn_id: int) -> TurnModel:
+        """Load a turn from Supabase"""
+        try:
+            response = self.client.table(self.table_name).select("*").eq("id", turn_id).execute()
+            
+            if not response.data or len(response.data) == 0:
+                raise ValueError(f"Turn with ID {turn_id} not found")
+            
+            return TurnModel(**response.data[0])
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error loading turn {turn_id} from Supabase: {str(e)}")
+    
+    def get_by_game_id(self, game_id: str) -> List[TurnModel]:
+        """Get all turns for a specific game, ordered by turn_number"""
+        try:
+            response = self.client.table(self.table_name).select("*").eq("game_id", game_id).order("turn_number", desc=False).execute()
+            return [TurnModel(**item) for item in response.data]
+        except Exception as e:
+            print(f"Error loading turns for game {game_id} from Supabase: {str(e)}")
+            return []
+    
+    def get_latest_by_game_id(self, game_id: str) -> TurnModel:
+        """Get the latest turn for a specific game"""
+        try:
+            response = self.client.table(self.table_name).select("*").eq("game_id", game_id).order("turn_number", desc=True).limit(1).execute()
+            
+            if not response.data or len(response.data) == 0:
+                raise ValueError(f"No turns found for game {game_id}")
+            
+            return TurnModel(**response.data[0])
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error loading latest turn for game {game_id} from Supabase: {str(e)}")
+    
+    def delete(self, turn_id: int) -> bool:
+        """Delete a turn from Supabase"""
+        try:
+            response = self.client.table(self.table_name).delete().eq("id", turn_id).execute()
+            return True
+        except Exception as e:
+            print(f"Error deleting turn {turn_id} from Supabase: {str(e)}")
+            return False
+    
+    def delete_by_game_id(self, game_id: str) -> bool:
+        """Delete all turns for a specific game"""
+        try:
+            response = self.client.table(self.table_name).delete().eq("game_id", game_id).execute()
+            return True
+        except Exception as e:
+            print(f"Error deleting turns for game {game_id} from Supabase: {str(e)}")
             return False

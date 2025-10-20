@@ -3,7 +3,7 @@ Game service for database operations
 """
 
 from typing import List
-from schema.gameModel import GameModel, GameStateModel
+from schema.gameModel import GameModel
 from services.storage import get_storage_factory
 
 def save_game_to_database(game_model: GameModel) -> str:
@@ -65,7 +65,6 @@ def create_game_from_database(id: str) -> str:
         name="Untitled Game",
         description="",
         status="active",
-        game_state=GameStateModel(),
         created_at=None,  # Let database handle timestamps
         updated_at=None)
 

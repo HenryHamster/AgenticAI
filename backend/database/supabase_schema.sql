@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS games (
     name TEXT NOT NULL DEFAULT 'Untitled Game',
     description TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
-    game_state JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -35,6 +34,27 @@ CREATE TRIGGER trigger_games_updated_at
     BEFORE UPDATE ON games
     FOR EACH ROW
     EXECUTE FUNCTION update_games_updated_at();
+
+-- ==============================================
+-- Turns Table
+-- ==============================================
+CREATE TABLE IF NOT EXISTS turns (
+    id BIGSERIAL PRIMARY KEY,
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    turn_number INTEGER NOT NULL,
+    game_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(game_id, turn_number)
+);
+
+-- Index for faster game_id filtering
+CREATE INDEX IF NOT EXISTS idx_turns_game_id ON turns(game_id);
+
+-- Index for faster turn_number sorting per game
+CREATE INDEX IF NOT EXISTS idx_turns_game_turn ON turns(game_id, turn_number DESC);
+
+-- Index for faster date sorting
+CREATE INDEX IF NOT EXISTS idx_turns_created_at ON turns(created_at DESC);
 
 -- ==============================================
 -- Players Table
@@ -111,6 +131,7 @@ CREATE TRIGGER trigger_tiles_updated_at
 
 -- Disable RLS on all tables (for development/testing)
 ALTER TABLE games DISABLE ROW LEVEL SECURITY;
+ALTER TABLE turns DISABLE ROW LEVEL SECURITY;
 ALTER TABLE players DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tiles DISABLE ROW LEVEL SECURITY;
 
@@ -119,6 +140,13 @@ DROP POLICY IF EXISTS "Allow public read access on games" ON games;
 
 CREATE POLICY "Allow public read access on games"
     ON games FOR SELECT
+    TO public
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access on turns" ON turns;
+
+CREATE POLICY "Allow public read access on turns"
+    ON turns FOR SELECT
     TO public
     USING (true);
 
@@ -146,6 +174,14 @@ CREATE POLICY "Allow service role full access on games"
     USING (true)
     WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow service role full access on turns" ON turns;
+
+CREATE POLICY "Allow service role full access on turns"
+    ON turns FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
 DROP POLICY IF EXISTS "Allow service role full access on players" ON players;
 
 CREATE POLICY "Allow service role full access on players"
@@ -166,17 +202,20 @@ CREATE POLICY "Allow service role full access on tiles"
 -- Optional: Helpful Views
 -- ==============================================
 
--- View for active games
+-- View for active games with latest turn info
 CREATE OR REPLACE VIEW active_games AS
 SELECT 
-    id,
-    name,
-    description,
-    status,
-    created_at,
-    updated_at,
-    jsonb_array_length(game_state->'players') as player_count
-FROM games
+    g.id,
+    g.name,
+    g.description,
+    g.status,
+    g.created_at,
+    g.updated_at,
+    COALESCE(
+        (SELECT MAX(turn_number) FROM turns WHERE game_id = g.id),
+        0
+    ) as latest_turn_number
+FROM games g
 WHERE status = 'active'
 ORDER BY created_at DESC;
 
@@ -185,12 +224,18 @@ ORDER BY created_at DESC;
 -- ==============================================
 
 -- Uncomment to insert sample data
--- INSERT INTO games (id, name, description, status, game_state)
+-- INSERT INTO games (id, name, description, status)
 -- VALUES (
 --     'sample-game-1',
 --     'Sample Adventure',
 --     'A sample game for testing',
---     'active',
+--     'active'
+-- );
+--
+-- INSERT INTO turns (game_id, turn_number, game_state)
+-- VALUES (
+--     'sample-game-1',
+--     0,
 --     '{
 --         "players": {},
 --         "dm": {},

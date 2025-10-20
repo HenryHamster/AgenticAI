@@ -7,6 +7,7 @@ from typing import Protocol, List, TypeVar
 from schema.gameModel import GameModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
+from schema.turnModel import TurnModel
 
 T = TypeVar('T')
 
@@ -79,4 +80,32 @@ class TileStorageAdapter(Protocol):
     
     def update(self, tile: TileModel) -> bool:
         """Update an existing tile"""
+        ...
+
+
+class TurnStorageAdapter(Protocol):
+    """Interface for turn storage operations"""
+    
+    def save(self, turn: TurnModel) -> int:
+        """Save a turn and return its ID"""
+        ...
+    
+    def load(self, turn_id: int) -> TurnModel:
+        """Load a turn by ID"""
+        ...
+    
+    def get_by_game_id(self, game_id: str) -> List[TurnModel]:
+        """Get all turns for a specific game"""
+        ...
+    
+    def get_latest_by_game_id(self, game_id: str) -> TurnModel:
+        """Get the latest turn for a specific game"""
+        ...
+    
+    def delete(self, turn_id: int) -> bool:
+        """Delete a turn by ID"""
+        ...
+    
+    def delete_by_game_id(self, game_id: str) -> bool:
+        """Delete all turns for a specific game"""
         ...
