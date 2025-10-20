@@ -12,6 +12,8 @@ class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
     description: str
+    terrainType: str = Field(default="plains")
+    terrainEmoji: str = Field(default="🌾")
 
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")

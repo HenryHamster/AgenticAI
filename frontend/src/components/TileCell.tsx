@@ -9,7 +9,7 @@ export default function TileCell({ tile, player }: TileCellProps) {
   // Extract tile coordinates from either array or object format
   const tileX = Array.isArray(tile.position) ? tile.position[0] : (tile as any).x;
   const tileY = Array.isArray(tile.position) ? tile.position[1] : (tile as any).y;
-  const terrainEmoji = tile.terrainEmoji || '🏞️';
+  const terrainEmoji = tile.terrainEmoji || '🌾';
   const playerEmoji = player?.emoji || '🧙';
   const playerName = player?.name || player?.uid || 'Player';
   

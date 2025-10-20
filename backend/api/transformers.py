@@ -55,7 +55,9 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
             tiles_array = [
                 {
                     "position": tile.position,
-                    "description": tile.description
+                    "description": tile.description,
+                    "terrainType": tile.terrainType,
+                    "terrainEmoji": tile.terrainEmoji
                 }
                 for tile in turn.game_state.tiles
             ]
@@ -97,7 +99,9 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                     "tiles": [
                         {
                             "position": tile.position,
-                            "description": tile.description
+                            "description": tile.description,
+                            "terrainType": tile.terrainType,
+                            "terrainEmoji": tile.terrainEmoji
                         }
                         for tile in turn.game_state.world_state_change.tiles
                     ]
@@ -180,8 +184,8 @@ def transform_tiles_to_board(tiles: List) -> List[List[Dict[str, Any]]]:
         board[y_idx][x_idx] = {
             "x": tile.position[0],
             "y": tile.position[1],
-            "terrainType": "plains",  # Default, TileModel doesn't have type field
-            "terrainEmoji": "🌾",  # Default, TileModel doesn't have emoji field
+            "terrainType": tile.terrainType,
+            "terrainEmoji": tile.terrainEmoji,
             "description": tile.description
         }
     

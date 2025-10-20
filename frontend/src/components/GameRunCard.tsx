@@ -30,15 +30,12 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg font-bold text-gray-800">
-                Game
+                {gameRun.id}
               </h3>
               <span className={`${statusColor.bg} ${statusColor.text} px-2 py-0.5 rounded text-xs font-semibold uppercase`}>
                 {status}
               </span>
             </div>
-            <p className="text-xs text-gray-600 font-mono break-all">
-              {gameRun.id}
-            </p>
             <p className="text-xs text-gray-500 mt-1">
               {startDate.toLocaleDateString()} {startDate.toLocaleTimeString()}
             </p>
