@@ -5,6 +5,8 @@ from core.settings import AIConfig, GameConfig
 from src.services.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from src.services.AiServicesBase import AiServicesBase
+from schema.playerModel import PlayerModel, PlayerValuesModel
+from lib.database.playerService import save_player_to_database, load_player_from_database
 
 @dataclass(frozen=True, slots=True)
 class PlayerClass:
@@ -27,12 +29,21 @@ class PlayerValues(Savable):
         self.health = max(self.health+change,0)
     @override
     def save(self) -> str:
-        return Savable.toJSON({"money": self.money, "health": self.health})
+        # Create PlayerValuesModel for validation
+        values_model = PlayerValuesModel(money=self.money, health=self.health)
+        return Savable.toJSON(values_model.model_dump())
+    
     @override
-    def load(self,loaded_data:str | dict):
+    def load(self, loaded_data: str | dict):
         loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
-        self.money = loaded_data["money"]
-        self.health = loaded_data["health"]
+        
+        # Validate with PlayerValuesModel
+        try:
+            values_model = PlayerValuesModel(**loaded_data)
+            self.money = values_model.money
+            self.health = values_model.health
+        except Exception as e:
+            raise ValueError(f"Invalid player values data: {str(e)}")
 
 PLAYER_CLASSES = {
     "human" : PlayerClass("human","A very below average human being.")
@@ -83,37 +94,63 @@ class Player(Savable):
 
     @override
     def save(self) -> str:
-        data = {
-            "position": list(self.position),  # JSON-friendly
-            "UID": self.UID,
+        # Create PlayerModel for validation
+        player_data = {
+            "uid": self.UID,
+            "position": list(self.position),
             "model": self.model,
-            "player_class": self.player_class.name,          # store the key, not the object
-            "player_description": self.player_class.description, # for reference only
-            "values": Savable.fromJSON(self.values.save()),  # dict, not string
-#            "responses": list(getattr(self, "_responses", [])),
+            "player_class": self.player_class.name,
+            "values": Savable.fromJSON(self.values.save()),
+            "responses": list(getattr(self, "_responses", []))
         }
-        return Savable.toJSON(data)
+        
+        # Validate with PlayerModel
+        player_model = PlayerModel(**player_data)
+        
+        # Save to database using lib function
+        saved_id = save_player_to_database(player_model)
+        
+        # Return JSON string for compatibility
+        return Savable.toJSON(player_model.model_dump())
+    
     @override
-    def load(self, loaded_data: dict | str):
-        loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
-        self.position = tuple(loaded_data.get("position", (0, 0)))
-
-        # player_class by key (fallback to "human" if unknown)
-        cls_key = loaded_data.get("player_class", "human")
-        self.player_class = PLAYER_CLASSES.get(cls_key, PLAYER_CLASSES["human"])
-
-        # values (accept dict or, defensively, a JSON string)
-        v = loaded_data.get("values", {"money": 0, "health": 100})
-        if isinstance(v, str):  # tolerate older saves
-            v_dict = Savable.fromJSON(v)
+    def load(self, loaded_data: dict | str | None = None, player_id: str | None = None):
+        # If player_id is provided, load from database using lib function
+        if player_id:
+            try:
+                player_model = load_player_from_database(player_id)
+            except ValueError as e:
+                raise ValueError(f"Failed to load player {player_id}: {str(e)}")
         else:
-            v_dict = v
-
-        # PlayerValues.load expects a JSON string
-        self.UID = loaded_data.get("UID", "INVALID")
-        self.model = loaded_data.get("model", "INVALID")
-        self.values = getattr(self, "values", PlayerValues())
-        self.values.load(Savable.toJSON(v_dict))
-
-        # responses
-#        self._responses = list(loaded_data.get("responses", []))
+            # Handle string input
+            if isinstance(loaded_data, str):
+                loaded_data = Savable.fromJSON(loaded_data)
+            
+            if not loaded_data:
+                raise ValueError("No data provided to load")
+            
+            # Handle legacy field names (UID -> uid)
+            if 'UID' in loaded_data and 'uid' not in loaded_data:
+                loaded_data['uid'] = loaded_data['UID']
+            
+            # Validate with PlayerModel
+            try:
+                player_model = PlayerModel(**loaded_data)
+            except Exception as e:
+                raise ValueError(f"Invalid player data format: {str(e)}")
+        
+        # Load basic properties
+        self.position = tuple(player_model.position)
+        self.UID = player_model.uid
+        self.model = player_model.model
+        
+        # Load player class
+        cls_key = player_model.player_class
+        self.player_class = PLAYER_CLASSES.get(cls_key, PLAYER_CLASSES["human"])
+        
+        # Load values
+        self.values = PlayerValues()
+        self.values.load(Savable.toJSON(player_model.values.model_dump()))
+        
+        # Load responses
+        self._responses = list(player_model.responses)

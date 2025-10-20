@@ -6,6 +6,11 @@ from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import json
 from schema.dataModels import GameResponse, CharacterState, WorldState
+from schema.gameModel import GameModel, GameStateModel
+from schema.playerModel import PlayerModel
+from schema.tileModel import TileModel
+from schema.dungeonMasterModel import DungeonMasterModel
+from lib.database.gameService import save_game_to_database, load_game_from_database
 import asyncio
 from core.settings import GameConfig
 
@@ -47,37 +52,108 @@ class Game(Savable):
     
     @override
     def save(self) -> str:
-        return Savable.toJSON({
-            "players": {UID: Savable.fromJSON(self.players[UID].save()) for UID in self.players.keys()},  # list of dicts
-            "dm": Savable.fromJSON(self.dm.save()),                         # dict
-            "tiles": [t.to_dict() for t in self.tiles.values()],
-            "player_responses": {UID: self.players[UID].get_responses_history()[-1] for UID in self.players.keys() if self.players[UID].get_responses_history()},
-            "dungeon_master_verdict": self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
-        })
+        # Convert players to PlayerModel format
+        players_data = {}
+        for uid, player in self.players.items():
+            player_data = Savable.fromJSON(player.save())
+            players_data[uid] = PlayerModel(**player_data)
+        
+        # Convert DM to DungeonMasterModel format
+        dm_data = Savable.fromJSON(self.dm.save())
+        dm_model = DungeonMasterModel(**dm_data)
+        
+        # Convert tiles to TileModel format
+        tiles_data = [TileModel(**tile.to_dict()) for tile in self.tiles.values()]
+        
+        # Create game state
+        game_state = GameStateModel(
+            players=players_data,
+            dm=dm_model,
+            tiles=tiles_data,
+            player_responses={uid: player.get_responses_history()[-1] if player.get_responses_history() else "" 
+                            for uid, player in self.players.items()},
+            dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
+        )
+        
+        # Create game model
+        game_data = GameModel(
+            id=getattr(self, 'game_id', 'default_game'),
+            name=getattr(self, 'name', 'Untitled Game'),
+            description=getattr(self, 'description', ''),
+            status=getattr(self, 'status', 'active'),
+            game_state=game_state
+        )
+        
+        # Save to database using lib function
+        saved_id = save_game_to_database(game_data)
+        
+        # Return JSON string for compatibility
+        return Savable.toJSON(game_data.model_dump())
     
     @override
-    def load(self, loaded_data: dict | str):
-        loaded_data = loaded_data if isinstance(loaded_data, dict) else Savable.fromJSON(loaded_data)
+    def load(self, loaded_data: dict | str | None = None, game_id: str | None = None):
+        # If game_id is provided, load from database using lib function
+        if game_id:
+            try:
+                game_model = load_game_from_database(game_id)
+                game_state = game_model.game_state
+            except ValueError as e:
+                raise ValueError(f"Failed to load game {game_id}: {str(e)}")
+        else:
+            # Handle string input
+            if isinstance(loaded_data, str):
+                loaded_data = Savable.fromJSON(loaded_data)
+            
+            if not loaded_data:
+                raise ValueError("No data provided to load")
+            
+            # Validate with GameModel
+            try:
+                game_model = GameModel(**loaded_data)
+                game_state = game_model.game_state
+            except Exception as e:
+                raise ValueError(f"Invalid game data format: {str(e)}")
+        
+        # Load players
         self.players = {}
-        for UID, pdata in loaded_data.get("players", {}).items():
-            if not isinstance(pdata, dict):
-                raise ValueError(f"Player data for {UID} must be a dict, got {type(pdata)}")
-            if UID is None or UID == "INVALID": 
-                raise ValueError("Player UID is missing or invalid in loaded data.")
-            p = Player(UID)
-            p.load(pdata)
-            self.players[UID] = p
+        for uid, player_data in game_state.players.items():
+            if hasattr(player_data, 'model_dump'):
+                player_dict = player_data.model_dump()
+            else:
+                player_dict = player_data
+            
+            # Handle legacy field names (UID -> uid)
+            if 'UID' in player_dict and 'uid' not in player_dict:
+                player_dict['uid'] = player_dict['UID']
+            
+            p = Player(uid)
+            p.load(player_dict)
+            if p.UID != uid:
+                p.UID = uid  # enforce key ↔ object UID consistency
+            self.players[uid] = p
 
-        # dm
-        self.dm = DungeonMaster()     # or your concrete type
-        self.dm.load(loaded_data["dm"])
+        # Load DM
+        self.dm = DungeonMaster()
+        dm_data = game_state.dm.model_dump() if hasattr(game_state.dm, 'model_dump') else game_state.dm
+        self.dm.load(dm_data)
 
-        # tiles
+        # Load tiles
         tiles_map: dict[tuple[int, int], Tile] = {}
-        for td in loaded_data.get("tiles", []):
-            t = Tile.from_dict(td)
+        for tile_data in game_state.tiles:
+            if hasattr(tile_data, 'model_dump'):
+                tile_dict = tile_data.model_dump()
+            else:
+                tile_dict = tile_data
+            
+            t = Tile.from_dict(tile_dict)
             tiles_map[(t.position[0], t.position[1])] = t
         self.tiles = tiles_map
+        
+        # Store game metadata
+        self.game_id = game_model.id
+        self.name = game_model.name
+        self.description = game_model.description
+        self.status = game_model.status
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []

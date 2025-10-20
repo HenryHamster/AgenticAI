@@ -1,0 +1,121 @@
+[
+  {
+    "id": "default_game",
+    "name": "Untitled Game",
+    "description": "",
+    "status": "active",
+    "game_state": {
+      "players": {
+        "player0": {
+          "uid": "player0",
+          "position": [
+            0,
+            1
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Move cautiously toward the faint trail into the shadowed woods, searching for hidden riches or opportunities.",
+            "Move swiftly up the winding path to gain a vantage point and scout for lucrative opportunities or threats in the surrounding area."
+          ]
+        },
+        "player1": {
+          "uid": "player1",
+          "position": [
+            0,
+            1
+          ],
+          "model": "gpt-4.1-nano",
+          "player_class": "human",
+          "values": {
+            "money": 0,
+            "health": 100
+          },
+          "responses": [
+            "Draw my dagger and quietly follow the faint trail into the shadowed woods, ready to seize any opportunity or obstacle.",
+            "Quickly draw a small gemstone from my pouch and conceal it in my hand, ready to use as leverage or a bargaining tool."
+          ]
+        }
+      },
+      "dm": {
+        "responses": []
+      },
+      "tiles": [
+        {
+          "position": [
+            -1,
+            -1
+          ],
+          "description": "At coordinates (-1, -1), a narrow, moss-covered stone bridge arches over a bubbling, hidden stream nestled within a dense thicket of tangled vines and ancient oaks."
+        },
+        {
+          "position": [
+            -1,
+            0
+          ],
+          "description": "At coordinates (-1, 0), a sunlit clearing reveals a circle of weathered standing stones, their surfaces etched with glowing runes, amid a carpet of thick, fragrant moss."
+        },
+        {
+          "position": [
+            -1,
+            1
+          ],
+          "description": "At coordinates (-1, 1), a jagged cliffside plunges into churning waters below, with a narrow, precarious ledge dotted with sparse, wind-bent shrubs offering a fleeting path forward."
+        },
+        {
+          "position": [
+            0,
+            -1
+          ],
+          "description": "At coordinates (0, -1), a sun-dappled meadow stretches open, dotted with wildflowers and a solitary, gnarled tree whose low-hanging branches conceal a hidden hollow entrance."
+        },
+        {
+          "position": [
+            0,
+            0
+          ],
+          "description": "At coordinates (0, 0), a tranquil pond reflects the surrounding dense canopy, with a mossy bank hosting scattered driftwood and a faint trail leading into the shadowed woods beyond."
+        },
+        {
+          "position": [
+            0,
+            1
+          ],
+          "description": "At coordinates (0, 1), a rocky hilltop crowned with jagged stones offers a commanding view over the surrounding forest, with a narrow, winding path spiraling upward through sparse patches of hardy grass."
+        },
+        {
+          "position": [
+            1,
+            -1
+          ],
+          "description": "At coordinates (1, -1), a steep, winding canyon wall lined with ancient, carved statues plunges into shadowed depths, with a hidden crevice at its base offering potential shelter or entrance."
+        },
+        {
+          "position": [
+            1,
+            0
+          ],
+          "description": "At coordinates (1, 0), a sunlit hillock covered in wild thyme and blooming daisies rises gently, with a faint trail leading to a hidden hollow beneath a solitary, twisted oak."
+        },
+        {
+          "position": [
+            1,
+            1
+          ],
+          "description": "At coordinates (1, 1), a dense thicket of thorny bushes and tangled vines conceals a weathered stone archway, hinting at a forgotten passage into shadowed ruins beyond."
+        }
+      ],
+      "player_responses": {
+        "player0": "Move swiftly up the winding path to gain a vantage point and scout for lucrative opportunities or threats in the surrounding area.",
+        "player1": "Quickly draw a small gemstone from my pouch and conceal it in my hand, ready to use as leverage or a bargaining tool."
+      },
+      "dungeon_master_verdict": "character_state=[CharacterState(uid='player0', money_change=0, health_change=0, position_change=[0, 1]), CharacterState(uid='player1', money_change=0, health_change=0, position_change=[0, 0])] world_state=WorldState(tiles=[TileState(position=[0, 1], description='At coordinates (0, 1), a rocky hilltop crowned with jagged stones offers a commanding view over the surrounding forest, with a narrow, winding path spiraling upward through sparse patches of hardy grass.')]) narrative_result='Player0 swiftly ascends the winding path to scout the area, while Player1 discreetly conceals a gemstone, both acting to maximize their advantage. Success: true.'"
+    },
+    "created_at": null,
+    "updated_at": null
+  }
+]
