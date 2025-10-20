@@ -3,7 +3,7 @@ FastAPI routes for game management
 """
 
 from fastapi import APIRouter, HTTPException, Response
-from lib.database.gameService import get_game_run_from_database, create_game_from_database
+from services.database.gameService import get_game_run_from_database, create_game_from_database
 
 router = APIRouter()
 

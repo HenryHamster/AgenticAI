@@ -7,10 +7,12 @@ class CharacterState(BaseModel):
     money_change: int = Field()
     health_change: int = Field()
     position_change: List[int] = Field(min_length=2, max_length=2)
+
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
     description: str
+
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     tiles: List[TileState] = Field(default_factory=list)

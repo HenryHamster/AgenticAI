@@ -10,7 +10,7 @@ from schema.gameModel import GameModel, GameStateModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
 from schema.dungeonMasterModel import DungeonMasterModel
-from lib.database.gameService import save_game_to_database, load_game_from_database
+from services.database.gameService import save_game_to_database, load_game_from_database
 import asyncio
 from core.settings import GameConfig
 

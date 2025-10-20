@@ -1,7 +1,7 @@
 from database.fileManager import Savable
 from typing import override, overload
 from schema.tileModel import TileModel
-from lib.database.tileService import save_tile_to_database, load_tile_from_database
+from services.database.tileService import save_tile_to_database, load_tile_from_database
 
 class Tile(Savable):
     position: tuple[int,int]
