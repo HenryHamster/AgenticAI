@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS games (
     name TEXT NOT NULL DEFAULT 'Untitled Game',
     description TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
+    world_size INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -203,7 +204,9 @@ CREATE POLICY "Allow service role full access on tiles"
 -- ==============================================
 
 -- View for active games with latest turn info
-CREATE OR REPLACE VIEW active_games AS
+DROP VIEW IF EXISTS active_games;
+
+CREATE VIEW active_games AS
 SELECT 
     g.id,
     g.name,
@@ -264,3 +267,19 @@ ORDER BY created_at DESC;
 -- WHERE table_schema = 'public'
 --     AND table_name IN ('games', 'players', 'tiles')
 -- ORDER BY table_name, ordinal_position;
+
+-- ==============================================
+-- Database Migrations (for existing databases)
+-- ==============================================
+
+-- Add world_size column if it doesn't exist (safe for existing databases)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'world_size'
+    ) THEN
+        ALTER TABLE games ADD COLUMN world_size INTEGER NOT NULL DEFAULT 1;
+    END IF;
+END $$;

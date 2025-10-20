@@ -5,6 +5,7 @@ from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import json
+import uuid
 from schema.dataModels import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
 from schema.playerModel import PlayerModel
@@ -22,13 +23,16 @@ class Game(Savable):
     file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
     current_turn_number: int
+    world_size: int
 
-    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None):
+    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
         self.file_manager = FileManager()
         self.players = {}
         self.current_turn_number = 0
+        # Use provided world_size or fallback to GameConfig default
+        self.world_size = world_size if world_size is not None else GameConfig.world_size
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
@@ -37,7 +41,7 @@ class Game(Savable):
             if p.UID != uid:
                 p.UID = uid  # enforce key ↔ object UID consistency
             self.players[uid] = p
-        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-GameConfig.world_size, GameConfig.world_size + 1) for j in range(-GameConfig.world_size, GameConfig.world_size + 1)}
+        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
     def step(self):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
@@ -82,12 +86,13 @@ class Game(Savable):
         )
         
         # Create/update game metadata (without game_state)
-        game_id = getattr(self, 'game_id', 'default_game')
+        game_id = getattr(self, 'game_id', str(uuid.uuid4()))
         game_data = GameModel(
             id=game_id,
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
-            status=getattr(self, 'status', 'active')
+            status=getattr(self, 'status', 'active'),
+            world_size=self.world_size
         )
         
         # Save game metadata to database
@@ -202,6 +207,7 @@ class Game(Savable):
         self.name = game_model.name
         self.description = game_model.description
         self.status = game_model.status
+        self.world_size = getattr(game_model, 'world_size', GameConfig.world_size)
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []
@@ -324,7 +330,7 @@ class Game(Savable):
                     continue
     #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
-        if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:
+        if abs(position[0]) > self.world_size or abs(position[1]) > self.world_size:
             return Tile("This is an invalid tile. You cannot interact with or enter this tile.", position=position)
         if position not in self.tiles:
             self.tiles[position] = self.dm.generate_tile(position)

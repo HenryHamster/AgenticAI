@@ -54,18 +54,39 @@ def update_game_in_database(game_model: GameModel) -> bool:
     storage = get_storage_factory().create_game_storage()
     return storage.update(game_model)
 
-def create_game_from_database(id: str) -> str:
+def create_game(
+    id: str,
+    player_info: dict = None,
+    dm_info: dict = None,
+    name: str = "Untitled Game",
+    description: str = ""
+) -> str:
     """
-    Create game from database/file system
-    Returns the created game ID
+    Create and persist a new game to database
+    
+    Args:
+        id: Unique identifier for the game
+        player_info: Dictionary of player data keyed by UID (uses defaults if None)
+        dm_info: Dungeon Master configuration (uses defaults if None)
+        name: Game name
+        description: Game description
+        
+    Returns:
+        The created game ID
     """
-
-    game_model = GameModel(
-        id=id,
-        name="Untitled Game",
-        description="",
-        status="active",
-        created_at=None,  # Let database handle timestamps
-        updated_at=None)
-
-    return save_game_to_database(game_model)
+    from services.gameInitializer import initialize_game
+    
+    # Initialize the game with provided or default configuration
+    game = initialize_game(
+        game_id=id,
+        player_info=player_info,
+        dm_info=dm_info,
+        name=name,
+        description=description,
+        status="active"
+    )
+    
+    # Persist to database (creates both GameModel and initial turn)
+    game.save()
+    
+    return id

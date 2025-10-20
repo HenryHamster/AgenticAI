@@ -18,6 +18,7 @@ class GameModel(BaseModel):
     name: str = Field(default="Untitled Game")
     description: str = Field(default="")
     status: str = Field(default="active")
+    world_size: int = Field(default=1)
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)
 

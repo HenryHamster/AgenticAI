@@ -6,12 +6,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - /app/__pycache__
+      - ./backend:/backend
+      - /backend/__pycache__
     env_file:
       - ./backend/.env
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/backend
     networks:
       - agentic-ai-network
 
