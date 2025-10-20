@@ -19,6 +19,11 @@ class GameModel(BaseModel):
     description: str = Field(default="")
     status: str = Field(default="active")
     world_size: int = Field(default=1)
+    winner_player_name: Optional[str] = Field(default=None)
+    currency_target: Optional[int] = Field(default=None)
+    number_of_turns: Optional[int] = Field(default=None)
+    total_players: Optional[int] = Field(default=None)
+    game_duration: Optional[str] = Field(default=None)  # Duration as ISO 8601 string or seconds
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)
 

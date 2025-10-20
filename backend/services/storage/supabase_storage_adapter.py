@@ -40,7 +40,8 @@ class SupabaseGameStorageAdapter:
     def save(self, game: GameModel) -> str:
         """Save a game to Supabase"""
         try:
-            data = game.model_dump()
+            # Exclude None values to allow database defaults (e.g., created_at) to apply
+            data = game.model_dump(exclude_none=True)
             # Upsert (insert or update)
             response = self.client.table(self.table_name).upsert(data).execute()
             return game.id
@@ -64,7 +65,7 @@ class SupabaseGameStorageAdapter:
     def get_all(self) -> List[GameModel]:
         """Get all games from Supabase"""
         try:
-            response = self.client.table(self.table_name).select("*").execute()
+            response = self.client.table(self.table_name).select("*").order("created_at", desc=True).execute()
             return [GameModel(**item) for item in response.data]
         except Exception as e:
             print(f"Error loading games from Supabase: {str(e)}")
@@ -82,7 +83,8 @@ class SupabaseGameStorageAdapter:
     def update(self, game: GameModel) -> bool:
         """Update an existing game in Supabase"""
         try:
-            data = game.model_dump()
+            # Exclude None values to prevent overwriting with null
+            data = game.model_dump(exclude_none=True)
             response = self.client.table(self.table_name).update(data).eq("id", game.id).execute()
             return True
         except Exception as e:
@@ -113,7 +115,8 @@ class SupabasePlayerStorageAdapter:
     def save(self, player: PlayerModel) -> str:
         """Save a player to Supabase"""
         try:
-            data = player.model_dump()
+            # Exclude None values to allow database defaults to apply
+            data = player.model_dump(exclude_none=True)
             # Upsert (insert or update)
             response = self.client.table(self.table_name).upsert(data).execute()
             return player.uid
@@ -155,7 +158,8 @@ class SupabasePlayerStorageAdapter:
     def update(self, player: PlayerModel) -> bool:
         """Update an existing player in Supabase"""
         try:
-            data = player.model_dump()
+            # Exclude None values to prevent overwriting with null
+            data = player.model_dump(exclude_none=True)
             response = self.client.table(self.table_name).update(data).eq("uid", player.uid).execute()
             return True
         except Exception as e:
@@ -187,7 +191,8 @@ class SupabaseTileStorageAdapter:
         """Save a tile to Supabase"""
         try:
             tile_id = f"tile_{tile.position[0]}_{tile.position[1]}"
-            data = tile.model_dump()
+            # Exclude None values to allow database defaults to apply
+            data = tile.model_dump(exclude_none=True)
             data["tile_id"] = tile_id  # Add explicit tile_id for lookup
             # Upsert (insert or update)
             response = self.client.table(self.table_name).upsert(data).execute()
@@ -239,7 +244,8 @@ class SupabaseTileStorageAdapter:
         """Update an existing tile in Supabase"""
         try:
             tile_id = f"tile_{tile.position[0]}_{tile.position[1]}"
-            data = tile.model_dump()
+            # Exclude None values to prevent overwriting with null
+            data = tile.model_dump(exclude_none=True)
             response = self.client.table(self.table_name).update(data).eq("tile_id", tile_id).execute()
             return True
         except Exception as e:
@@ -270,7 +276,9 @@ class SupabaseTurnStorageAdapter:
     def save(self, turn: TurnModel) -> int:
         """Save a turn to Supabase"""
         try:
-            data = turn.model_dump(exclude={'id'} if turn.id is None else set())
+            # Exclude None values to allow database defaults (e.g., created_at) to apply
+            exclude_fields = {'id'} if turn.id is None else set()
+            data = turn.model_dump(exclude=exclude_fields, exclude_none=True)
             # Insert new turn
             response = self.client.table(self.table_name).insert(data).execute()
             

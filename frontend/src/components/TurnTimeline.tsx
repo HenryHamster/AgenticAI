@@ -57,7 +57,7 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
               </div>
               
               <div className="space-y-4">
-                {turn.actions.map((action, idx) => (
+                {turn.actions && turn.actions.length > 0 ? turn.actions.map((action, idx) => (
                   <div 
                     key={idx}
                     className={`border-l-4 pl-4 py-2 rounded-r ${
@@ -112,7 +112,11 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
                       </span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center text-gray-500 py-4">
+                    No actions recorded for this turn
+                  </div>
+                )}
               </div>
             </div>
           );

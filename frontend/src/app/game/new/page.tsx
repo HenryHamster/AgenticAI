@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlayerSetup, GameCreationRequest } from "@/types/game";
-// import { createGame } from "@/services/api";
+import { createGame } from "@/services/api";
 
 // Random name pool for players
 const PLAYER_NAMES = [
@@ -52,6 +52,7 @@ export default function NewGamePage() {
   const [numberOfPlayers, setNumberOfPlayers] = useState(2);
   const [maxTurns, setMaxTurns] = useState<number | "until_win">("until_win");
   const [currencyGoal, setCurrencyGoal] = useState(50);
+  const [worldSize, setWorldSize] = useState(1); // Default world_size = 1 (creates 3x3 board)
   const [players, setPlayers] = useState<PlayerSetup[]>([
     {
       name: getRandomName(),
@@ -118,11 +119,11 @@ export default function NewGamePage() {
       players,
       maxTurns,
       currencyGoal,
+      worldSize,
     };
 
     try {
-      // todo: implement create game
-      const gameId = '1231231123'
+      const gameId = await createGame(gameRequest);
       router.push(`/game/${gameId}`);
     } catch (error) {
       console.error("Failed to create game:", error);
@@ -190,6 +191,31 @@ export default function NewGamePage() {
 
               {showAdvanced && (
                 <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Board Size
+                    </label>
+                    <select
+                      value={worldSize}
+                      onChange={(e) => setWorldSize(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="1">3×3 (Small)</option>
+                      <option value="2">5×5</option>
+                      <option value="3">7×7</option>
+                      <option value="4">9×9</option>
+                      <option value="5">11×11 (Default)</option>
+                      <option value="6">13×13</option>
+                      <option value="7">15×15</option>
+                      <option value="8">17×17</option>
+                      <option value="9">19×19</option>
+                      <option value="10">21×21 (Large)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      World size determines the game board dimensions
+                    </p>
+                  </div>
+
                   <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Max Turns
@@ -336,7 +362,7 @@ export default function NewGamePage() {
                             "startingPosition",
                             e.target.value === "random"
                               ? "random"
-                              : { x: 0, y: 0 }
+                              : [0, 0]
                           )
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -356,18 +382,17 @@ export default function NewGamePage() {
                             type="number"
                             min="0"
                             value={
-                              typeof player.startingPosition === "object"
-                                ? player.startingPosition.x
+                              Array.isArray(player.startingPosition)
+                                ? player.startingPosition[0]
                                 : 0
                             }
                             onChange={(e) =>
-                              updatePlayer(index, "startingPosition", {
-                                x: parseInt(e.target.value),
-                                y:
-                                  typeof player.startingPosition === "object"
-                                    ? player.startingPosition.y
-                                    : 0,
-                              })
+                              updatePlayer(index, "startingPosition", [
+                                parseInt(e.target.value),
+                                Array.isArray(player.startingPosition)
+                                  ? player.startingPosition[1]
+                                  : 0,
+                              ])
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
@@ -381,18 +406,17 @@ export default function NewGamePage() {
                             type="number"
                             min="0"
                             value={
-                              typeof player.startingPosition === "object"
-                                ? player.startingPosition.y
+                              Array.isArray(player.startingPosition)
+                                ? player.startingPosition[1]
                                 : 0
                             }
                             onChange={(e) =>
-                              updatePlayer(index, "startingPosition", {
-                                x:
-                                  typeof player.startingPosition === "object"
-                                    ? player.startingPosition.x
-                                    : 0,
-                                y: parseInt(e.target.value),
-                              })
+                              updatePlayer(index, "startingPosition", [
+                                Array.isArray(player.startingPosition)
+                                  ? player.startingPosition[0]
+                                  : 0,
+                                parseInt(e.target.value),
+                              ])
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required

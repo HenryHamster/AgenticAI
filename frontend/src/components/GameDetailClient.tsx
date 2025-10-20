@@ -13,8 +13,52 @@ interface GameDetailClientProps {
 export default function GameDetailClient({ gameRun }: GameDetailClientProps) {
   const [selectedTurnNumber, setSelectedTurnNumber] = useState(0);
   
+  // Safety check for turns
+  if (!gameRun.turns || gameRun.turns.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-xl font-semibold text-gray-700">No turns available</h2>
+        <p className="text-gray-500 mt-2">This game has no recorded turns yet.</p>
+      </div>
+    );
+  }
+  
   const currentTurn = gameRun.turns.find((t) => t.turnNumber === selectedTurnNumber) || gameRun.turns[0];
-  const winner = gameRun.players.find((p) => p.id === gameRun.winnerId);
+  
+  // Additional safety check
+  if (!currentTurn) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-xl font-semibold text-gray-700">Turn not found</h2>
+        <p className="text-gray-500 mt-2">Unable to load turn data.</p>
+      </div>
+    );
+  }
+  
+  // Convert players dictionary to array for easier iteration
+  const playersArray = Object.values(gameRun.players || {});
+  const winner = gameRun.winnerId ? gameRun.players?.[gameRun.winnerId] : null;
+  
+  // Convert tiles array to board state (2D grid) for backwards compatibility
+  const getBoardStateFromTiles = (tiles: any): any => {
+    if (tiles && Array.isArray(tiles)) {
+      // If it's the new tiles array format, we'll pass it directly
+      return tiles;
+    }
+    // Fallback to legacy boardState if available
+    return currentTurn.boardState || [];
+  };
+  
+  // Get player states as array from dictionary
+  const getPlayerStatesArray = (players: any): any[] => {
+    if (players && typeof players === 'object' && !Array.isArray(players)) {
+      return Object.values(players);
+    }
+    // Fallback to legacy playerStates if available
+    return currentTurn.playerStates || [];
+  };
 
   return (
     <>
@@ -26,17 +70,17 @@ export default function GameDetailClient({ gameRun }: GameDetailClientProps) {
               Game #{gameRun.id.slice(0, 8)}
             </h1>
             <p className="text-gray-600">
-              {new Date(gameRun.startTime).toLocaleString()}
+              {new Date(gameRun.created_at).toLocaleString()}
             </p>
           </div>
           
           {winner && (
             <div className="bg-yellow-100 px-4 py-2 rounded-lg">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{winner.emoji}</span>
+                <span className="text-2xl">{winner.emoji || '👑'}</span>
                 <div>
                   <div className="text-xs text-yellow-700">Winner</div>
-                  <div className="font-bold text-yellow-900">{winner.name}</div>
+                  <div className="font-bold text-yellow-900">{winner.name || winner.uid}</div>
                 </div>
               </div>
             </div>
@@ -106,14 +150,15 @@ export default function GameDetailClient({ gameRun }: GameDetailClientProps) {
             </div>
             
             <GameBoard
-              boardState={currentTurn.boardState}
-              players={currentTurn.playerStates}
+              boardState={getBoardStateFromTiles(currentTurn.tiles)}
+              players={getPlayerStatesArray(currentTurn.players)}
+              boardSize={currentTurn.board_size || gameRun.board_size}
             />
           </div>
 
           {/* Player Stats */}
           <PlayerStatsPanel
-            players={currentTurn.playerStates}
+            players={getPlayerStatesArray(currentTurn.players)}
             targetCurrency={gameRun.targetCurrency}
           />
         </div>

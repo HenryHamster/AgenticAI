@@ -92,7 +92,12 @@ class Game(Savable):
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
             status=getattr(self, 'status', 'active'),
-            world_size=self.world_size
+            world_size=self.world_size,
+            winner_player_name=getattr(self, 'winner_player_name', None),
+            currency_target=getattr(self, 'currency_target', None),
+            number_of_turns=getattr(self, 'number_of_turns', None),
+            total_players=getattr(self, 'total_players', None),
+            game_duration=getattr(self, 'game_duration', None)
         )
         
         # Save game metadata to database
@@ -208,6 +213,11 @@ class Game(Savable):
         self.description = game_model.description
         self.status = game_model.status
         self.world_size = getattr(game_model, 'world_size', GameConfig.world_size)
+        self.winner_player_name = getattr(game_model, 'winner_player_name', None)
+        self.currency_target = getattr(game_model, 'currency_target', None)
+        self.number_of_turns = getattr(game_model, 'number_of_turns', None)
+        self.total_players = getattr(game_model, 'total_players', None)
+        self.game_duration = getattr(game_model, 'game_duration', None)
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []

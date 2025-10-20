@@ -6,13 +6,20 @@ Provides utilities for creating default game configurations
 from typing import Dict, Any
 
 
-def create_default_player_info(num_players: int = 2, model: str = "mock") -> Dict[str, Dict[str, Any]]:
+def create_default_player_info(
+    num_players: int = 2, 
+    model: str = "mock",
+    starting_currency: int = 0,
+    starting_health: int = 100
+) -> Dict[str, Dict[str, Any]]:
     """
     Create default player configuration
     
     Args:
         num_players: Number of players to create (default: 2)
         model: AI model to use for players (default: "mock")
+        starting_currency: Starting currency for each player (default: 0)
+        starting_health: Starting health for each player (default: 100)
         
     Returns:
         Dictionary of player data keyed by UID
@@ -26,7 +33,7 @@ def create_default_player_info(num_players: int = 2, model: str = "mock") -> Dic
             "UID": uid,
             "model": model,
             "player_class": "human",
-            "values": {"money": 0, "health": 100},
+            "values": {"money": starting_currency, "health": starting_health},
             "responses": []
         }
     
@@ -55,7 +62,10 @@ def initialize_game(
     model: str = "mock",
     name: str = "Untitled Game",
     description: str = "",
-    status: str = "active"
+    status: str = "active",
+    currency_target: int = 1000,
+    starting_currency: int = 0,
+    starting_health: int = 100
 ):
     """
     Initialize a new Game instance with configuration
@@ -70,6 +80,9 @@ def initialize_game(
         name: Game name
         description: Game description
         status: Initial game status
+        currency_target: Win condition currency target (default: 1000)
+        starting_currency: Starting currency for each player (default: 0)
+        starting_health: Starting health for each player (default: 100)
         
     Returns:
         Configured Game instance
@@ -79,7 +92,12 @@ def initialize_game(
     
     # Use defaults if not provided
     if player_info is None:
-        player_info = create_default_player_info(num_players=num_players, model=model)
+        player_info = create_default_player_info(
+            num_players=num_players, 
+            model=model,
+            starting_currency=starting_currency,
+            starting_health=starting_health
+        )
     
     if dm_info is None:
         dm_info = create_default_dm_info(model=model)
@@ -92,5 +110,12 @@ def initialize_game(
     game.name = name
     game.description = description
     game.status = status
+    
+    # Set new game configuration fields
+    game.currency_target = currency_target
+    game.total_players = num_players
+    game.winner_player_name = None
+    game.number_of_turns = None
+    game.game_duration = None
     
     return game

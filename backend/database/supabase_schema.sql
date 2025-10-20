@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS games (
     description TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
     world_size INTEGER NOT NULL DEFAULT 1,
+    winner_player_name TEXT,
+    currency_target INTEGER,
+    number_of_turns INTEGER,
+    total_players INTEGER,
+    game_duration INTERVAL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -281,5 +286,65 @@ BEGIN
         AND column_name = 'world_size'
     ) THEN
         ALTER TABLE games ADD COLUMN world_size INTEGER NOT NULL DEFAULT 1;
+    END IF;
+END $$;
+
+-- Add winner_player_name column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'winner_player_name'
+    ) THEN
+        ALTER TABLE games ADD COLUMN winner_player_name TEXT;
+    END IF;
+END $$;
+
+-- Add currency_target column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'currency_target'
+    ) THEN
+        ALTER TABLE games ADD COLUMN currency_target INTEGER;
+    END IF;
+END $$;
+
+-- Add number_of_turns column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'number_of_turns'
+    ) THEN
+        ALTER TABLE games ADD COLUMN number_of_turns INTEGER;
+    END IF;
+END $$;
+
+-- Add total_players column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'total_players'
+    ) THEN
+        ALTER TABLE games ADD COLUMN total_players INTEGER;
+    END IF;
+END $$;
+
+-- Add game_duration column if it doesn't exist (stored as interval for time duration)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'game_duration'
+    ) THEN
+        ALTER TABLE games ADD COLUMN game_duration INTERVAL;
     END IF;
 END $$;

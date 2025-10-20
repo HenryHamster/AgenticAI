@@ -3,15 +3,17 @@ FastAPI routes for game management
 """
 
 import asyncio
+from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Response, Query
 from services.database.gameService import (
     get_game_run_from_database,
     save_game_to_database,
     get_all_games_from_database,
 )
-from services.database.turnService import get_turns_by_game_id
 from services.gameWorker import run_game_async
 from services.gameInitializer import initialize_game
+from schema.gameModel import GameModel
+from api.transformers import transform_game_for_frontend
 
 router = APIRouter()
 
@@ -21,7 +23,7 @@ async def health_check():
     return {"status": "healthy"}
 
 
-@router.get("/games/create")
+@router.post("/games/create")
 async def create_game_endpoint(
     number_of_rounds: int = Query(
         default=10, ge=1, description="Number of game rounds to play"
@@ -30,7 +32,7 @@ async def create_game_endpoint(
         default=2, ge=1, le=10, description="Number of players in the game"
     ),
     world_size: int = Query(
-        default=1,
+        default=2,
         ge=1,
         le=10,
         description="World size (grid extends from -size to +size)",
@@ -39,6 +41,21 @@ async def create_game_endpoint(
         default="mock",
         regex="^(gpt-4\.1-nano|mock)$",
         description="AI model to use (gpt-4.1-nano or mock)",
+    ),
+    currency_target: int = Query(
+        default=1000,
+        ge=1,
+        description="Currency target for win condition"
+    ),
+    starting_currency: int = Query(
+        default=0,
+        ge=0,
+        description="Starting currency for each player"
+    ),
+    starting_health: int = Query(
+        default=100,
+        ge=1,
+        description="Starting health for each player"
     ),
 ):
     try:
@@ -53,8 +70,11 @@ async def create_game_endpoint(
             num_players=number_of_players,
             world_size=world_size,
             model=model_mode,
-            name=f"Game {game_id}",
+            name=f"{game_id}",
             description=f"Game with {number_of_players} players, {number_of_rounds} rounds, world size {world_size}",
+            currency_target=currency_target,
+            starting_currency=starting_currency,
+            starting_health=starting_health,
         )
 
         # Save the initialized game to database
@@ -75,6 +95,9 @@ async def create_game_endpoint(
                 "number_of_players": number_of_players,
                 "world_size": world_size,
                 "model_mode": model_mode,
+                "currency_target": currency_target,
+                "starting_currency": starting_currency,
+                "starting_health": starting_health,
             },
         }
     except Exception as e:
@@ -86,7 +109,7 @@ async def get_all_games():
     """Get all games without their turns"""
     try:
         games = get_all_games_from_database()
-        return [game.model_dump() for game in games]
+        return [transform_game_for_frontend(game, include_turns=False) for game in games]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get games: {str(e)}")
 
@@ -100,14 +123,7 @@ async def get_game_detail(
 ):
     try:
         game_run = get_game_run_from_database(game_id)
-        response = game_run.model_dump()
-
-        # Optionally include all turns for this game
-        if include_turns:
-            turns = get_turns_by_game_id(game_id)
-            response["turns"] = [turn.model_dump() for turn in turns]
-
-        return response
+        return transform_game_for_frontend(game_run, include_turns=include_turns)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=f"Game not found: {str(e)}")
     except Exception as e:

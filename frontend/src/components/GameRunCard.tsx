@@ -6,8 +6,10 @@ interface GameRunCardProps {
 }
 
 export default function GameRunCard({ gameRun }: GameRunCardProps) {
-  const winner = gameRun.players.find(p => p.id === gameRun.winnerId);
-  const startDate = new Date(gameRun.startTime);
+  // Convert players dictionary to array
+  const playersArray = gameRun.players ? Object.values(gameRun.players) : [];
+  const winner = gameRun.winnerId && gameRun.players ? gameRun.players[gameRun.winnerId] : null;
+  const startDate = new Date(gameRun.created_at);
   const endDate = new Date(gameRun.endTime);
   const duration = Math.round((endDate.getTime() - startDate.getTime()) / 1000 / 60); // minutes
 
@@ -26,7 +28,7 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           
           {winner && (
             <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
-              <span className="text-lg">{winner.emoji}</span>
+              <span className="text-lg">{winner.emoji || '🏆'}</span>
               <span className="text-xs font-semibold text-yellow-800">Winner</span>
             </div>
           )}
@@ -35,12 +37,12 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
         <div className="grid grid-cols-2 gap-3 text-sm mb-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Players:</span>
-            <span className="font-semibold text-gray-600">{gameRun.players.length}</span>
+            <span className="font-semibold text-gray-600">{playersArray.length}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Turns:</span>
-            <span className="font-semibold text-gray-600">{gameRun.turns.length}</span>
+            <span className="font-semibold text-gray-600">{gameRun.turns?.length || 0}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -55,13 +57,13 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
         </div>
 
         <div className="flex items-center gap-1 pt-2 border-t">
-          {gameRun.players.slice(0, 4).map((player) => (
-            <span key={player.id} className="text-xl" title={player.name}>
-              {player.emoji}
+          {playersArray.slice(0, 4).map((player) => (
+            <span key={player.uid || (player as any).id} className="text-xl" title={player.name || player.uid}>
+              {player.emoji || '🧙'}
             </span>
           ))}
-          {gameRun.players.length > 4 && (
-            <span className="text-sm text-gray-500">+{gameRun.players.length - 4}</span>
+          {playersArray.length > 4 && (
+            <span className="text-sm text-gray-500">+{playersArray.length - 4}</span>
           )}
         </div>
       </div>
