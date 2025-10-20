@@ -4,7 +4,7 @@ Game-specific data models
 
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
-from schema.dataModels import GameResponse, CharacterState, WorldState
+from schema.dataModels import GameResponse, CharacterState, WorldState, TileState
 
 class GameStateModel(BaseModel):
     players: Dict[str, 'PlayerModel'] = Field(default_factory=dict)
@@ -12,6 +12,10 @@ class GameStateModel(BaseModel):
     tiles: List['TileModel'] = Field(default_factory=list)
     player_responses: Dict[str, str] = Field(default_factory=dict)
     dungeon_master_verdict: str = Field(default="")
+    # Decomposed verdict components
+    character_state_change: List[CharacterState] = Field(default_factory=list)
+    world_state_change: Optional[WorldState] = Field(default=None)
+    narrative_result: str = Field(default="")
 
 class GameModel(BaseModel):
     id: str = Field(min_length=1)
@@ -24,6 +28,8 @@ class GameModel(BaseModel):
     currency_target: Optional[int] = Field(default=None)
     max_turns: Optional[int] = Field(default=None)
     total_players: Optional[int] = Field(default=None)
+    starting_currency: Optional[int] = Field(default=0)
+    starting_health: Optional[int] = Field(default=100)
     game_duration: Optional[str] = Field(default=None)  # Duration as ISO 8601 string or seconds
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)

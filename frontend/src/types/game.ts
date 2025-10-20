@@ -38,6 +38,20 @@ export interface PlayerAction {
   isValid: boolean;
 }
 
+export interface CharacterState {
+  uid: string;
+  money_change: number;
+  health_change: number;
+  position_change: [number, number];
+}
+
+export interface WorldState {
+  tiles: {
+    position: [number, number];
+    description: string;
+  }[];
+}
+
 export interface Turn {
   turnNumber: number;
   tiles: Tile[];
@@ -47,6 +61,10 @@ export interface Turn {
   };
   player_responses?: { [key: string]: string };
   dungeon_master_verdict?: string;
+  // Decomposed verdict components
+  character_state_change?: CharacterState[];
+  world_state_change?: WorldState | null;
+  narrative_result?: string;
   world_size?: number; // Backend world_size parameter
   board_size?: number; // Calculated board dimension (2 * world_size + 1)
   // Legacy fields for backwards compatibility

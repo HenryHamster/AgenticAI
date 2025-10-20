@@ -81,10 +81,37 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                     "isActive": p.values.health > 0
                 }
             
+            # Convert verdict components to serializable format
+            character_state_data = []
+            for cs in turn.game_state.character_state_change:
+                character_state_data.append({
+                    "uid": cs.uid,
+                    "money_change": cs.money_change,
+                    "health_change": cs.health_change,
+                    "position_change": cs.position_change
+                })
+            
+            world_state_data = None
+            if turn.game_state.world_state_change:
+                world_state_data = {
+                    "tiles": [
+                        {
+                            "position": tile.position,
+                            "description": tile.description
+                        }
+                        for tile in turn.game_state.world_state_change.tiles
+                    ]
+                }
+            
             turn_data = {
                 "turnNumber": turn.turn_number,
                 "tiles": tiles_array,
                 "players": players_dict,
+                "dungeon_master_verdict": turn.game_state.dungeon_master_verdict,
+                # Decomposed verdict components
+                "character_state_change": character_state_data,
+                "world_state_change": world_state_data,
+                "narrative_result": turn.game_state.narrative_result,
                 "world_size": game.world_size,
                 "board_size": 2 * game.world_size + 1,  # Calculate board dimensions
                 # Legacy fields for backwards compatibility

@@ -3,6 +3,7 @@ FastAPI routes for game management
 """
 
 from typing import List, Dict, Any
+import uuid
 from fastapi import APIRouter, HTTPException, Response, Query, BackgroundTasks
 from services.database.gameService import (
     get_game_run_from_database,
@@ -10,7 +11,6 @@ from services.database.gameService import (
     get_all_games_from_database,
 )
 from services.gameWorker import run_game_async
-from services.gameInitializer import initialize_game
 from schema.gameModel import GameModel
 from api.transformers import transform_game_for_frontend
 
@@ -62,31 +62,33 @@ async def create_game_endpoint(
 ):
     try:
         # Create a unique game ID
-        import uuid
-
         game_id = f"game_{uuid.uuid4().hex[:8]}"
 
-        # Initialize the game using gameInitializer with the specified parameters
-        game = initialize_game(
-            game_id=game_id,
-            num_players=number_of_players,
-            world_size=world_size,
-            model=model_mode,
+        # Create database entry with all configuration
+        # The worker will read this configuration and handle initialization
+        game_model = GameModel(
+            id=game_id,
             name=f"{game_id}",
             description=f"Game with {number_of_players} players, world size {world_size}",
+            status="pending",  # Worker will change to 'active' after initialization
+            model=model_mode,
+            world_size=world_size,
             currency_target=currency_target,
+            total_players=number_of_players,
+            max_turns=max_turns,
             starting_currency=starting_currency,
             starting_health=starting_health,
-            max_turns=max_turns,
         )
+        
+        # Save game configuration to database
+        save_game_to_database(game_model)
 
-        # Save the initialized game to database
-        game.save()
-
-        # Trigger the game worker to run the game asynchronously
-        # This runs in the background without blocking the API response
+        # Trigger the game worker to initialize and run the game asynchronously
+        # Worker will fetch all configuration from database
         background_tasks.add_task(
-            run_game_async, game_id=game_id, max_turns=max_turns, verbose=True
+            run_game_async,
+            game_id=game_id,
+            verbose=True,
         )
 
         return {

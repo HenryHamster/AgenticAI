@@ -4,7 +4,6 @@ from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
-import json
 import uuid
 from schema.dataModels import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
@@ -13,26 +12,31 @@ from schema.tileModel import TileModel
 from schema.dungeonMasterModel import DungeonMasterModel
 from schema.turnModel import TurnModel
 from services.database.gameService import save_game_to_database, load_game_from_database
-from services.database.turnService import save_turn_to_database, get_latest_turn_by_game_id, get_turns_by_game_id
-import asyncio
+from services.database.turnService import save_turn_to_database, get_latest_turn_by_game_id
 from core.settings import GameConfig
 
 class Game(Savable):
     players: dict[str,Player]
     dm: DungeonMaster
-    file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
     current_turn_number: int
     world_size: int
+    # Decomposed verdict components
+    verdict_character_state: list[CharacterState]
+    verdict_world_state: WorldState | None
+    verdict_narrative_result: str
 
     def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
-        self.file_manager = FileManager()
         self.players = {}
         self.current_turn_number = 0
         # Use provided world_size or fallback to GameConfig default
         self.world_size = world_size if world_size is not None else GameConfig.world_size
+        # Initialize verdict components
+        self.verdict_character_state = []
+        self.verdict_world_state = None
+        self.verdict_narrative_result = ""
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
@@ -82,7 +86,11 @@ class Game(Savable):
             tiles=tiles_data,
             player_responses={uid: player.get_responses_history()[-1] if player.get_responses_history() else "" 
                             for uid, player in self.players.items()},
-            dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
+            dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else "",
+            # Include decomposed verdict components
+            character_state_change=self.verdict_character_state,
+            world_state_change=self.verdict_world_state,
+            narrative_result=self.verdict_narrative_result
         )
         
         # Create/update game metadata (without game_state)
@@ -239,6 +247,7 @@ class Game(Savable):
         if self.dm._responses and len(self.dm._responses) > frame:
             responses["DM"] = self.dm._responses[frame]
         return responses
+    
     def handle_verdict(self, verdict: GameResponse | dict | str | None):
         """
         Apply a DM verdict to game state.
@@ -246,7 +255,7 @@ class Game(Savable):
         - Supports multiple players via CharacterState entries keyed by uid.
         - Ignores/records unknown or false UIDs without raising.
         - Clamps negative money/health to 0.
-        - Applies world_state tile updates when present.
+        - Applies world_state_change tile updates when present.
         """
         if verdict is None:
             return
@@ -273,12 +282,12 @@ class Game(Savable):
         except Exception as E:
             raise ValueError(f"Failed to parse verdict into GameResponse: {E}.")
 
-        if parsed is None or not isinstance(getattr(parsed, "character_state", None), list):
+        if parsed is None or not isinstance(getattr(parsed, "character_state_change", None), list):
             return #Don't throw errors if state is empty
 
         # --- Apply per-player character updates ---
         unknown_uids: list[str] = []
-        for cs in parsed.character_state:
+        for cs in parsed.character_state_change:
             # Tolerate entries that aren't CharacterState (e.g., dicts)
             try:
                 if not isinstance(cs, CharacterState):
@@ -325,7 +334,7 @@ class Game(Savable):
             print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")
 
         # --- Apply world updates to tiles if provided ---
-        ws = getattr(parsed, "world_state", None)
+        ws = getattr(parsed, "world_state_change", None)
         tiles_payload = getattr(ws, "tiles", None) if ws else None
         if tiles_payload:
             for td in tiles_payload:
@@ -340,6 +349,12 @@ class Game(Savable):
                     self.tiles[(t.position[0], t.position[1])].update_description(t.description)
                 except Exception:
                     continue
+        
+        # --- Store decomposed verdict components for persistence ---
+        self.verdict_character_state = getattr(parsed, "character_state_change", [])
+        self.verdict_world_state = getattr(parsed, "world_state_change", None)
+        self.verdict_narrative_result = getattr(parsed, "narrative_result", "")
+    
     #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
         if abs(position[0]) > self.world_size or abs(position[1]) > self.world_size:

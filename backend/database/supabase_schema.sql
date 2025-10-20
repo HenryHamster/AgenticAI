@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS games (
     currency_target INTEGER,
     max_turns INTEGER,
     total_players INTEGER,
+    starting_currency INTEGER DEFAULT 0,
+    starting_health INTEGER DEFAULT 100,
     game_duration INTERVAL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -359,5 +361,29 @@ BEGIN
         AND column_name = 'model'
     ) THEN
         ALTER TABLE games ADD COLUMN model TEXT NOT NULL DEFAULT 'mock';
+    END IF;
+END $$;
+
+-- Add starting_currency column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'starting_currency'
+    ) THEN
+        ALTER TABLE games ADD COLUMN starting_currency INTEGER DEFAULT 0;
+    END IF;
+END $$;
+
+-- Add starting_health column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'starting_health'
+    ) THEN
+        ALTER TABLE games ADD COLUMN starting_health INTEGER DEFAULT 100;
     END IF;
 END $$;

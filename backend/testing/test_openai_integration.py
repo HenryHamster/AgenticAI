@@ -27,12 +27,12 @@ def test_openai_integration():
 
         if parsed_result:
             print("✓ Received structured response")
-            print(f"Character money: {parsed_result.character_state['money']}")
-            print(f"Position: {parsed_result.character_state['position']}")
-            print(f"Current action: {parsed_result.character_state['current_action']}")
-            print(f"Environment: {parsed_result.world_state['environment_type']}")
-            print(f"Available actions: {parsed_result.world_state['available_actions']}")
-            print(f"NPCs: {parsed_result.world_state['npcs']}")
+            print(f"Character money: {parsed_result.character_state_change['money']}")
+            print(f"Position: {parsed_result.character_state_change['position']}")
+            print(f"Current action: {parsed_result.character_state_change['current_action']}")
+            print(f"Environment: {parsed_result.world_state_change['environment_type']}")
+            print(f"Available actions: {parsed_result.world_state_change['available_actions']}")
+            print(f"NPCs: {parsed_result.world_state_change['npcs']}")
             print()
 
             if parsed_result.parse_errors:
@@ -72,7 +72,7 @@ def test_parser_validation():
     sample_response = """I greet the barkeeper with a friendly smile and order an ale. "Good evening! I'm new to these parts. I've heard rumors of ancient ruins nearby - any truth to those tales? Also, are there any merchants or adventurers looking for skilled help?"
 
 {
-    "character_state": {
+    "character_state_change": {
         "money": 95,
         "skill_level": 1,
         "attributes": {
@@ -89,7 +89,7 @@ def test_parser_validation():
         "health": 100,
         "experience": 0
     },
-    "world_state": {
+    "world_state_change": {
         "environment_type": "tavern",
         "description": "A cozy tavern with wooden tables, a stone fireplace, and the smell of roasted meat",
         "available_actions": ["order drink", "ask about rumors", "talk to patrons", "rent room", "leave"],
@@ -103,11 +103,11 @@ def test_parser_validation():
     print("=== Testing Parser with Realistic Response ===")
     result = parser.parse_response(sample_response)
 
-    print(f"✓ Character money: {result.character_state['money']}")
-    print(f"✓ Charisma: {result.character_state['attributes']['charisma']}")
-    print(f"✓ Inventory: {result.character_state['inventory']}")
-    print(f"✓ Environment: {result.world_state['environment_type']}")
-    print(f"✓ NPCs: {result.world_state['npcs']}")
+    print(f"✓ Character money: {result.character_state_change['money']}")
+    print(f"✓ Charisma: {result.character_state_change['attributes']['charisma']}")
+    print(f"✓ Inventory: {result.character_state_change['inventory']}")
+    print(f"✓ Environment: {result.world_state_change['environment_type']}")
+    print(f"✓ NPCs: {result.world_state_change['npcs']}")
     print(f"✓ Narrative: {result.narrative}")
 
     if result.parse_errors:

@@ -28,23 +28,32 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
     return playerActions;
   }
 
+  // Create a map of character states for quick lookup
+  const characterStateMap = new Map<string, { healthChange: number; currencyChange: number }>();
+  if (turn.character_state_change) {
+    turn.character_state_change.forEach((cs) => {
+      characterStateMap.set(cs.uid, {
+        healthChange: cs.health_change,
+        currencyChange: cs.money_change,
+      });
+    });
+  }
+
   Object.entries(turn.players).forEach(([playerId, player]) => {
     if (player.responses && player.responses.length > 0) {
       // Get the most recent response for this turn
       const latestResponse = player.responses[player.responses.length - 1];
 
-      // TODO: Calculate actual changes from game resolution
-      // For now, using mock values - will be replaced with actual resolution data
-      const healthChange = -1; // Mock: Will come from action resolution
-      const currencyChange = +2; // Mock: Will come from action resolution
+      // Get actual changes from character_state_change, fallback to 0 if not found
+      const changes = characterStateMap.get(playerId) || { healthChange: 0, currencyChange: 0 };
 
       playerActions.push({
         playerId,
         playerName: player.name || player.uid,
         response: latestResponse,
         emoji: player.emoji,
-        healthChange,
-        currencyChange,
+        healthChange: changes.healthChange,
+        currencyChange: changes.currencyChange,
       });
     }
   });
@@ -116,6 +125,19 @@ function TurnActions({ turn }: { turn: Turn }) {
       {playerActions.map((action, idx) => (
         <PlayerActionCard key={idx} action={action} />
       ))}
+      
+      {/* Display narrative result if available */}
+      {turn.narrative_result && (
+        <div className="mt-4 border-l-4 pl-4 py-3 rounded-r border-purple-500 bg-purple-50/50">
+          <div className="font-bold text-purple-900 mb-2 flex items-center gap-2">
+            <span>🎲</span>
+            <span>Dungeon Master's Verdict</span>
+          </div>
+          <div className="text-sm text-gray-700 bg-white/70 p-3 rounded">
+            {turn.narrative_result}
+          </div>
+        </div>
+      )}
     </>
   );
 }

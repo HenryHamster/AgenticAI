@@ -19,6 +19,6 @@ class WorldState(BaseModel):
 
 class GameResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    character_state: List[CharacterState]
-    world_state: WorldState
+    character_state_change: List[CharacterState]
+    world_state_change: WorldState
     narrative_result: str = Field(default ="")    

@@ -73,7 +73,7 @@ class AIConfig:
         "   - health_change: HP ±int\n"
         "   - position_change: [dx, dy]\n"
         "   Never output absolute totals.\n"
-        "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
+        "4) world_state_change.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
         "5) Include a one-sentence narration and boolean success.\n"
         "6) Use exactly the given player UIDs.\n"
         "7) If nothing changes, set all *_change = 0."
@@ -92,7 +92,7 @@ class AIConfig:
 IMPORTANT: You must include at the end of your response a JSON object with the following structure:
 
 {
-    "character_state": {
+    "character_state_change": {
         "money": <integer>,
         "skill_level": <integer>,
         "attributes": {
@@ -109,7 +109,7 @@ IMPORTANT: You must include at the end of your response a JSON object with the f
         "health": <integer>,
         "experience": <integer>
     },
-    "world_state": {
+    "world_state_change": {
         "environment_type": "<string>",
         "description": "<string>",
         "available_actions": ["<action1>", "<action2>"],

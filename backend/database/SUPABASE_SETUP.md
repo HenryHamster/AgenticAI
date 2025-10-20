@@ -123,7 +123,16 @@ The schema creates four main tables:
 - **id** (TEXT): Primary key, game identifier
 - **name** (TEXT): Game name
 - **description** (TEXT): Game description
-- **status** (TEXT): Game status (active, completed, etc.)
+- **status** (TEXT): Game status (pending, active, completed, error, etc.)
+- **model** (TEXT): AI model used (default: 'mock')
+- **world_size** (INTEGER): World grid size (default: 1)
+- **winner_player_name** (TEXT): Name of winning player (if any)
+- **currency_target** (INTEGER): Currency needed to win
+- **max_turns** (INTEGER): Maximum number of turns
+- **total_players** (INTEGER): Total number of players
+- **starting_currency** (INTEGER): Starting currency for each player (default: 0)
+- **starting_health** (INTEGER): Starting health for each player (default: 100)
+- **game_duration** (INTERVAL): Game duration
 - **created_at** (TIMESTAMPTZ): Timestamp
 - **updated_at** (TIMESTAMPTZ): Auto-updated timestamp
 

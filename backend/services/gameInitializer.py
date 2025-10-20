@@ -4,6 +4,7 @@ Provides utilities for creating default game configurations
 """
 
 from typing import Dict, Any
+from src.app.Game import Game
 
 
 def create_default_player_info(
@@ -89,7 +90,6 @@ def initialize_game(
         Configured Game instance
     """
     # Import here to avoid circular imports
-    from src.app.Game import Game
     
     # Use defaults if not provided
     if player_info is None:
