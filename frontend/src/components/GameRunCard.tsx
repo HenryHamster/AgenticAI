@@ -9,7 +9,7 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
   // Convert players dictionary to array
   const playersArray = gameRun.players ? Object.values(gameRun.players) : [];
   const winner = gameRun.winnerId && gameRun.players ? gameRun.players[gameRun.winnerId] : null;
-  const startDate = new Date(gameRun.created_at);
+  const startDate = new Date(gameRun.startTime);
   const endDate = new Date(gameRun.endTime);
   const duration = Math.round((endDate.getTime() - startDate.getTime()) / 1000 / 60); // minutes
 
@@ -37,7 +37,7 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
         <div className="grid grid-cols-2 gap-3 text-sm mb-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Players:</span>
-            <span className="font-semibold text-gray-600">{playersArray.length}</span>
+            <span className="font-semibold text-gray-600">{gameRun.totalPlayers}</span>
           </div>
           
           <div className="flex items-center gap-2">

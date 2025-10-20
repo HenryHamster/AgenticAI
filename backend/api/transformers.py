@@ -2,9 +2,11 @@
 Data transformation utilities for converting backend models to frontend format
 """
 
+import json
 from typing import List, Dict, Any
 from services.database.turnService import get_turns_by_game_id
 from schema.gameModel import GameModel
+from schema.dataModels import GameResponse
 
 
 def transform_game_for_frontend(game: GameModel, include_turns: bool = False) -> Dict[str, Any]:
@@ -12,7 +14,6 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
     turns_data = []
     players_data = {}  # Changed to dictionary to match new format
     winner_id = None
-    target_currency = 1000  # Default, can be made configurable
     initial_tiles = []  # Changed from initial_board_state
     
     if include_turns:
@@ -38,7 +39,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                         "health": player.values.health
                     },
                     "position": player.position,  # Keep as array [x, y]
-                    "responses": [],
+                    "responses": player.responses,
                     "player_class": player.player_class,
                     # Legacy fields for backwards compatibility
                     "name": player.uid,
@@ -70,7 +71,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                         "health": p.values.health
                     },
                     "position": p.position,  # Keep as array [x, y]
-                    "responses": [],
+                    "responses": p.responses,
                     "player_class": p.player_class,
                     # Legacy fields
                     "name": p.uid,
@@ -109,7 +110,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
         "winnerId": winner_id,
         "players": players_data,  # Now a dictionary
         "turns": turns_data,
-        "targetCurrency": target_currency,
+        "targetCurrency": game.currency_target,
         "initialTiles": initial_tiles,  # New format
         # New game summary fields
         "winnerPlayerName": game.winner_player_name,
@@ -123,6 +124,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
         "name": game.name,
         "description": game.description,
         "status": game.status,
+        "model": game.model,
         "world_size": game.world_size,
         "board_size": 2 * game.world_size + 1  # Calculate board dimensions
     }

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS games (
     name TEXT NOT NULL DEFAULT 'Untitled Game',
     description TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
+    model TEXT NOT NULL DEFAULT 'mock',
     world_size INTEGER NOT NULL DEFAULT 1,
     winner_player_name TEXT,
     currency_target INTEGER,
@@ -346,5 +347,17 @@ BEGIN
         AND column_name = 'game_duration'
     ) THEN
         ALTER TABLE games ADD COLUMN game_duration INTERVAL;
+    END IF;
+END $$;
+
+-- Add model column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'model'
+    ) THEN
+        ALTER TABLE games ADD COLUMN model TEXT NOT NULL DEFAULT 'mock';
     END IF;
 END $$;

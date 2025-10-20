@@ -92,6 +92,7 @@ class Game(Savable):
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
             status=getattr(self, 'status', 'active'),
+            model=getattr(self, 'model', 'mock'),
             world_size=self.world_size,
             winner_player_name=getattr(self, 'winner_player_name', None),
             currency_target=getattr(self, 'currency_target', None),
@@ -212,6 +213,7 @@ class Game(Savable):
         self.name = game_model.name
         self.description = game_model.description
         self.status = game_model.status
+        self.model = getattr(game_model, 'model', 'mock')
         self.world_size = getattr(game_model, 'world_size', GameConfig.world_size)
         self.winner_player_name = getattr(game_model, 'winner_player_name', None)
         self.currency_target = getattr(game_model, 'currency_target', None)

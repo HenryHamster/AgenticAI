@@ -110,6 +110,7 @@ def initialize_game(
     game.name = name
     game.description = description
     game.status = status
+    game.model = model
     
     # Set new game configuration fields
     game.currency_target = currency_target

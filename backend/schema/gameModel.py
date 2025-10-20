@@ -18,6 +18,7 @@ class GameModel(BaseModel):
     name: str = Field(default="Untitled Game")
     description: str = Field(default="")
     status: str = Field(default="active")
+    model: str = Field(default="mock")
     world_size: int = Field(default=1)
     winner_player_name: Optional[str] = Field(default=None)
     currency_target: Optional[int] = Field(default=None)

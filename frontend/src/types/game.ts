@@ -63,6 +63,7 @@ export interface GameRun {
   players: { [key: string]: Player }; // Dictionary of players keyed by player ID
   turns: Turn[];
   targetCurrency: number;
+  model?: string; // AI model used for the game
   world_size?: number; // Backend world_size parameter
   board_size?: number; // Calculated board dimension (2 * world_size + 1)
   initialTiles?: Tile[];

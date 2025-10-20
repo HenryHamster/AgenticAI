@@ -1,12 +1,123 @@
 'use client';
 
-import { Turn } from '@/types/game';
+import { Turn, Player } from '@/types/game';
 import { useEffect, useRef } from 'react';
 
 interface TurnTimelineProps {
   turns: Turn[];
   selectedTurnNumber: number;
   onTurnSelect: (turnNumber: number) => void;
+}
+
+interface PlayerAction {
+  playerId: string;
+  playerName: string;
+  response: string;
+  emoji?: string;
+  healthChange: number;
+  currencyChange: number;
+}
+
+/**
+ * Extracts player actions from a turn's player data
+ */
+function extractPlayerActions(turn: Turn): PlayerAction[] {
+  const playerActions: PlayerAction[] = [];
+
+  if (!turn.players) {
+    return playerActions;
+  }
+
+  Object.entries(turn.players).forEach(([playerId, player]) => {
+    if (player.responses && player.responses.length > 0) {
+      // Get the most recent response for this turn
+      const latestResponse = player.responses[player.responses.length - 1];
+
+      // TODO: Calculate actual changes from game resolution
+      // For now, using mock values - will be replaced with actual resolution data
+      const healthChange = -1; // Mock: Will come from action resolution
+      const currencyChange = +2; // Mock: Will come from action resolution
+
+      playerActions.push({
+        playerId,
+        playerName: player.name || player.uid,
+        response: latestResponse,
+        emoji: player.emoji,
+        healthChange,
+        currencyChange,
+      });
+    }
+  });
+
+  return playerActions;
+}
+
+/**
+ * Renders a single player action card
+ */
+function PlayerActionCard({ action }: { action: PlayerAction }) {
+  return (
+    <div className="border-l-4 pl-4 py-2 rounded-r border-blue-500 bg-blue-50/50">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="font-bold text-gray-800 flex items-center gap-2">
+          {action.emoji && <span>{action.emoji}</span>}
+          <span>{action.playerName}</span>
+        </div>
+      </div>
+
+      <div className="text-sm text-gray-700 italic bg-white/70 p-2 rounded mb-2">
+        💬 "{action.response}"
+      </div>
+
+      <div className="flex flex-wrap gap-3 text-sm">
+        {action.healthChange !== 0 && (
+          <span
+            className={`px-2 py-1 rounded ${
+              action.healthChange > 0
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            ❤️ {action.healthChange > 0 ? '+' : ''}{action.healthChange}
+          </span>
+        )}
+        {action.currencyChange !== 0 && (
+          <span
+            className={`px-2 py-1 rounded ${
+              action.currencyChange > 0
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            💰 {action.currencyChange > 0 ? '+' : ''}{action.currencyChange}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders the actions section for a turn
+ */
+function TurnActions({ turn }: { turn: Turn }) {
+  const playerActions = extractPlayerActions(turn);
+
+  if (playerActions.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-4">
+        No actions recorded for this turn
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {playerActions.map((action, idx) => (
+        <PlayerActionCard key={idx} action={action} />
+      ))}
+    </>
+  );
 }
 
 export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }: TurnTimelineProps) {
@@ -57,66 +168,7 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
               </div>
               
               <div className="space-y-4">
-                {turn.actions && turn.actions.length > 0 ? turn.actions.map((action, idx) => (
-                  <div 
-                    key={idx}
-                    className={`border-l-4 pl-4 py-2 rounded-r ${
-                      action.isValid 
-                        ? 'border-green-500 bg-green-50/50' 
-                        : 'border-red-500 bg-red-50/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="font-bold text-gray-800 flex items-center gap-2">
-                        <span>{action.playerName}</span>
-                        {action.isValid ? (
-                          <span className="text-green-600 text-sm">✓ Valid</span>
-                        ) : (
-                          <span className="text-red-600 text-sm">✗ Invalid</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-gray-700 italic bg-white/70 p-2 rounded mb-2">
-                      💬 "{action.actionDeclaration}"
-                    </div>
-                    
-                    <div className="text-sm text-gray-800 bg-white/70 p-2 rounded mb-2">
-                      🎲 {action.resolution}
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      {action.healthChange !== 0 && (
-                        <span className={`px-2 py-1 rounded ${
-                          action.healthChange > 0 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          ❤️ {action.healthChange > 0 ? '+' : ''}{action.healthChange}
-                        </span>
-                      )}
-                      {action.currencyChange !== 0 && (
-                        <span className={`px-2 py-1 rounded ${
-                          action.currencyChange > 0 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          💰 {action.currencyChange > 0 ? '+' : ''}{action.currencyChange}
-                        </span>
-                      )}
-                      <span className="px-2 py-1 rounded bg-purple-100 text-purple-700">
-                        ✨ Creativity: {action.creativityScore}/10
-                      </span>
-                      <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
-                        📊 Validity: {action.validityScore}/10
-                      </span>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-center text-gray-500 py-4">
-                    No actions recorded for this turn
-                  </div>
-                )}
+                <TurnActions turn={turn} />
               </div>
             </div>
           );
