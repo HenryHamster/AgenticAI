@@ -7,12 +7,12 @@ from typing import Literal
 from services.storage.file_storage_adapter import (
     FileGameStorageAdapter,
     FilePlayerStorageAdapter,
-    FileTileStorageAdapter
+    FileTileStorageAdapter,
 )
 from services.storage.supabase_storage_adapter import (
     SupabaseGameStorageAdapter,
     SupabasePlayerStorageAdapter,
-    SupabaseTileStorageAdapter
+    SupabaseTileStorageAdapter,
 )
 
 StorageType = Literal["file", "supabase"]
@@ -20,21 +20,21 @@ StorageType = Literal["file", "supabase"]
 
 class StorageConfig:
     """Configuration for storage adapters"""
-    
+
     def __init__(self):
         # Get storage type from environment variable, default to file
         self.storage_type: StorageType = os.getenv("STORAGE_TYPE", "file").lower()
-        
+
         # File storage configuration
         self.file_data_dir = os.getenv("FILE_DATA_DIR", None)
-        
+
         # Supabase configuration
         self.supabase_url = os.getenv("SUPABASE_URL", "")
         self.supabase_key = os.getenv("SUPABASE_KEY", "")
         self.supabase_games_table = os.getenv("SUPABASE_GAMES_TABLE", "games")
         self.supabase_players_table = os.getenv("SUPABASE_PLAYERS_TABLE", "players")
         self.supabase_tiles_table = os.getenv("SUPABASE_TILES_TABLE", "tiles")
-    
+
     def validate(self):
         """Validate configuration based on storage type"""
         if self.storage_type == "supabase":
@@ -51,17 +51,17 @@ class StorageConfig:
 
 class StorageFactory:
     """Factory for creating storage adapters"""
-    
+
     def __init__(self, config: StorageConfig = None):
         """
         Initialize storage factory
-        
+
         Args:
             config: Storage configuration. If None, creates default config from environment.
         """
         self.config = config or StorageConfig()
         self.config.validate()
-    
+
     def create_game_storage(self):
         """Create a game storage adapter based on configuration"""
         if self.config.storage_type == "file":
@@ -70,11 +70,11 @@ class StorageFactory:
             return SupabaseGameStorageAdapter(
                 supabase_url=self.config.supabase_url,
                 supabase_key=self.config.supabase_key,
-                table_name=self.config.supabase_games_table
+                table_name=self.config.supabase_games_table,
             )
         else:
             raise ValueError(f"Unsupported storage type: {self.config.storage_type}")
-    
+
     def create_player_storage(self):
         """Create a player storage adapter based on configuration"""
         if self.config.storage_type == "file":
@@ -83,11 +83,11 @@ class StorageFactory:
             return SupabasePlayerStorageAdapter(
                 supabase_url=self.config.supabase_url,
                 supabase_key=self.config.supabase_key,
-                table_name=self.config.supabase_players_table
+                table_name=self.config.supabase_players_table,
             )
         else:
             raise ValueError(f"Unsupported storage type: {self.config.storage_type}")
-    
+
     def create_tile_storage(self):
         """Create a tile storage adapter based on configuration"""
         if self.config.storage_type == "file":
@@ -96,7 +96,7 @@ class StorageFactory:
             return SupabaseTileStorageAdapter(
                 supabase_url=self.config.supabase_url,
                 supabase_key=self.config.supabase_key,
-                table_name=self.config.supabase_tiles_table
+                table_name=self.config.supabase_tiles_table,
             )
         else:
             raise ValueError(f"Unsupported storage type: {self.config.storage_type}")

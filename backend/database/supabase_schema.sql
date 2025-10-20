@@ -29,6 +29,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_games_updated_at ON games;
+
 CREATE TRIGGER trigger_games_updated_at
     BEFORE UPDATE ON games
     FOR EACH ROW
@@ -63,6 +65,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_players_updated_at ON players;
+
 CREATE TRIGGER trigger_players_updated_at
     BEFORE UPDATE ON players
     FOR EACH ROW
@@ -94,6 +98,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_tiles_updated_at ON tiles;
+
 CREATE TRIGGER trigger_tiles_updated_at
     BEFORE UPDATE ON tiles
     FOR EACH ROW
@@ -103,21 +109,27 @@ CREATE TRIGGER trigger_tiles_updated_at
 -- Row Level Security (RLS) Policies
 -- ==============================================
 
--- Enable RLS on all tables
-ALTER TABLE games ENABLE ROW LEVEL SECURITY;
-ALTER TABLE players ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tiles ENABLE ROW LEVEL SECURITY;
+-- Disable RLS on all tables (for development/testing)
+ALTER TABLE games DISABLE ROW LEVEL SECURITY;
+ALTER TABLE players DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tiles DISABLE ROW LEVEL SECURITY;
 
 -- Public read access (adjust based on your security requirements)
+DROP POLICY IF EXISTS "Allow public read access on games" ON games;
+
 CREATE POLICY "Allow public read access on games"
     ON games FOR SELECT
     TO public
     USING (true);
 
+DROP POLICY IF EXISTS "Allow public read access on players" ON players;
+
 CREATE POLICY "Allow public read access on players"
     ON players FOR SELECT
     TO public
     USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access on tiles" ON tiles;
 
 CREATE POLICY "Allow public read access on tiles"
     ON tiles FOR SELECT
@@ -126,17 +138,23 @@ CREATE POLICY "Allow public read access on tiles"
 
 -- Service role full access (for your backend)
 -- Note: The service role bypasses RLS by default, but we can be explicit
+DROP POLICY IF EXISTS "Allow service role full access on games" ON games;
+
 CREATE POLICY "Allow service role full access on games"
     ON games FOR ALL
     TO service_role
     USING (true)
     WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow service role full access on players" ON players;
+
 CREATE POLICY "Allow service role full access on players"
     ON players FOR ALL
     TO service_role
     USING (true)
     WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow service role full access on tiles" ON tiles;
 
 CREATE POLICY "Allow service role full access on tiles"
     ON tiles FOR ALL

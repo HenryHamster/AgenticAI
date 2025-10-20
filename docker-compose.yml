@@ -8,6 +8,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/__pycache__
+    env_file:
+      - ./backend/.env
     environment:
       - PYTHONPATH=/app
     networks:

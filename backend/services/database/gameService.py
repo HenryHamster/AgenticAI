@@ -3,7 +3,6 @@ Game service for database operations
 """
 
 from typing import List
-from datetime import datetime
 from schema.gameModel import GameModel, GameStateModel
 from services.storage import get_storage_factory
 
@@ -67,7 +66,7 @@ def create_game_from_database(id: str) -> str:
         description="",
         status="active",
         game_state=GameStateModel(),
-        created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat())
+        created_at=None,  # Let database handle timestamps
+        updated_at=None)
 
     return save_game_to_database(game_model)
