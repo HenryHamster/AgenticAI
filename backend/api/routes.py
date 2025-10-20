@@ -2,9 +2,8 @@
 FastAPI routes for game management
 """
 
-import asyncio
 from typing import List, Dict, Any
-from fastapi import APIRouter, HTTPException, Response, Query
+from fastapi import APIRouter, HTTPException, Response, Query, BackgroundTasks
 from services.database.gameService import (
     get_game_run_from_database,
     save_game_to_database,
@@ -25,9 +24,7 @@ async def health_check():
 
 @router.post("/games/create")
 async def create_game_endpoint(
-    number_of_rounds: int = Query(
-        default=10, ge=1, description="Number of game rounds to play"
-    ),
+    background_tasks: BackgroundTasks,
     number_of_players: int = Query(
         default=2, ge=1, le=10, description="Number of players in the game"
     ),
@@ -57,6 +54,11 @@ async def create_game_endpoint(
         ge=1,
         description="Starting health for each player"
     ),
+    max_turns: int = Query(
+        default=10,
+        ge=1,
+        description="Maximum number of turns"
+    ),
 ):
     try:
         # Create a unique game ID
@@ -71,10 +73,11 @@ async def create_game_endpoint(
             world_size=world_size,
             model=model_mode,
             name=f"{game_id}",
-            description=f"Game with {number_of_players} players, {number_of_rounds} rounds, world size {world_size}",
+            description=f"Game with {number_of_players} players, world size {world_size}",
             currency_target=currency_target,
             starting_currency=starting_currency,
             starting_health=starting_health,
+            max_turns=max_turns,
         )
 
         # Save the initialized game to database
@@ -82,8 +85,8 @@ async def create_game_endpoint(
 
         # Trigger the game worker to run the game asynchronously
         # This runs in the background without blocking the API response
-        asyncio.create_task(
-            run_game_async(game_id=game_id, rounds=number_of_rounds, verbose=True)
+        background_tasks.add_task(
+            run_game_async, game_id=game_id, max_turns=max_turns, verbose=True
         )
 
         return {
@@ -91,7 +94,7 @@ async def create_game_endpoint(
             "status": "created",
             "message": "Game created and worker started. The game will run in the background.",
             "config": {
-                "number_of_rounds": number_of_rounds,
+                "max_turns": max_turns,
                 "number_of_players": number_of_players,
                 "world_size": world_size,
                 "model_mode": model_mode,

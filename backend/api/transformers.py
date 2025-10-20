@@ -115,7 +115,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
         # New game summary fields
         "winnerPlayerName": game.winner_player_name,
         "currencyTarget": game.currency_target,
-        "numberOfTurns": game.number_of_turns,
+        "maxTurns": game.max_turns,
         "totalPlayers": game.total_players,
         "gameDuration": game.game_duration,
         # Legacy field for backwards compatibility - use first turn's tiles if available

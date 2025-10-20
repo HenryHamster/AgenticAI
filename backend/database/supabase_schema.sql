@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS games (
     world_size INTEGER NOT NULL DEFAULT 1,
     winner_player_name TEXT,
     currency_target INTEGER,
-    number_of_turns INTEGER,
+    max_turns INTEGER,
     total_players INTEGER,
     game_duration INTERVAL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -314,15 +314,15 @@ BEGIN
     END IF;
 END $$;
 
--- Add number_of_turns column if it doesn't exist
+-- Add max_turns column if it doesn't exist
 DO $$ 
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'games' 
-        AND column_name = 'number_of_turns'
+        AND column_name = 'max_turns'
     ) THEN
-        ALTER TABLE games ADD COLUMN number_of_turns INTEGER;
+        ALTER TABLE games ADD COLUMN max_turns INTEGER;
     END IF;
 END $$;
 

@@ -96,7 +96,7 @@ class Game(Savable):
             world_size=self.world_size,
             winner_player_name=getattr(self, 'winner_player_name', None),
             currency_target=getattr(self, 'currency_target', None),
-            number_of_turns=getattr(self, 'number_of_turns', None),
+            max_turns=getattr(self, 'max_turns', None),
             total_players=getattr(self, 'total_players', None),
             game_duration=getattr(self, 'game_duration', None)
         )
@@ -217,7 +217,7 @@ class Game(Savable):
         self.world_size = getattr(game_model, 'world_size', GameConfig.world_size)
         self.winner_player_name = getattr(game_model, 'winner_player_name', None)
         self.currency_target = getattr(game_model, 'currency_target', None)
-        self.number_of_turns = getattr(game_model, 'number_of_turns', None)
+        self.max_turns = getattr(game_model, 'max_turns', None)
         self.total_players = getattr(game_model, 'total_players', None)
         self.game_duration = getattr(game_model, 'game_duration', None)
 

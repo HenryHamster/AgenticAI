@@ -41,8 +41,8 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">Turns:</span>
-            <span className="font-semibold text-gray-600">{gameRun.turns?.length || 0}</span>
+            <span className="text-gray-600">Max Turns:</span>
+            <span className="font-semibold text-gray-600">{gameRun.maxTurns}</span>
           </div>
           
           <div className="flex items-center gap-2">

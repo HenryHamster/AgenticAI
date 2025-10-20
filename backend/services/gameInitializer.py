@@ -65,7 +65,8 @@ def initialize_game(
     status: str = "active",
     currency_target: int = 1000,
     starting_currency: int = 0,
-    starting_health: int = 100
+    starting_health: int = 100,
+    max_turns: int = 10,
 ):
     """
     Initialize a new Game instance with configuration
@@ -116,7 +117,7 @@ def initialize_game(
     game.currency_target = currency_target
     game.total_players = num_players
     game.winner_player_name = None
-    game.number_of_turns = None
+    game.max_turns = max_turns
     game.game_duration = None
     
     return game

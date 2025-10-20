@@ -72,7 +72,7 @@ export interface GameRun {
   // New game summary fields
   winnerPlayerName?: string | null;
   currencyTarget?: number | null;
-  numberOfTurns?: number | null;
+  maxTurns?: number | null;
   totalPlayers?: number | null;
   gameDuration?: string | null; // Duration as ISO 8601 string or seconds
   // Legacy fields for backwards compatibility
