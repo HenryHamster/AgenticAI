@@ -180,7 +180,7 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
             >
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-xl font-bold text-gray-800">
-                  Turn {turn.turnNumber + 1}
+                  Turn {turn.turnNumber}
                 </h4>
                 {isSelected && (
                   <span className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full font-semibold">

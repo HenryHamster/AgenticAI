@@ -75,6 +75,7 @@ export interface Turn {
 
 export interface GameRun {
   id: string;
+  status?: string; // Game status (e.g., 'active', 'completed', 'cancelled')
   startTime: string;
   endTime: string;
   winnerId: string | null;

@@ -17,6 +17,12 @@ class GameStateModel(BaseModel):
     world_state_change: Optional[WorldState] = Field(default=None)
     narrative_result: str = Field(default="")
 
+class PlayerConfigModel(BaseModel):
+    """Individual player configuration"""
+    name: str
+    starting_health: int = 100
+    starting_currency: int = 0
+
 class GameModel(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(default="Untitled Game")
@@ -28,8 +34,9 @@ class GameModel(BaseModel):
     currency_target: Optional[int] = Field(default=None)
     max_turns: Optional[int] = Field(default=None)
     total_players: Optional[int] = Field(default=None)
-    starting_currency: Optional[int] = Field(default=0)
-    starting_health: Optional[int] = Field(default=100)
+    starting_currency: Optional[int] = Field(default=0)  # Default for backward compatibility
+    starting_health: Optional[int] = Field(default=100)  # Default for backward compatibility
+    player_configs: Optional[List[PlayerConfigModel]] = Field(default=None)  # Individual player configs
     game_duration: Optional[str] = Field(default=None)  # Duration as ISO 8601 string or seconds
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)

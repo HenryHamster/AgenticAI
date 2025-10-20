@@ -86,7 +86,22 @@ def create_game(
         status="active"
     )
     
-    # Persist to database (creates both GameModel and initial turn)
-    game.save()
+    # Note: Game will be saved after first step() call to avoid creating empty turn 0
+    # Only save the game metadata without turn data
+    from schema.gameModel import GameModel
+    game_data = GameModel(
+        id=id,
+        name=game.name,
+        description=game.description,
+        status=game.status,
+        model=getattr(game, 'model', 'mock'),
+        world_size=game.world_size,
+        winner_player_name=None,
+        currency_target=getattr(game, 'currency_target', None),
+        max_turns=getattr(game, 'max_turns', None),
+        total_players=getattr(game, 'total_players', None),
+        game_duration=None
+    )
+    save_game_to_database(game_data)
     
     return id

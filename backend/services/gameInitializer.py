@@ -41,6 +41,40 @@ def create_default_player_info(
     return player_info
 
 
+def create_player_info_from_configs(
+    player_configs: list,
+    model: str = "mock"
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Create player configuration from individual player configs
+    
+    Args:
+        player_configs: List of player configuration objects with name, starting_health, starting_currency
+        model: AI model to use for players (default: "mock")
+        
+    Returns:
+        Dictionary of player data keyed by UID
+    """
+    player_info = {}
+    
+    for i, config in enumerate(player_configs):
+        # Use player name as UID if available, otherwise fall back to player{i}
+        uid = config.name if hasattr(config, 'name') and config.name else f"player{i}"
+        player_info[uid] = {
+            "position": [0, 0],
+            "UID": uid,
+            "model": model,
+            "player_class": "human",
+            "values": {
+                "money": config.starting_currency if hasattr(config, 'starting_currency') else 0,
+                "health": config.starting_health if hasattr(config, 'starting_health') else 100
+            },
+            "responses": []
+        }
+    
+    return player_info
+
+
 def create_default_dm_info(model: str = "mock") -> Dict[str, str]:
     """
     Create default Dungeon Master configuration
@@ -68,6 +102,7 @@ def initialize_game(
     starting_currency: int = 0,
     starting_health: int = 100,
     max_turns: int = 10,
+    player_configs: list = None,
 ):
     """
     Initialize a new Game instance with configuration
@@ -85,6 +120,7 @@ def initialize_game(
         currency_target: Win condition currency target (default: 1000)
         starting_currency: Starting currency for each player (default: 0)
         starting_health: Starting health for each player (default: 100)
+        player_configs: List of individual player configurations (default: None)
         
     Returns:
         Configured Game instance
@@ -93,12 +129,20 @@ def initialize_game(
     
     # Use defaults if not provided
     if player_info is None:
-        player_info = create_default_player_info(
-            num_players=num_players, 
-            model=model,
-            starting_currency=starting_currency,
-            starting_health=starting_health
-        )
+        # If individual player configs are provided, use them
+        if player_configs is not None:
+            player_info = create_player_info_from_configs(
+                player_configs=player_configs,
+                model=model
+            )
+        else:
+            # Otherwise use default values
+            player_info = create_default_player_info(
+                num_players=num_players, 
+                model=model,
+                starting_currency=starting_currency,
+                starting_health=starting_health
+            )
     
     if dm_info is None:
         dm_info = create_default_dm_info(model=model)

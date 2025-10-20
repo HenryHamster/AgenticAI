@@ -57,31 +57,34 @@ export async function fetchTurnByNumber(gameId: string, turnNumber: number): Pro
 }
 
 export async function createGame(gameRequest: GameCreationRequest): Promise<string> {
-  // Map frontend game creation request to backend query parameters
-  // Backend expects: number_of_rounds, number_of_players, world_size, model_mode, currency_target, starting_currency, starting_health
+  // Map frontend game creation request to backend JSON body
+  // Backend expects: { game_config: {...}, players: [...] }
   
-  // Use first player's settings as defaults, or game-level defaults
-  const firstPlayer = gameRequest.players[0];
+  const requestBody = {
+    game_config: {
+      world_size: gameRequest.worldSize || 2,
+      model_mode: 'gpt-4.1-nano',
+      currency_target: gameRequest.currencyGoal,
+      max_turns: gameRequest.maxTurns === 'until_win' ? 100 : gameRequest.maxTurns,
+    },
+    players: gameRequest.players.map(player => ({
+      name: player.name,
+      starting_health: player.startingHealth,
+      starting_currency: player.startingCurrency,
+    })),
+  };
   
-  const params = new URLSearchParams({
-    number_of_players: gameRequest.numberOfPlayers.toString(),
-    number_of_rounds: gameRequest.maxTurns === 'until_win' ? '100' : gameRequest.maxTurns.toString(),
-    world_size: (gameRequest.worldSize || 5).toString(),
-    model_mode: 'gpt-4.1-nano', // Default to mock mode for now
-    currency_target: gameRequest.currencyGoal.toString(),
-    starting_currency: firstPlayer.startingCurrency.toString(),
-    starting_health: firstPlayer.startingHealth.toString(),
-  });
-  
-  const response = await fetch(`${FRONTEND_BASE_URL}/games/create?${params}`, {
+  const response = await fetch(`${FRONTEND_BASE_URL}/games/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify(requestBody),
   });
   
   if (!response.ok) {
-    throw new Error(`Failed to create game: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to create game: ${response.statusText}`);
   }
   
   const data = await response.json();

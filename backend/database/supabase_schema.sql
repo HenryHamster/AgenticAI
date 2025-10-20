@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS games (
     total_players INTEGER,
     starting_currency INTEGER DEFAULT 0,
     starting_health INTEGER DEFAULT 100,
+    player_configs JSONB,
     game_duration INTERVAL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -385,5 +386,17 @@ BEGIN
         AND column_name = 'starting_health'
     ) THEN
         ALTER TABLE games ADD COLUMN starting_health INTEGER DEFAULT 100;
+    END IF;
+END $$;
+
+-- Add player_configs column if it doesn't exist (stores individual player configurations as JSONB)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'games' 
+        AND column_name = 'player_configs'
+    ) THEN
+        ALTER TABLE games ADD COLUMN player_configs JSONB;
     END IF;
 END $$;

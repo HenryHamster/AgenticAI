@@ -132,6 +132,7 @@ The schema creates four main tables:
 - **total_players** (INTEGER): Total number of players
 - **starting_currency** (INTEGER): Starting currency for each player (default: 0)
 - **starting_health** (INTEGER): Starting health for each player (default: 100)
+- **player_configs** (JSONB): Individual player configurations (name, starting_health, starting_currency per player)
 - **game_duration** (INTERVAL): Game duration
 - **created_at** (TIMESTAMPTZ): Timestamp
 - **updated_at** (TIMESTAMPTZ): Auto-updated timestamp

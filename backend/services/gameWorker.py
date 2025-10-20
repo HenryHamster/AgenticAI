@@ -46,6 +46,11 @@ class GameWorker:
                 self._log(f"Game {self.game_id} is pending initialization...")
                 self._log(f"Initializing with: players={game_model.total_players}, world_size={game_model.world_size}, model={game_model.model}")
                 
+                # Check if individual player configs are available
+                player_configs = game_model.player_configs if hasattr(game_model, 'player_configs') else None
+                if player_configs:
+                    self._log(f"Using individual player configurations for {len(player_configs)} players")
+                
                 # Initialize the game using configuration from database
                 self.game = initialize_game(
                     game_id=self.game_id,
@@ -58,11 +63,11 @@ class GameWorker:
                     starting_currency=game_model.starting_currency,
                     starting_health=game_model.starting_health,
                     max_turns=game_model.max_turns,
+                    player_configs=player_configs,
                 )
                 
-                # Save initialized game and update status to active
+                # Update status to active (game will be saved after first step)
                 self.game.status = "active"
-                self.game.save()
                 self._log(f"Game initialized successfully with {len(self.game.players)} players")
                 
             else:

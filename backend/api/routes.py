@@ -11,7 +11,8 @@ from services.database.gameService import (
     get_all_games_from_database,
 )
 from services.gameWorker import run_game_async
-from schema.gameModel import GameModel
+from schema.gameModel import GameModel, PlayerConfigModel
+from schema.dataModels import CreateGameRequest
 from api.transformers import transform_game_for_frontend
 
 router = APIRouter()
@@ -24,60 +25,44 @@ async def health_check():
 
 @router.post("/games/create")
 async def create_game_endpoint(
+    request: CreateGameRequest,
     background_tasks: BackgroundTasks,
-    number_of_players: int = Query(
-        default=2, ge=1, le=10, description="Number of players in the game"
-    ),
-    world_size: int = Query(
-        default=2,
-        ge=1,
-        le=10,
-        description="World size (grid extends from -size to +size)",
-    ),
-    model_mode: str = Query(
-        default="mock",
-        regex="^(gpt-4\.1-nano|mock)$",
-        description="AI model to use (gpt-4.1-nano or mock)",
-    ),
-    currency_target: int = Query(
-        default=1000,
-        ge=1,
-        description="Currency target for win condition"
-    ),
-    starting_currency: int = Query(
-        default=0,
-        ge=0,
-        description="Starting currency for each player"
-    ),
-    starting_health: int = Query(
-        default=100,
-        ge=1,
-        description="Starting health for each player"
-    ),
-    max_turns: int = Query(
-        default=10,
-        ge=1,
-        description="Maximum number of turns"
-    ),
 ):
     try:
         # Create a unique game ID
         game_id = f"game_{uuid.uuid4().hex[:8]}"
+        
+        # Extract game configuration
+        game_config = request.game_config
+        players = request.players
+        number_of_players = len(players)
+        
 
+        # Convert player configs to PlayerConfigModel
+        player_config_models = [
+            PlayerConfigModel(
+                name=p.name,
+                starting_health=p.starting_health,
+                starting_currency=p.starting_currency
+            )
+            for p in players
+        ]
+        
         # Create database entry with all configuration
-        # The worker will read this configuration and handle initialization
         game_model = GameModel(
             id=game_id,
             name=f"{game_id}",
-            description=f"Game with {number_of_players} players, world size {world_size}",
+            description=f"Game with {number_of_players} players, world size {game_config.world_size}",
             status="pending",  # Worker will change to 'active' after initialization
-            model=model_mode,
-            world_size=world_size,
-            currency_target=currency_target,
+            model=game_config.model_mode,
+            world_size=game_config.world_size,
+            currency_target=game_config.currency_target,
             total_players=number_of_players,
-            max_turns=max_turns,
-            starting_currency=starting_currency,
-            starting_health=starting_health,
+            max_turns=game_config.max_turns,
+            player_configs=player_config_models,
+            # Store default values for backward compatibility
+            starting_currency=players[0].starting_currency if players else 0,
+            starting_health=players[0].starting_health if players else 100,
         )
         
         # Save game configuration to database
@@ -96,13 +81,9 @@ async def create_game_endpoint(
             "status": "created",
             "message": "Game created and worker started. The game will run in the background.",
             "config": {
-                "max_turns": max_turns,
+                "game_config": game_config.model_dump(),
+                "players": [p.model_dump() for p in players],
                 "number_of_players": number_of_players,
-                "world_size": world_size,
-                "model_mode": model_mode,
-                "currency_target": currency_target,
-                "starting_currency": starting_currency,
-                "starting_health": starting_health,
             },
         }
     except Exception as e:
