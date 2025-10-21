@@ -4,7 +4,7 @@ import random
 import uuid
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
-from .EvalServicesBase import EvalServicesBase, EvaluationResult, EvaluationConfig
+from .EvalServicesBase import EvalServicesBase
 
 
 class MockEvalService(EvalServicesBase):
@@ -24,7 +24,8 @@ class MockEvalService(EvalServicesBase):
             results_history: Previous evaluation results
             deterministic: If True, use deterministic scoring
         """
-        super().__init__(eval_id or str(uuid.uuid4()), config, results_history)
+        super().__init__(eval_id or str(uuid.uuid4()), "", results_history)
+        self.config = config or {}
         self.deterministic = deterministic
         self.seed = 42 if deterministic else None
         
@@ -32,27 +33,27 @@ class MockEvalService(EvalServicesBase):
             random.seed(self.seed)
     
     def evaluate(self, 
-                 input_data: Any, 
-                 expected_output: Optional[Any] = None,
-                 evaluation_criteria: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                 environment: str, 
+                 user_response: str,
+                 expected_output: Optional[str],
+                 evaluation_criteria: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Mock evaluation that returns simulated results
         
         Args:
-            input_data: The data to evaluate
-            expected_output: Expected output for comparison
+            environment: The environment description
+            user_response: The user's response
+            expected_output: Expected response (optional)
             evaluation_criteria: Custom criteria for evaluation
             
         Returns:
             Dictionary containing mock evaluation results
         """
         # Generate mock score based on input characteristics
-        if isinstance(input_data, str):
+        combined_text = environment + " " + user_response
+        if len(combined_text) > 0:
             # Simple heuristic: longer inputs tend to score higher
-            base_score = min(0.3 + (len(input_data) / 1000) * 0.4, 0.9)
-        elif isinstance(input_data, (list, dict)):
-            # Complex data structures get higher scores
-            base_score = 0.6 + random.uniform(0.0, 0.3)
+            base_score = min(0.3 + (len(combined_text) / 1000) * 0.4, 0.9)
         else:
             base_score = random.uniform(0.4, 0.8)
         
@@ -95,102 +96,12 @@ class MockEvalService(EvalServicesBase):
             "reasoning": reasoning,
             "passed": passed,
             "details": {
-                "input_type": type(input_data).__name__,
-                "input_length": len(str(input_data)) if hasattr(input_data, '__len__') else 0,
+                "environment_length": len(environment),
+                "response_length": len(user_response),
                 "has_expected_output": expected_output is not None,
                 "criteria_count": len(evaluation_criteria) if evaluation_criteria else 0,
                 "mock_evaluation": True
             }
         }
         
-        self._append_result(result)
-        return result
-    
-    def batch_evaluate(self, 
-                      input_data_list: List[Any], 
-                      expected_outputs: Optional[List[Any]] = None,
-                      evaluation_criteria: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """
-        Mock batch evaluation
-        
-        Args:
-            input_data_list: List of data to evaluate
-            expected_outputs: List of expected outputs
-            evaluation_criteria: Custom criteria for evaluation
-            
-        Returns:
-            List of mock evaluation result dictionaries
-        """
-        results = []
-        
-        for i, input_data in enumerate(input_data_list):
-            expected_output = expected_outputs[i] if expected_outputs and i < len(expected_outputs) else None
-            
-            result = self.evaluate(input_data, expected_output, evaluation_criteria)
-            result["details"]["batch_index"] = i
-            results.append(result)
-        
-        return results
-    
-    def get_evaluation_metrics(self) -> Dict[str, Any]:
-        """
-        Get aggregated metrics from evaluation history
-        
-        Returns:
-            Dictionary containing aggregated metrics
-        """
-        if not self.results_history:
-            return {
-                "total_evaluations": 0,
-                "average_score": 0.0,
-                "pass_rate": 0.0,
-                "metrics_summary": {},
-                "mock_service": True
-            }
-        
-        scores = [result.get("score", 0.0) for result in self.results_history]
-        passed_count = sum(1 for result in self.results_history if result.get("passed", False))
-        
-        # Aggregate metrics
-        all_metrics = {}
-        for result in self.results_history:
-            metrics = result.get("metrics", {})
-            for key, value in metrics.items():
-                if key not in all_metrics:
-                    all_metrics[key] = []
-                all_metrics[key].append(value)
-        
-        # Calculate averages
-        metrics_summary = {}
-        for key, values in all_metrics.items():
-            metrics_summary[key] = sum(values) / len(values) if values else 0.0
-        
-        return {
-            "total_evaluations": len(self.results_history),
-            "average_score": sum(scores) / len(scores) if scores else 0.0,
-            "pass_rate": passed_count / len(self.results_history) if self.results_history else 0.0,
-            "metrics_summary": metrics_summary,
-            "min_score": min(scores) if scores else 0.0,
-            "max_score": max(scores) if scores else 0.0,
-            "mock_service": True,
-            "deterministic": self.deterministic
-        }
-    
-    def reset_history(self):
-        """Reset evaluation history"""
-        self.results_history = []
-        if self.seed:
-            random.seed(self.seed)  # Reset random seed for deterministic behavior
-    
-    def get_history(self) -> List[Dict[str, Any]]:
-        """Get evaluation history"""
-        return self.results_history.copy()
-    
-    def set_deterministic(self, deterministic: bool):
-        """Set deterministic mode"""
-        self.deterministic = deterministic
-        if deterministic:
-            self.seed = 42
-            random.seed(self.seed)
-        else:
-            self.seed = None
+        return result    
