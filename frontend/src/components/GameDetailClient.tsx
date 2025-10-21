@@ -1,9 +1,11 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from 'react';
 import GameBoard from '@/components/GameBoard';
 import TurnTimeline from '@/components/TurnTimeline';
 import PlayerStatsPanel from '@/components/PlayerStatsPanel';
+import EvaluationButton from '@/components/EvaluationButton';
+import EvaluationModal from '@/components/EvaluationModal';
 import { GameRun } from '@/types/game';
 
 interface GameDetailClientProps {
@@ -13,6 +15,8 @@ interface GameDetailClientProps {
 export default function GameDetailClient({ gameRun: initialGameRun }: GameDetailClientProps) {
   const [selectedTurnIndex, setSelectedTurnIndex] = useState(0);
   const [formattedStartTime, setFormattedStartTime] = useState<string>('');
+  const [isEvaluationModalOpen, setIsEvaluationModalOpen] = useState(false);
+  const [evaluationResults, setEvaluationResults] = useState<any>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Format start time client-side to avoid hydration mismatch
@@ -39,6 +43,12 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
       }
     };
   }, [initialGameRun.turns]);
+  
+  // Handle evaluation completion
+  const handleEvaluationComplete = (results: any) => {
+    setEvaluationResults(results);
+    setIsEvaluationModalOpen(true);
+  };
   
   // Safety check for turns
   if (!initialGameRun.turns || initialGameRun.turns.length === 0) {
@@ -124,17 +134,24 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
             </p>
           </div>
           
-          {winner && (
-            <div className="bg-yellow-100 px-4 py-2 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{winner.emoji || '👑'}</span>
-                <div>
-                  <div className="text-xs text-yellow-700">Winner</div>
-                  <div className="font-bold text-yellow-900">{winner.name || winner.uid}</div>
+          <div className="flex items-center gap-4">
+            <EvaluationButton 
+              gameId={initialGameRun.id}
+              onEvaluationComplete={handleEvaluationComplete}
+            />
+            
+            {winner && (
+              <div className="bg-yellow-100 px-4 py-2 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{winner.emoji || '👑'}</span>
+                  <div>
+                    <div className="text-xs text-yellow-700">Winner</div>
+                    <div className="font-bold text-yellow-900">{winner.name || winner.uid}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -216,6 +233,14 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
           />
         </div>
       </div>
+
+      {/* Evaluation Modal */}
+      <EvaluationModal
+        isOpen={isEvaluationModalOpen}
+        onClose={() => setIsEvaluationModalOpen(false)}
+        evaluationResults={evaluationResults}
+        gameId={initialGameRun.id}
+      />
     </>
   );
 }

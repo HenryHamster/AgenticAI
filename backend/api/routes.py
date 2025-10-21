@@ -116,7 +116,7 @@ async def get_game_detail(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get game: {str(e)}")
 
-@router.get("/game/{game_id}/eval")
+@router.get("/game/eval/{game_id}")
 async def evaluate_game(
     game_id: str
 ):
