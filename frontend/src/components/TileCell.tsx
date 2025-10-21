@@ -33,9 +33,19 @@ export default function TileCell({ tile, player }: TileCellProps) {
       )}
       
       {/* Hover tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[200px] max-w-[300px] bg-black/95 text-white text-base sm:text-lg px-4 py-3 sm:py-4 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg leading-relaxed rounded-md whitespace-normal pointer-events-none">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[300px] max-w-[450px] bg-black/95 text-white text-base sm:text-lg px-4 py-3 sm:py-4 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg leading-relaxed rounded-md whitespace-normal pointer-events-none">
         {tile.description}
         {player && <div className="font-bold mt-2">{playerName}</div>}
+        {tile.secrets && tile.secrets.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-gray-600">
+            <div className="font-semibold text-yellow-400 mb-1">💎 Secrets:</div>
+            {tile.secrets.map((secret, idx) => (
+              <div key={idx} className="text-sm text-gray-200 ml-2">
+                • {secret.key.replace(/_/g, ' ')}: <span className="text-yellow-300 font-medium">{secret.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Coordinates (subtle) */}

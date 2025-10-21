@@ -84,11 +84,13 @@ class Game(Savable):
         tiles_data = []
         for (x, y), val in self.tiles.items():
             tile = val[0] if isinstance(val, tuple) else val  # handle (Tile, ...) cases
+            # Convert Secret objects to dicts for TileModel
+            secrets = [secret.to_dict() for secret in tile.secrets]
             tiles_data.append(
                 TileModel(
                     position=[int(x), int(y)],
                     description=getattr(tile, "description", ""),
-                    secrets=[(str(k), int(v)) for k, v in getattr(tile, "secrets", [])],
+                    secrets=secrets,
                 )
             )
         

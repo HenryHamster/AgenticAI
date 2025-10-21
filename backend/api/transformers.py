@@ -26,7 +26,10 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
             for tile in first_turn.game_state.tiles:
                 initial_tiles.append({
                     "position": tile.position,
-                    "description": tile.description
+                    "description": tile.description,
+                    "secrets": [s.to_dict() if hasattr(s, 'to_dict') else s for s in tile.secrets],
+                    "terrainType": tile.terrainType,
+                    "terrainEmoji": tile.terrainEmoji
                 })
             
             # Get players from the first turn - store as dictionary
@@ -56,6 +59,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                 {
                     "position": tile.position,
                     "description": tile.description,
+                    "secrets": [s.to_dict() if hasattr(s, 'to_dict') else s for s in tile.secrets],
                     "terrainType": tile.terrainType,
                     "terrainEmoji": tile.terrainEmoji
                 }
@@ -100,6 +104,7 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                         {
                             "position": tile.position,
                             "description": tile.description,
+                            "secrets": [s.to_dict() if hasattr(s, 'to_dict') else s for s in tile.secrets],
                             "terrainType": tile.terrainType,
                             "terrainEmoji": tile.terrainEmoji
                         }

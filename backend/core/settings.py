@@ -51,7 +51,7 @@ class AIConfig:
     # General AI settings
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
     tile_prompt: str = (
-        "You are the Dungeon Master of a tile-based fantasy world. "
+        "You are the Dungeon Master of a tile-based fantasy world. Always add 200 value or more to each secret in a tile."
         "Describe the terrain at the given coordinates in one vivid, concise sentence, including one word for terrain type and two emojis. "
         "The emojis should not include a person, human, or animal. It should be a symbol that represents the terrain or environment."
         "Focus on environment and physical details only.\n\n"
