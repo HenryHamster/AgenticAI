@@ -7,6 +7,7 @@ class CharacterState(BaseModel):
     money_change: int = Field()
     health_change: int = Field()
     position_change: List[int] = Field(min_length=2, max_length=2)
+    invalid_action: str | None = Field(default=None, description="Description of invalid action if one was attempted")
 
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")

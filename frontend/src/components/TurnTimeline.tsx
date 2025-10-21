@@ -16,6 +16,7 @@ interface PlayerAction {
   emoji?: string;
   healthChange: number;
   currencyChange: number;
+  invalidAction?: string | null;
 }
 
 /**
@@ -29,12 +30,13 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
   }
 
   // Create a map of character states for quick lookup
-  const characterStateMap = new Map<string, { healthChange: number; currencyChange: number }>();
+  const characterStateMap = new Map<string, { healthChange: number; currencyChange: number; invalidAction?: string | null }>();
   if (turn.character_state_change) {
     turn.character_state_change.forEach((cs) => {
       characterStateMap.set(cs.uid, {
         healthChange: cs.health_change,
         currencyChange: cs.money_change,
+        invalidAction: cs.invalid_action,
       });
     });
   }
@@ -45,7 +47,7 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
       const latestResponse = player.responses[player.responses.length - 1];
 
       // Get actual changes from character_state_change, fallback to 0 if not found
-      const changes = characterStateMap.get(playerId) || { healthChange: 0, currencyChange: 0 };
+      const changes = characterStateMap.get(playerId) || { healthChange: 0, currencyChange: 0, invalidAction: null };
 
       playerActions.push({
         playerId,
@@ -54,6 +56,7 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
         emoji: player.emoji,
         healthChange: changes.healthChange,
         currencyChange: changes.currencyChange,
+        invalidAction: changes.invalidAction,
       });
     }
   });
@@ -102,6 +105,13 @@ function PlayerActionCard({ action }: { action: PlayerAction }) {
           </span>
         )}
       </div>
+
+      {action.invalidAction && (
+        <div className="mt-2 text-sm bg-yellow-50 border-l-2 border-yellow-500 p-2 rounded">
+          <span className="font-semibold text-yellow-800">⚠️ Invalid Action:</span>
+          <span className="text-yellow-700 ml-1">{action.invalidAction}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,6 +43,7 @@ export interface CharacterState {
   money_change: number;
   health_change: number;
   position_change: [number, number];
+  invalid_action?: string | null;
 }
 
 export interface WorldState {

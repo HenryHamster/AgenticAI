@@ -90,7 +90,8 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                     "uid": cs.uid,
                     "money_change": cs.money_change,
                     "health_change": cs.health_change,
-                    "position_change": cs.position_change
+                    "position_change": cs.position_change,
+                    "invalid_action": cs.invalid_action
                 })
             
             world_state_data = None

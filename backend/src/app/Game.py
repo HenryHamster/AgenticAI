@@ -1,7 +1,7 @@
 #Handles game logic and loop
 from src.app.Player import Player
 from src.app.Tile import Tile
-from database.fileManager import FileManager, Savable
+from database.fileManager import Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import uuid
@@ -315,6 +315,18 @@ class Game(Savable):
             except Exception:
                 new_pos = (0,0)
 
+            # Validate position is within bounds before applying
+            new_x = player.position[0] + new_pos[0]
+            new_y = player.position[1] + new_pos[1]
+            
+            if abs(new_x) > self.world_size or abs(new_y) > self.world_size:
+                invalid_msg = f"Attempted to move out of bounds to ({new_x}, {new_y}). World boundaries are [{-self.world_size}, {self.world_size}]."
+                cs.invalid_action = (cs.invalid_action + "\n" + invalid_msg) if cs.invalid_action else invalid_msg
+                print(f"[handle_verdict] Player {uid} invalid move: {invalid_msg}")
+            else:
+                # Position is valid, apply the update
+                player.update_position(new_pos)
+
             # Money/Health (clamp to >= 0). Keep current if absent.
             try:
                 money = getattr(cs, "money_change", player.values.money)
@@ -326,7 +338,6 @@ class Game(Savable):
             except Exception:
                 health = 0
 
-            player.update_position(new_pos)
             player.values.update_money(money)
             player.values.update_health(health)
 

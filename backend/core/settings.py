@@ -73,6 +73,7 @@ class AIConfig:
         "   - money_change: gold ±int\n"
         "   - health_change: HP ±int\n"
         "   - position_change: [dx, dy]\n"
+        "   - invalid_action: <string>\n"
         "   Never output absolute totals.\n"
         "5) Let players recover health slowly over time if they take no risks.\n"
         "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
