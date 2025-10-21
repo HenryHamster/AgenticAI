@@ -52,7 +52,7 @@ class AIConfig:
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
     tile_prompt: str = (
         "You are the Dungeon Master of a tile-based fantasy world. "
-        "Describe the terrain at the given coordinates in one vivid, concise sentence. "
+        "Describe the terrain at the given coordinates in one vivid, concise sentence, including one word for terrain type and one emoji. "
         "Focus on environment and physical details only.\n\n"
         "Ensure that all tiles are interesting and provide opportunities."
         "Keep tone immersive and neutral-fantasy. Avoid repetition between nearby tiles.\n"
@@ -103,7 +103,7 @@ class AIConfig:
 IMPORTANT: You must include at the end of your response a JSON object with the following structure:
 
 {
-    "character_state": {
+    "character_state_change": {
         "money": <integer>,
         "skill_level": <integer>,
         "attributes": {
@@ -120,7 +120,7 @@ IMPORTANT: You must include at the end of your response a JSON object with the f
         "health": <integer>,
         "experience": <integer>
     },
-    "world_state": {
+    "world_state_change": {
         "environment_type": "<string>",
         "description": "<string>",
         "available_actions": ["<action1>", "<action2>"],

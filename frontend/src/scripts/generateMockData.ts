@@ -319,7 +319,7 @@ export function generateGameRun(
   maxTurns: number = 10
 ): GameRun {
   const id = `game-${Date.now()}-${randomInt(1000, 9999)}`;
-  const startTime = new Date(Date.now() - randomInt(1000000, 10000000)).toISOString();
+  const created_at = new Date(Date.now() - randomInt(1000000, 10000000)).toISOString();
   
   const initialBoard = generateBoard();
   const players = generatePlayers(playerCount, initialBoard);
@@ -330,11 +330,11 @@ export function generateGameRun(
   const winner = lastTurn.playerStates.find(p => p.currency >= targetCurrency);
   const winnerId = winner?.id || null;
   
-  const endTime = new Date(new Date(startTime).getTime() + turns.length * 60000).toISOString();
+  const endTime = new Date(new Date(created_at).getTime() + turns.length * 60000).toISOString();
   
   return {
     id,
-    startTime,
+    created_at,
     endTime,
     winnerId,
     players: lastTurn.playerStates,

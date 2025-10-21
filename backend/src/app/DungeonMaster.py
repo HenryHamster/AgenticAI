@@ -5,6 +5,7 @@ from src.services.aiServices.wrapper import AIWrapper
 from schema.dataModels import GameResponse
 from core.settings import AIConfig
 from typing import override
+from schema.tileModel import TileModel
 
 class DungeonMaster(Savable):
     model:str
@@ -15,8 +16,8 @@ class DungeonMaster(Savable):
         if loaded_data is not None:
             self.load(loaded_data)
     def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None) -> Tile:
-        generated_description = AIWrapper.ask(format_request(AIConfig.tile_prompt, {"position": position}), self.model, "DungeonMaster")
-        return Tile(generated_description, position)
+        generated_description = AIWrapper.ask(format_request(AIConfig.tile_prompt, {"position": position}), self.model, "DungeonMaster", structured_output = TileModel)
+        return Tile(generated_description.description, position, terrainType=generated_description.terrainType, terrainEmoji=generated_description.terrainEmoji)
     def update_tile(self, tile: Tile, event: str):
         tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
     def respond_actions(self, info: dict) -> GameResponse:

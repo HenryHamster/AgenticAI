@@ -6,10 +6,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - /app/__pycache__
+      - ./backend:/backend
+      - /backend/__pycache__
+    env_file:
+      - ./backend/.env
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/backend
     networks:
       - agentic-ai-network
 
@@ -23,7 +25,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
     depends_on:
       - backend
     networks:

@@ -6,7 +6,6 @@ from src.services.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from src.services.AiServicesBase import AiServicesBase
 from schema.playerModel import PlayerModel, PlayerValuesModel
-from lib.database.playerService import save_player_to_database, load_player_from_database
 
 @dataclass(frozen=True, slots=True)
 class PlayerClass:
@@ -94,6 +93,7 @@ class Player(Savable):
 
     @override
     def save(self) -> str:
+        """Save player as JSON string. Players are stored in game state, not in separate database table."""
         # Create PlayerModel for validation
         player_data = {
             "uid": self.UID,
@@ -107,37 +107,28 @@ class Player(Savable):
         # Validate with PlayerModel
         player_model = PlayerModel(**player_data)
         
-        # Save to database using lib function
-        saved_id = save_player_to_database(player_model)
-        
         # Return JSON string for compatibility
         return Savable.toJSON(player_model.model_dump())
     
     @override
     def load(self, loaded_data: dict | str | None = None, player_id: str | None = None):
-        # If player_id is provided, load from database using lib function
-        if player_id:
-            try:
-                player_model = load_player_from_database(player_id)
-            except ValueError as e:
-                raise ValueError(f"Failed to load player {player_id}: {str(e)}")
-        else:
-            # Handle string input
-            if isinstance(loaded_data, str):
-                loaded_data = Savable.fromJSON(loaded_data)
-            
-            if not loaded_data:
-                raise ValueError("No data provided to load")
-            
-            # Handle legacy field names (UID -> uid)
-            if 'UID' in loaded_data and 'uid' not in loaded_data:
-                loaded_data['uid'] = loaded_data['UID']
-            
-            # Validate with PlayerModel
-            try:
-                player_model = PlayerModel(**loaded_data)
-            except Exception as e:
-                raise ValueError(f"Invalid player data format: {str(e)}")
+        """Load player from data dict or JSON string. Players are loaded from game state, not database."""
+        # Handle string input
+        if isinstance(loaded_data, str):
+            loaded_data = Savable.fromJSON(loaded_data)
+        
+        if not loaded_data:
+            raise ValueError("No data provided to load")
+        
+        # Handle legacy field names (UID -> uid)
+        if 'UID' in loaded_data and 'uid' not in loaded_data:
+            loaded_data['uid'] = loaded_data['UID']
+        
+        # Validate with PlayerModel
+        try:
+            player_model = PlayerModel(**loaded_data)
+        except Exception as e:
+            raise ValueError(f"Invalid player data format: {str(e)}")
         
         # Load basic properties
         self.position = tuple(player_model.position)

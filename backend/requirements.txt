@@ -9,3 +9,7 @@ langchain>=0.3.0
 langchain-anthropic>=0.2.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
+
+# Optional: Storage backends
+# Uncomment the line below if you want to use Supabase storage
+supabase>=2.0.0

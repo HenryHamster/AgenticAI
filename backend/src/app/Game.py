@@ -4,27 +4,39 @@ from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
-import json
+import uuid
 from schema.dataModels import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
 from schema.dungeonMasterModel import DungeonMasterModel
-from lib.database.gameService import save_game_to_database, load_game_from_database
-import asyncio
+from schema.turnModel import TurnModel
+from services.database.gameService import save_game_to_database, load_game_from_database
+from services.database.turnService import save_turn_to_database, get_latest_turn_by_game_id
 from core.settings import GameConfig
 
 class Game(Savable):
     players: dict[str,Player]
     dm: DungeonMaster
-    file_manager: FileManager
     tiles: dict[tuple[int,int],Tile]
+    current_turn_number: int
+    world_size: int
+    # Decomposed verdict components
+    verdict_character_state: list[CharacterState]
+    verdict_world_state: WorldState | None
+    verdict_narrative_result: str
 
-    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None):
+    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
-        self.file_manager = FileManager()
         self.players = {}
+        self.current_turn_number = 0
+        # Use provided world_size or fallback to GameConfig default
+        self.world_size = world_size if world_size is not None else GameConfig.world_size
+        # Initialize verdict components
+        self.verdict_character_state = []
+        self.verdict_world_state = None
+        self.verdict_narrative_result = ""
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
@@ -33,7 +45,7 @@ class Game(Savable):
             if p.UID != uid:
                 p.UID = uid  # enforce key ↔ object UID consistency
             self.players[uid] = p
-        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-GameConfig.world_size, GameConfig.world_size + 1) for j in range(-GameConfig.world_size, GameConfig.world_size + 1)}
+        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
     def step(self):
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
@@ -45,6 +57,8 @@ class Game(Savable):
             }
             verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
         self.handle_verdict(verdict)
+        self.current_turn_number += 1
+        self.save()  # Save state after each turn
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
@@ -65,54 +79,107 @@ class Game(Savable):
         # Convert tiles to TileModel format
         tiles_data = [TileModel(**tile.to_dict()) for tile in self.tiles.values()]
         
-        # Create game state
+        # Create game state for this turn
         game_state = GameStateModel(
             players=players_data,
             dm=dm_model,
             tiles=tiles_data,
             player_responses={uid: player.get_responses_history()[-1] if player.get_responses_history() else "" 
                             for uid, player in self.players.items()},
-            dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else ""
+            dungeon_master_verdict=self.dm.get_responses_history()[-1] if self.dm.get_responses_history() else "",
+            # Include decomposed verdict components
+            character_state_change=self.verdict_character_state,
+            world_state_change=self.verdict_world_state,
+            narrative_result=self.verdict_narrative_result
         )
         
-        # Create game model
+        # Create/update game metadata (without game_state)
+        game_id = getattr(self, 'game_id', str(uuid.uuid4()))
         game_data = GameModel(
-            id=getattr(self, 'game_id', 'default_game'),
+            id=game_id,
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
             status=getattr(self, 'status', 'active'),
+            model=getattr(self, 'model', 'mock'),
+            world_size=self.world_size,
+            winner_player_name=getattr(self, 'winner_player_name', None),
+            currency_target=getattr(self, 'currency_target', None),
+            max_turns=getattr(self, 'max_turns', None),
+            total_players=getattr(self, 'total_players', None),
+            game_duration=getattr(self, 'game_duration', None)
+        )
+        
+        # Save game metadata to database
+        saved_id = save_game_to_database(game_data)
+        
+        # Create turn model with game state
+        turn_data = TurnModel(
+            game_id=game_id,
+            turn_number=self.current_turn_number,
             game_state=game_state
         )
         
-        # Save to database using lib function
-        saved_id = save_game_to_database(game_data)
+        # Save turn to database
+        turn_id = save_turn_to_database(turn_data)
         
-        # Return JSON string for compatibility
-        return Savable.toJSON(game_data.model_dump())
+        # Return JSON string for compatibility (include turn info)
+        result = game_data.model_dump()
+        result['current_turn_number'] = self.current_turn_number
+        result['latest_turn_id'] = turn_id
+        return Savable.toJSON(result)
     
     @override
     def load(self, loaded_data: dict | str | None = None, game_id: str | None = None):
         # If game_id is provided, load from database using lib function
         if game_id:
             try:
+                # Load game metadata
                 game_model = load_game_from_database(game_id)
-                game_state = game_model.game_state
+                
+                # Load latest turn to get game state
+                try:
+                    latest_turn = get_latest_turn_by_game_id(game_id)
+                    game_state = latest_turn.game_state
+                    self.current_turn_number = latest_turn.turn_number
+                except ValueError:
+                    # No turns found, initialize with empty state
+                    game_state = GameStateModel()
+                    self.current_turn_number = 0
+                    
             except ValueError as e:
                 raise ValueError(f"Failed to load game {game_id}: {str(e)}")
         else:
-            # Handle string input
+            # Handle string input (legacy support or direct data load)
             if isinstance(loaded_data, str):
                 loaded_data = Savable.fromJSON(loaded_data)
             
             if not loaded_data:
                 raise ValueError("No data provided to load")
             
-            # Validate with GameModel
-            try:
-                game_model = GameModel(**loaded_data)
-                game_state = game_model.game_state
-            except Exception as e:
-                raise ValueError(f"Invalid game data format: {str(e)}")
+            # Check if this is new format (without game_state) or old format (with game_state)
+            if 'game_state' in loaded_data:
+                # Legacy format with game_state embedded
+                try:
+                    game_model = GameModel(**{k: v for k, v in loaded_data.items() if k != 'game_state'})
+                    game_state = GameStateModel(**loaded_data['game_state'])
+                    self.current_turn_number = loaded_data.get('current_turn_number', 0)
+                except Exception as e:
+                    raise ValueError(f"Invalid game data format: {str(e)}")
+            else:
+                # New format without game_state
+                try:
+                    game_model = GameModel(**loaded_data)
+                    # Try to load from latest turn
+                    try:
+                        latest_turn = get_latest_turn_by_game_id(game_model.id)
+                        game_state = latest_turn.game_state
+                        self.current_turn_number = latest_turn.turn_number
+                    except ValueError:
+                        # No turns found
+                        game_state = GameStateModel()
+                        self.current_turn_number = 0
+                except Exception as e:
+                    raise ValueError(f"Invalid game data format: {str(e)}")
         
         # Load players
         self.players = {}
@@ -154,6 +221,13 @@ class Game(Savable):
         self.name = game_model.name
         self.description = game_model.description
         self.status = game_model.status
+        self.model = getattr(game_model, 'model', 'mock')
+        self.world_size = getattr(game_model, 'world_size', GameConfig.world_size)
+        self.winner_player_name = getattr(game_model, 'winner_player_name', None)
+        self.currency_target = getattr(game_model, 'currency_target', None)
+        self.max_turns = getattr(game_model, 'max_turns', None)
+        self.total_players = getattr(game_model, 'total_players', None)
+        self.game_duration = getattr(game_model, 'game_duration', None)
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []
@@ -173,6 +247,7 @@ class Game(Savable):
         if self.dm._responses and len(self.dm._responses) > frame:
             responses["DM"] = self.dm._responses[frame]
         return responses
+    
     def handle_verdict(self, verdict: GameResponse | dict | str | None):
         """
         Apply a DM verdict to game state.
@@ -180,7 +255,7 @@ class Game(Savable):
         - Supports multiple players via CharacterState entries keyed by uid.
         - Ignores/records unknown or false UIDs without raising.
         - Clamps negative money/health to 0.
-        - Applies world_state tile updates when present.
+        - Applies world_state_change tile updates when present.
         """
         if verdict is None:
             return
@@ -207,12 +282,12 @@ class Game(Savable):
         except Exception as E:
             raise ValueError(f"Failed to parse verdict into GameResponse: {E}.")
 
-        if parsed is None or not isinstance(getattr(parsed, "character_state", None), list):
+        if parsed is None or not isinstance(getattr(parsed, "character_state_change", None), list):
             return #Don't throw errors if state is empty
 
         # --- Apply per-player character updates ---
         unknown_uids: list[str] = []
-        for cs in parsed.character_state:
+        for cs in parsed.character_state_change:
             # Tolerate entries that aren't CharacterState (e.g., dicts)
             try:
                 if not isinstance(cs, CharacterState):
@@ -259,7 +334,7 @@ class Game(Savable):
             print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")
 
         # --- Apply world updates to tiles if provided ---
-        ws = getattr(parsed, "world_state", None)
+        ws = getattr(parsed, "world_state_change", None)
         tiles_payload = getattr(ws, "tiles", None) if ws else None
         if tiles_payload:
             for td in tiles_payload:
@@ -274,9 +349,15 @@ class Game(Savable):
                     self.tiles[(t.position[0], t.position[1])].update_description(t.description)
                 except Exception:
                     continue
+        
+        # --- Store decomposed verdict components for persistence ---
+        self.verdict_character_state = getattr(parsed, "character_state_change", [])
+        self.verdict_world_state = getattr(parsed, "world_state_change", None)
+        self.verdict_narrative_result = getattr(parsed, "narrative_result", "")
+    
     #Accessor functions
     def get_tile(self, position: tuple[int,int]) -> Tile:
-        if abs(position[0]) > GameConfig.world_size or abs(position[1]) > GameConfig.world_size:
+        if abs(position[0]) > self.world_size or abs(position[1]) > self.world_size:
             return Tile("This is an invalid tile. You cannot interact with or enter this tile.", position=position)
         if position not in self.tiles:
             self.tiles[position] = self.dm.generate_tile(position)
