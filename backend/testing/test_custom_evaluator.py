@@ -26,36 +26,14 @@ def test_custom_evaluation():
         result = EvalWrapper.evaluate(environment, user_response, service_type="custom")
         print(f"  Score: {result['score']:.2f}")
         print(f"  Reasoning: {result['reasoning']}")
-        if 'relevance' in result:
-            print(f"  Relevance: {result['relevance']:.2f}")
-            print(f"  Appropriateness: {result['appropriateness']:.2f}")
-            print(f"  Completeness: {result['completeness']:.2f}")
-            print(f"  Clarity: {result['clarity']:.2f}")
-        print(f"  Details: {result.get('details', {})}")
+        print(f"  Appropriateness: {result['appropriateness']:.2f}")
+        print(f"  Completeness: {result['completeness']:.2f}")
+        print(f"  Clarity: {result['clarity']:.2f}")
+        print(f"  Creativity: {result['creativity']:.2f}")
+        print(f"  Action Validity: {result['action_validity']:.2f}")
     except Exception as e:
         print(f"  Error: {e}")
     print()
-    
-    # Test quick_evaluate with custom service
-    print("QUICK_EVALUATE WITH CUSTOM SERVICE:")
-    try:
-        result = quick_evaluate(environment, user_response, service_type="custom")
-        print(f"  Score: {result['score']:.2f}")
-        print(f"  Reasoning: {result['reasoning']}")
-        if 'relevance' in result:
-            print(f"  Relevance: {result['relevance']:.2f}")
-            print(f"  Appropriateness: {result['appropriateness']:.2f}")
-            print(f"  Completeness: {result['completeness']:.2f}")
-            print(f"  Clarity: {result['clarity']:.2f}")
-    except Exception as e:
-        print(f"  Error: {e}")
-    print()
-
-
-def test_custom_service_directly():
-    """Test CustomEvalService directly"""
-    
-    print("=== Testing CustomEvalService Directly ===\n")
     
     # Create custom service instance
     custom_service = CustomEvalService(
@@ -101,11 +79,11 @@ def test_custom_service_directly():
             )
             print(f"  Score: {result['score']:.2f}")
             print(f"  Reasoning: {result['reasoning']}")
-            if 'relevance' in result:
-                print(f"  Relevance: {result['relevance']:.2f}")
-                print(f"  Appropriateness: {result['appropriateness']:.2f}")
-                print(f"  Completeness: {result['completeness']:.2f}")
-                print(f"  Clarity: {result['clarity']:.2f}")
+            print(f"  Appropriateness: {result['appropriateness']:.2f}")
+            print(f"  Completeness: {result['completeness']:.2f}")
+            print(f"  Clarity: {result['clarity']:.2f}")
+            print(f"  Creativity: {result['creativity']:.2f}")
+            print(f"  Action Validity: {result['action_validity']:.2f}")
         except Exception as e:
             print(f"  Error: {e}")
         print()
@@ -127,14 +105,15 @@ def test_custom_with_criteria():
             "relevance": 0.3,
             "appropriateness": 0.3,
             "completeness": 0.2,
-            "clarity": 0.2
+            "clarity": 0.2,
+            "creativity": 0.2,
+            "action_validity": 0.2
         }
     }
     
     print(f"Environment: {environment}")
     print(f"User Response: {user_response}")
     print(f"Criteria: {criteria}")
-    print()
     
     try:
         result = quick_evaluate(
@@ -145,80 +124,16 @@ def test_custom_with_criteria():
         )
         print(f"Score: {result['score']:.2f}")
         print(f"Reasoning: {result['reasoning']}")
-        if 'relevance' in result:
-            print(f"Relevance: {result['relevance']:.2f}")
-            print(f"Appropriateness: {result['appropriateness']:.2f}")
-            print(f"Completeness: {result['completeness']:.2f}")
-            print(f"Clarity: {result['clarity']:.2f}")
+        print(f"Appropriateness: {result['appropriateness']:.2f}")
+        print(f"Completeness: {result['completeness']:.2f}")
+        print(f"Clarity: {result['clarity']:.2f}")
+        print(f"Creativity: {result['creativity']:.2f}")
+        print(f"Action Validity: {result['action_validity']:.2f}")
     except Exception as e:
         print(f"Error: {e}")
     print()
 
 
-def test_custom_service_history():
-    """Test custom service evaluation history"""
-    
-    print("=== Testing Custom Service History ===\n")
-    
-    custom_service = CustomEvalService(
-        eval_id="test-history-001",
-        threshold=0.6
-    )
-    
-    # Run multiple evaluations
-    test_cases = [
-        ("You are a chef. A customer asks about gluten-free options.", "We have several gluten-free dishes available. Let me show you our menu and explain the ingredients."),
-        ("You are a chef. A customer asks about gluten-free options.", "No."),
-        ("You are a chef. A customer asks about gluten-free options.", "I love cooking pasta and bread.")
-    ]
-    
-    print("Running multiple evaluations...")
-    for i, (env, response) in enumerate(test_cases):
-        try:
-            result = custom_service.evaluate(env, response, None, None)
-            print(f"  Evaluation {i+1}: Score={result['score']:.2f}")
-        except Exception as e:
-            print(f"  Evaluation {i+1}: Error - {e}")
-    
-    print(f"\nTotal evaluations in history: {len(custom_service.results_history)}")
-    print("History details:")
-    for i, result in enumerate(custom_service.results_history):
-        print(f"  {i+1}. Score: {result.get('score', 0):.2f}, Timestamp: {result.get('timestamp', 'N/A')}")
-
-
-def show_custom_service_features():
-    """Show custom service features and capabilities"""
-    
-    print("=== Custom Service Features ===\n")
-    
-    print("The CustomEvalService provides:")
-    print("1. AI-powered evaluation using structured Pydantic models")
-    print("2. Multiple evaluation metrics:")
-    print("   - Overall score (0.0-1.0)")
-    print("   - Relevance score")
-    print("   - Appropriateness score") 
-    print("   - Completeness score")
-    print("   - Clarity score")
-    print("3. Detailed reasoning for each evaluation")
-    print("4. Configurable threshold for pass/fail")
-    print("5. Support for custom evaluation criteria")
-    print("6. Evaluation history tracking")
-    print("7. Integration with AI wrapper system")
-    print()
-    print("Usage examples:")
-    print("  # Basic usage")
-    print("  result = quick_evaluate(env, response, service_type='custom')")
-    print()
-    print("  # With custom AI model")
-    print("  result = quick_evaluate(env, response, service_type='custom', ai_model='gpt-4')")
-    print()
-    print("  # With evaluation criteria")
-    print("  criteria = {'focus_areas': ['technical_accuracy', 'clarity']}")
-    print("  result = quick_evaluate(env, response, service_type='custom', evaluation_criteria=criteria)")
-
-
 if __name__ == "__main__":
     test_custom_evaluation()
-    test_custom_service_directly()
     test_custom_with_criteria()
-    show_custom_service_features()
