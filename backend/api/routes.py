@@ -12,7 +12,7 @@ from services.database.gameService import (
 )
 from services.gameWorker import run_game_async
 from schema.gameModel import GameModel, PlayerConfigModel
-from schema.dataModels import CreateGameRequest
+from api.apiDtoModel import CreateGameRequest
 from api.transformers import transform_game_for_frontend
 
 router = APIRouter()
