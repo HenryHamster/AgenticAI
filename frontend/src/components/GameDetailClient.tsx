@@ -12,7 +12,13 @@ interface GameDetailClientProps {
 
 export default function GameDetailClient({ gameRun: initialGameRun }: GameDetailClientProps) {
   const [selectedTurnIndex, setSelectedTurnIndex] = useState(0);
+  const [formattedStartTime, setFormattedStartTime] = useState<string>('');
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Format start time client-side to avoid hydration mismatch
+  useEffect(() => {
+    setFormattedStartTime(new Date(initialGameRun.startTime).toLocaleString());
+  }, [initialGameRun.startTime]);
   
   // Refresh page every 1 second if there are no turns yet
   useEffect(() => {
@@ -114,7 +120,7 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
               </span>
             </div>
             <p className="text-gray-600">
-              {new Date(initialGameRun.startTime).toLocaleString()}
+              {formattedStartTime || '...'}
             </p>
           </div>
           
