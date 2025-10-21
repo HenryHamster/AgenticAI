@@ -16,7 +16,7 @@ class OpenAiService(AiServicesBase):
     llm: ChatOpenAI
     chat_prompt: ChatPromptTemplate
 
-    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "gpt-4.1-nano", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
+    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "gpt-4.1-mini", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
         """
         Initialize the OpenAI service.
         Args:

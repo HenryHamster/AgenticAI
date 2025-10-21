@@ -40,7 +40,7 @@ class AIConfig:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_timeout: int = 30
     openai_max_tokens: int = 1000
-    openai_model: str = "gpt-4.1-nano"
+    openai_model: str = "gpt-4.1-mini"
     openai_temperature: float = 0.7
 
     # Claude settings

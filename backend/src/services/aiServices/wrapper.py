@@ -18,7 +18,7 @@ class AIWrapper:
     @classmethod
     def ask(cls,
             message: str,
-            model: str = "gpt-4.1-nano",
+            model: str = "gpt-4.1-mini",
             chat_id: Optional[str] = None,
             system_prompt: Optional[str] = None,
             structured_output: Optional[Type[BaseModel]] = None,
@@ -28,7 +28,7 @@ class AIWrapper:
 
         Args:
             message: The message to send
-            model: Model identifier (e.g., "gpt-4.1-nano", "claude-3-sonnet")
+            model: Model identifier (e.g., "gpt-4.1-mini", "claude-3-sonnet")
             chat_id: Chat session ID (creates new if None)
             system_prompt: Override default system prompt
             structured_output: Pydantic model for structured responses

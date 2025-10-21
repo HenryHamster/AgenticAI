@@ -10,7 +10,7 @@ from schema.tileModel import TileModel
 class DungeonMaster(Savable):
     model:str
     _responses: list[str]
-    def __init__(self, model: str = "gpt-4.1-nano", loaded_data: dict | None = None):
+    def __init__(self, model: str = "gpt-4.1-mini", loaded_data: dict | None = None):
         self.model = model
         self._responses = []
         if loaded_data is not None:
