@@ -55,14 +55,18 @@ class Game(Savable):
                               "verdict": verdict, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
             }
-            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
+            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
         self.handle_verdict(verdict)
         self.current_turn_number += 1
         self.save()  # Save state after each turn
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
-        return tile.to_dict()
+        return tile.clean_to_dict() #Prevents player from seeing secrets
+    @staticmethod
+    def _full_tile_payload(tile: Tile) -> dict:
+        """Plain-Python view of a tile for prompts/serialization."""
+        return tile.to_dict() #Prevents player from seeing secrets
     
     @override
     def save(self) -> str:
@@ -77,7 +81,16 @@ class Game(Savable):
         dm_model = DungeonMasterModel(**dm_data)
         
         # Convert tiles to TileModel format
-        tiles_data = [TileModel(**tile.to_dict()) for tile in self.tiles.values()]
+        tiles_data = []
+        for (x, y), val in self.tiles.items():
+            tile = val[0] if isinstance(val, tuple) else val  # handle (Tile, ...) cases
+            tiles_data.append(
+                TileModel(
+                    position=[int(x), int(y)],
+                    description=getattr(tile, "description", ""),
+                    secrets=[(str(k), int(v)) for k, v in getattr(tile, "secrets", [])],
+                )
+            )
         
         # Create game state for this turn
         game_state = GameStateModel(
@@ -238,6 +251,9 @@ class Game(Savable):
     
     def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
         return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
+    
+    def _get_tiles_full_payload(self) -> list[dict]:
+        return [self._full_tile_payload(t) for t in self.tiles.values()]
     def _get_responses_at_frame(self, frame:int) -> dict[str,str]:
         responses = {}
         for uid, player in self.players.items():
@@ -340,13 +356,18 @@ class Game(Savable):
             for td in tiles_payload:
                 try:
                     if isinstance(td, dict):
-                        t = Tile.from_dict(td)
+                        pos = list(td["position"])
+                        desc = td.get("description", "")
+                        secrets = [(str(k), int(v)) for k, v in td.get("secrets", [])]
                     else:
-                        # Attribute-style fallback
-                        pos_attr = list(getattr(td, "position")) #Throw exception when invalid position
-                        desc_attr = getattr(td, "description", "")
-                        t = Tile.from_dict({"position": pos_attr, "description": desc_attr})
-                    self.tiles[(t.position[0], t.position[1])].update_description(t.description)
+                        pos = list(getattr(td, "position"))
+                        desc = getattr(td, "description", "")
+                        secrets = [(str(k), int(v)) for k, v in getattr(td, "secrets", [])]
+
+                    key = (int(pos[0]), int(pos[1]))
+                    t = self.tiles[key]
+                    t.update_description(desc)
+                    t.update_secrets(secrets)
                 except Exception:
                     continue
         
