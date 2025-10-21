@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
+from schema.tileModel import SecretKV
 from typing import List
 
 class CharacterState(BaseModel):
@@ -11,7 +12,7 @@ class CharacterState(BaseModel):
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
-    secrets: List[tuple[str,int]] = Field()
+    secrets: List[SecretKV] = Field()
     description: str
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")

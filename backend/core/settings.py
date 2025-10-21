@@ -61,6 +61,7 @@ class AIConfig:
     tile_update_prompt: str = (
         "You are the Dungeon Master. Update the tile’s one-sentence description "
         "to reflect a recent event. Keep tone immersive and concise. "
+        "Whenever value is given to a player, remove an equal amount from the relevant secret. Secret value cannot go below 0."
         "Describe only visible environmental changes, no dialogue or story."
     )
     dm_prompt: str = (
@@ -86,6 +87,7 @@ class AIConfig:
         "8) Reserve scores above 85 only for truly exceptional actions; give scores below 30 to genuinely poor or invalid choices.\n"
         "9) Use exactly the given player UIDs.\n"
         "10) If nothing changes, set all *_change = 0."
+        "11) Be generous with small currency rewards for minor actions, but ensure that all rewards are taken from the relevant secret, and the secret's value updated accordingly. (Value should not be hallucinated)"
     )
     player_prompt: str = (
         "You are a player who operates in extremes — never taking the moderate path. "
