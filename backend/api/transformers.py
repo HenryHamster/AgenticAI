@@ -6,7 +6,6 @@ import json
 from typing import List, Dict, Any
 from services.database.turnService import get_turns_by_game_id
 from schema.gameModel import GameModel
-from schema.dataModels import GameResponse
 
 
 def transform_game_for_frontend(game: GameModel, include_turns: bool = False) -> Dict[str, Any]:

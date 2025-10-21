@@ -4,7 +4,7 @@ Game-specific data models
 
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
-from schema.dataModels import GameResponse, CharacterState, WorldState, TileState
+from api.apiDtoModels import CharacterState, WorldState
 
 class GameStateModel(BaseModel):
     players: Dict[str, 'PlayerModel'] = Field(default_factory=dict)

@@ -2,7 +2,7 @@ from src.app.Tile import Tile
 from database.fileManager import Savable
 from src.services.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
-from schema.dataModels import GameResponse
+from api.apiDtoModels import GameResponse
 from core.settings import AIConfig
 from typing import override
 from schema.tileModel import TileModel

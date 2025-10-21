@@ -5,7 +5,7 @@ from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
 from typing import override
 import uuid
-from schema.dataModels import GameResponse, CharacterState, WorldState
+from api.apiDtoModels import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
 from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
