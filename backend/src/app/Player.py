@@ -45,7 +45,7 @@ class PlayerValues(Savable):
             raise ValueError(f"Invalid player values data: {str(e)}")
 
 PLAYER_CLASSES = {
-    "human" : PlayerClass("human","A confident, exceptionally powerful human being.")
+    "human" : PlayerClass("human","A very below average human being.")
 }
 
 class Player(Savable):
@@ -85,18 +85,10 @@ class Player(Savable):
     #endregion
     #region: Modifier functions
     def update_position(self, change: tuple[int,int]):
-        new_x = self.position[0] + change[0]
-        new_y = self.position[1] + change[1]
-        if (new_x < -GameConfig.world_size or new_x > GameConfig.world_size or
-            new_y < -GameConfig.world_size or new_y > GameConfig.world_size):
-            raise ValueError(
-                f"Position change out of world bounds. "
-                f"Current position: {self.position}, "
-                f"Change: {change}, "
-                f"New position: ({new_x}, {new_y}), "
-                f"World bounds: [-{GameConfig.world_size}, {GameConfig.world_size}]"
-            )
-        self.position = (new_x, new_y)
+        if (self.position[0]+change[0] < -GameConfig.world_size or self.position[0]+change[0] > GameConfig.world_size or
+            self.position[1]+change[1] < -GameConfig.world_size or self.position[1]+change[1] > GameConfig.world_size):
+            return
+        self.position = (self.position[0]+change[0],self.position[1]+change[1])
     #endregion
 
     @override
