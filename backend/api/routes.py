@@ -12,6 +12,7 @@ from services.database.gameService import (
 )
 from services.gameWorker import run_game_async
 from schema.gameModel import GameModel, PlayerConfigModel
+from schema.enums import GameStatus
 from api.apiDtoModel import CreateGameRequest
 from api.transformers import transform_game_for_frontend
 
@@ -53,7 +54,7 @@ async def create_game_endpoint(
             id=game_id,
             name=f"{game_id}",
             description=f"Game with {number_of_players} players, world size {game_config.world_size}",
-            status="pending",  # Worker will change to 'active' after initialization
+            status=GameStatus.PENDING,  # Game starts as pending, worker will activate it
             model=game_config.model_mode,
             world_size=game_config.world_size,
             currency_target=game_config.currency_target,

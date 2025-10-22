@@ -5,6 +5,7 @@ Game-specific data models
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 from api.apiDtoModel import GameResponse, CharacterState, WorldState, TileState
+from schema.enums import GameStatus
 
 class GameStateModel(BaseModel):
     players: Dict[str, 'PlayerModel'] = Field(default_factory=dict)
@@ -16,6 +17,9 @@ class GameStateModel(BaseModel):
     character_state_change: List[CharacterState] = Field(default_factory=list)
     world_state_change: Optional[WorldState] = Field(default=None)
     narrative_result: str = Field(default="")
+    # Game ending state
+    is_game_over: bool = Field(default=False)
+    game_over_reason: Optional[str] = Field(default=None)
 
 class PlayerConfigModel(BaseModel):
     """Individual player configuration"""
@@ -27,7 +31,7 @@ class GameModel(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(default="Untitled Game")
     description: str = Field(default="")
-    status: str = Field(default="active")
+    status: GameStatus = Field(default=GameStatus.ACTIVE)
     model: str = Field(default="mock")
     world_size: int = Field(default=1)
     winner_player_name: Optional[str] = Field(default=None)
