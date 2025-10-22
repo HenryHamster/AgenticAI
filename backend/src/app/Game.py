@@ -91,6 +91,8 @@ class Game(Savable):
                     position=[int(x), int(y)],
                     description=getattr(tile, "description", ""),
                     secrets=secrets,
+                    terrainType=getattr(tile, "terrainType", "plains"),
+                    terrainEmoji=getattr(tile, "terrainEmoji", "🌾"),
                 )
             )
         
