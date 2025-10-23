@@ -76,7 +76,7 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
     })),
   };
   
-  const response = await fetch(`${API_BASE_URL}/games/create`, {
+  const response = await fetch(`http://localhost:8000/api/v1/games/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

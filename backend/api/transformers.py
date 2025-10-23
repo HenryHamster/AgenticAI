@@ -61,7 +61,8 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                     "description": tile.description,
                     "secrets": [s.to_dict() if hasattr(s, 'to_dict') else s for s in tile.secrets],
                     "terrainType": tile.terrainType,
-                    "terrainEmoji": tile.terrainEmoji
+                    "terrainEmoji": tile.terrainEmoji,
+                    "secrets": getattr(tile, 'secrets', [])
                 }
                 for tile in turn.game_state.tiles
             ]
@@ -106,7 +107,8 @@ def transform_game_for_frontend(game: GameModel, include_turns: bool = False) ->
                             "description": tile.description,
                             "secrets": [s.to_dict() if hasattr(s, 'to_dict') else s for s in tile.secrets],
                             "terrainType": tile.terrainType,
-                            "terrainEmoji": tile.terrainEmoji
+                            "terrainEmoji": tile.terrainEmoji,
+                            "secrets": getattr(tile, 'secrets', [])
                         }
                         for tile in turn.game_state.world_state_change.tiles
                     ]
@@ -191,7 +193,8 @@ def transform_tiles_to_board(tiles: List) -> List[List[Dict[str, Any]]]:
             "y": tile.position[1],
             "terrainType": tile.terrainType,
             "terrainEmoji": tile.terrainEmoji,
-            "description": tile.description
+            "description": tile.description,
+            "secrets": getattr(tile, 'secrets', [])
         }
     
     return board
