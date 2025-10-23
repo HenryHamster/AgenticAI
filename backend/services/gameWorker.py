@@ -7,13 +7,19 @@ import sys
 import asyncio
 from typing import Optional
 from datetime import datetime
+import time
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.app.Game import Game
-from services.database.gameService import load_game_from_database, update_game_in_database
 from services.gameInitializer import initialize_game
+from schema.enums import GameStatus
+from services.database.gameService import (
+    load_game_from_database,
+    update_game_in_database,
+)
 
 
 class GameWorker:
@@ -42,7 +48,7 @@ class GameWorker:
             # Fetch game configuration from database
             game_model = load_game_from_database(self.game_id)
             
-            if game_model.status == "pending":
+            if game_model.status == GameStatus.PENDING:
                 self._log(f"Game {self.game_id} is pending initialization...")
                 self._log(f"Initializing with: players={game_model.total_players}, world_size={game_model.world_size}, model={game_model.model}")
                 
@@ -66,9 +72,10 @@ class GameWorker:
                     player_configs=player_configs,
                 )
                 
-                # Update status to active (game will be saved after first step)
-                self.game.status = "active"
+                # Transition from PENDING to ACTIVE
+                self.game.status = GameStatus.ACTIVE
                 self._log(f"Game initialized successfully with {len(self.game.players)} players")
+                self._log(f"Game status changed from PENDING to ACTIVE")
                 
             else:
                 self._log(f"Loading existing game {self.game_id}...")
@@ -127,6 +134,9 @@ class GameWorker:
         """Update the game status in database"""
         try:
             game_model = load_game_from_database(self.game_id)
+            # Convert string to GameStatus if needed for backward compatibility
+            if isinstance(status, str):
+                status = GameStatus(status)
             game_model.status = status
             update_game_in_database(game_model)
             self._log(f"Game status updated to: {status}")
