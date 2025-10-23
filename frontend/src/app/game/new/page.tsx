@@ -293,17 +293,23 @@ export default function NewGamePage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Class
+                        Character Class
                       </label>
                       <select
-                        value={player.class}
+                        value={player.characterClass || ""}
                         onChange={(e) =>
-                          updatePlayer(index, "class", e.target.value)
+                          updatePlayer(index, "characterClass", e.target.value || undefined)
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <option value="human">Human</option>
+                        <option value="">None (Basic)</option>
+                        <option value="Warrior">Warrior</option>
+                        <option value="Mage">Mage</option>
+                        <option value="Rogue">Rogue</option>
                       </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        DnD-style progression with skills and leveling
+                      </p>
                     </div>
 
                     <div>

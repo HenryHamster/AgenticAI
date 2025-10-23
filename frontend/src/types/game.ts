@@ -10,6 +10,10 @@ export interface Player {
   position: [number, number]; // [x, y]
   responses: string[];
   player_class: "human";
+  level?: number;
+  experience?: number;
+  invalid_action_count?: number;
+  total_action_count?: number;
   // Legacy fields for backwards compatibility
   name?: string;
   emoji?: string;
@@ -108,8 +112,9 @@ export interface PlayerSetup {
   class: 'human';
   startingCurrency: number;
   startingHealth: number;
-  startingPosition: 'random' | [number, number]; // Changed to array format
+  startingPosition: 'random' | [number, number];
   agentPrompt: string;
+  characterClass?: 'Warrior' | 'Mage' | 'Rogue';
 }
 
 export interface GameCreationRequest {

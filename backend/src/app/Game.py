@@ -9,7 +9,7 @@ from src.app.GameConditions import (
     AllPlayersDeadCondition,
     CurrencyGoalCondition
 )
-from typing import override
+from typing_extensions import override
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
@@ -59,10 +59,11 @@ class Game(Savable):
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
-            p = Player(uid)
+            character_template_name = pdata.get('character_template_name')
+            p = Player(uid, character_template_name=character_template_name)
             p.load(pdata)
             if p.UID != uid:
-                p.UID = uid  # enforce key ↔ object UID consistency
+                p.UID = uid
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
     def step(self):
@@ -381,8 +382,9 @@ class Game(Savable):
 
         # --- Apply per-player character updates ---
         unknown_uids: list[str] = []
+        level_up_events: dict[str, list[str]] = {}
+
         for cs in parsed.character_state_change:
-            # Tolerate entries that aren't CharacterState (e.g., dicts)
             try:
                 if not isinstance(cs, CharacterState):
                     cs = _pyd_parse_dict(CharacterState, cs if isinstance(cs, dict) else cs.__dict__)
@@ -399,7 +401,6 @@ class Game(Savable):
                 unknown_uids.append(uid)
                 continue
 
-            # Position (len 2, ints). Fall back to current if malformed.
             try:
                 pos_raw = list(getattr(cs, "position_change", []))
                 if len(pos_raw) >= 2:
@@ -409,20 +410,59 @@ class Game(Savable):
             except Exception:
                 new_pos = (0,0)
 
-            # Money/Health (clamp to >= 0). Keep current if absent.
             try:
-                money = getattr(cs, "money_change", player.values.money)
+                money = getattr(cs, "money_change", 0)
             except Exception:
                 money = 0
 
             try:
-                health = getattr(cs, "health_change", player.values.health)
+                health = getattr(cs, "health_change", 0)
             except Exception:
                 health = 0
 
             player.update_position(new_pos)
             player.values.update_money(money)
             player.values.update_health(health)
+
+            xp_gain = getattr(cs, "experience_change", 0)
+            if xp_gain != 0:
+                player.experience += xp_gain
+                print(f"[handle_verdict] Player {uid} gained {xp_gain} XP (total: {player.experience})")
+
+            resource_changes = getattr(cs, "resource_changes", {})
+            if resource_changes:
+                player.update_resources(resource_changes)
+
+            inventory_changes = getattr(cs, "inventory_changes", {})
+            if inventory_changes:
+                for item in inventory_changes.get("added", []):
+                    if item not in player.inventory:
+                        player.inventory.append(item)
+                for item in inventory_changes.get("removed", []):
+                    if item in player.inventory:
+                        player.inventory.remove(item)
+
+            cooldowns = getattr(cs, "skill_cooldowns", {})
+            for skill_name, turns in cooldowns.items():
+                player.set_cooldown(skill_name, turns)
+
+            player.update_cooldowns(turn_delta=0)
+
+            player.total_action_count += 1
+            action_was_invalid = getattr(cs, "action_was_invalid", False)
+            if action_was_invalid:
+                player.invalid_action_count += 1
+
+            new_unlocks_from_dm = getattr(cs, "new_unlocks", [])
+
+            new_unlocks_from_level = player.check_level_up()
+            if new_unlocks_from_level:
+                level_up_events[uid] = new_unlocks_from_level
+                print(f"[handle_verdict] Player {uid} leveled up to {player.level}! New skills: {new_unlocks_from_level}")
+
+            if new_unlocks_from_dm:
+                for skill in new_unlocks_from_dm:
+                    player.unlock_skill(skill)
 
         if unknown_uids:
             print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")

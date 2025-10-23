@@ -8,6 +8,12 @@ class CharacterState(BaseModel):
     money_change: int = Field()
     health_change: int = Field()
     position_change: List[int] = Field(min_length=2, max_length=2)
+    experience_change: int = Field(default=0)
+    resource_changes: Dict[str, int] = Field(default_factory=dict)
+    inventory_changes: Dict[str, List[str]] = Field(default_factory=lambda: {"added": [], "removed": []})
+    skill_cooldowns: Dict[str, int] = Field(default_factory=dict)
+    new_unlocks: List[str] = Field(default_factory=list)
+    action_was_invalid: bool = Field(default=False)
 
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -37,6 +43,7 @@ class PlayerConfig(BaseModel):
     name: str = Field(..., min_length=1, description="Player name/identifier")
     starting_health: int = Field(default=100, ge=1, description="Starting health for this player")
     starting_currency: int = Field(default=0, ge=0, description="Starting currency for this player")
+    character_class: Optional[str] = Field(default=None, description="Character class (Warrior, Mage, Rogue)")
 
 class GameConfig(BaseModel):
     """Game-level configuration"""
