@@ -3,7 +3,7 @@ Tile-specific data models
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Tuple
+from typing import List, Dict, Any, Optional
 
 class SecretKV(BaseModel):
     key: str
@@ -15,3 +15,4 @@ class TileModel(BaseModel):
     secrets: List[SecretKV] = Field(default_factory=list)
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
+    secrets: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
