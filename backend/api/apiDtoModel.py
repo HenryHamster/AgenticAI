@@ -12,11 +12,10 @@ class CharacterState(BaseModel):
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
-    secrets: List[SecretKV] = Field()
+    secrets: Optional[List[SecretKV]] = Field(default_factory=list)
     description: str
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
-    secrets: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")

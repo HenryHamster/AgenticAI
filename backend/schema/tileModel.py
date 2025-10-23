@@ -15,4 +15,4 @@ class TileModel(BaseModel):
     secrets: List[SecretKV] = Field(default_factory=list)
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
-    secrets: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    secrets: Optional[List[SecretKV]] = Field(default_factory=list)
