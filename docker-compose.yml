@@ -26,6 +26,7 @@ services:
       - /app/node_modules
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+      - NEXT_PUBLIC_FRONTEND_URL=http://frontend:3000
     depends_on:
       - backend
     networks:

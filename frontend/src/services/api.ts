@@ -1,7 +1,9 @@
 import { GameRun, Turn, GameCreationRequest } from '@/types/game';
 
+// Use environment variables - now properly configured in docker-compose.yml
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 export const FRONTEND_BASE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8000/api/v1';
+
 
 /**
  * API service for fetching game data from the FastAPI backend
@@ -74,7 +76,7 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
     })),
   };
   
-  const response = await fetch(`${FRONTEND_BASE_URL}/games/create`, {
+  const response = await fetch(`${API_BASE_URL}/games/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -89,4 +91,55 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
   
   const data = await response.json();
   return data.game_id;
+}
+
+export async function evaluateGame(gameId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/game/eval/${gameId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to evaluate game: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// Client-side API functions that always use localhost (for browser requests)
+export async function evaluateGameClient(gameId: string): Promise<any> {
+  const response = await fetch(`http://localhost:8000/api/v1/game/eval/${gameId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to evaluate game: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+export async function fetchGameRunsClient(): Promise<GameRun[]> {
+  const response = await fetch(`http://localhost:8000/api/v1/games`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch games: ${response.statusText}`);
+  }
+  
+  const data = await response.json() as GameRun[];
+  return data.sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+}
+
+export async function fetchGameRunByIdClient(id: string): Promise<GameRun | null> {
+  try {
+    const response = await fetch(`http://localhost:8000/api/v1/game/${id}?include_turns=true`);
+    
+    if (response.status === 404) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch game: ${response.statusText}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching game by ID:', error);
+    return null;
+  }
 }
