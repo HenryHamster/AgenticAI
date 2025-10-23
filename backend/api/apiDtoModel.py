@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Dict, Any, Optional
 from schema.tileModel import SecretKV
-from typing import List
 
 class CharacterState(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -16,6 +16,7 @@ class TileState(BaseModel):
     description: str
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
+    secrets: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -42,7 +43,7 @@ class GameConfig(BaseModel):
     """Game-level configuration"""
     model_config = ConfigDict(extra="forbid")
     world_size: int = Field(default=2, ge=1, le=10, description="World size (grid extends from -size to +size)")
-    model_mode: str = Field(default="gpt-4.1-mini", pattern="^(gpt-4\.1-mini|mock)$", description="AI model to use")
+    model_mode: str = Field(default="gpt-4.1-nano", pattern=r"^(gpt-4\.1-nano|mock)$", description="AI model to use")
     currency_target: int = Field(default=1000, ge=1, description="Currency target for win condition")
     max_turns: int = Field(default=10, ge=1, description="Maximum number of turns")
 
