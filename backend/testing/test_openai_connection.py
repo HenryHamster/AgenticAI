@@ -14,7 +14,7 @@ def main():
 
     try:
         resp = client.chat.completions.create(
-            model="gpt-4.1-nano",   # Try nano first; fallback to mini if needed
+            model="gpt-4.1-mini",   # Try nano first; fallback to mini if needed
             messages=[{"role": "user", "content": "ping"}],
             max_tokens=8,
             temperature=0,

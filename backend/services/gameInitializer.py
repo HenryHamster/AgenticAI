@@ -5,6 +5,7 @@ Provides utilities for creating default game configurations
 
 from typing import Dict, Any
 from src.app.Game import Game
+from schema.enums import GameStatus
 
 
 def create_default_player_info(
@@ -97,7 +98,7 @@ def initialize_game(
     model: str = "mock",
     name: str = "Untitled Game",
     description: str = "",
-    status: str = "active",
+    status: GameStatus = GameStatus.PENDING,
     currency_target: int = 1000,
     starting_currency: int = 0,
     starting_health: int = 100,

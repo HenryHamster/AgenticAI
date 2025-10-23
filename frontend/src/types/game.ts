@@ -18,9 +18,15 @@ export interface Player {
   isActive?: boolean;
 }
 
+export interface Secret {
+  key: string;
+  value: number;
+}
+
 export interface Tile {
   position: [number, number]; // [x, y]
   description: string;
+  secrets?: Secret[];
   // Legacy fields for backwards compatibility
   terrainType?: TerrainType;
   terrainEmoji?: string;

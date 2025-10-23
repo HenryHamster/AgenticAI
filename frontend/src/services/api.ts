@@ -65,7 +65,7 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
   const requestBody = {
     game_config: {
       world_size: gameRequest.worldSize || 2,
-      model_mode: 'gpt-4.1-nano',
+      model_mode: 'gpt-4.1-mini',
       currency_target: gameRequest.currencyGoal,
       max_turns: gameRequest.maxTurns === 'until_win' ? 100 : gameRequest.maxTurns,
     },

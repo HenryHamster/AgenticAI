@@ -3,6 +3,12 @@ from src.app.Player import Player
 from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
+from src.app.GameConditions import (
+    GameConditionManager,
+    MaxTurnsCondition,
+    AllPlayersDeadCondition,
+    CurrencyGoalCondition
+)
 from typing import override
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
@@ -11,6 +17,7 @@ from schema.playerModel import PlayerModel
 from schema.tileModel import TileModel
 from schema.dungeonMasterModel import DungeonMasterModel
 from schema.turnModel import TurnModel
+from schema.enums import GameStatus
 from services.database.gameService import save_game_to_database, load_game_from_database
 from services.database.turnService import save_turn_to_database, get_latest_turn_by_game_id
 from core.settings import GameConfig
@@ -25,6 +32,10 @@ class Game(Savable):
     verdict_character_state: list[CharacterState]
     verdict_world_state: WorldState | None
     verdict_narrative_result: str
+    # Game condition management
+    condition_manager: GameConditionManager
+    is_game_over: bool
+    game_over_reason: str | None
 
     def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
         self.dm = DungeonMaster()
@@ -37,6 +48,14 @@ class Game(Savable):
         self.verdict_character_state = []
         self.verdict_world_state = None
         self.verdict_narrative_result = ""
+        # Initialize game condition manager
+        self.condition_manager = GameConditionManager()
+        self.is_game_over = False
+        self.game_over_reason = None
+        # Add default conditions
+        self.condition_manager.add_condition(MaxTurnsCondition())
+        self.condition_manager.add_condition(AllPlayersDeadCondition())
+        self.condition_manager.add_condition(CurrencyGoalCondition())
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
@@ -47,6 +66,11 @@ class Game(Savable):
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
     def step(self):
+        # Check if game is already over
+        if self.is_game_over:
+            print(f"[Game] Game is already over: {self.game_over_reason}")
+            return
+        
         player_responses, verdict = [], ""
         sorted_uids = sorted(self.players.keys())
         for _ in range(GameConfig.num_responses):
@@ -55,14 +79,49 @@ class Game(Savable):
                               "verdict": verdict, "uid": UID, "position": self.players[UID].position})
                 for UID in sorted_uids
             }
-            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict})    
+            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
         self.handle_verdict(verdict)
         self.current_turn_number += 1
+        
+        # Check win/end conditions after processing the turn
+        self._check_game_conditions()
+        
         self.save()  # Save state after each turn
+    def _check_game_conditions(self) -> None:
+        """Check all game end/win conditions and update game state accordingly."""
+        result = self.condition_manager.check_conditions(self)
+        if result is not None:
+            condition, reason = result
+            self.is_game_over = True
+            self.game_over_reason = reason
+            
+            # Update game status based on condition type
+            if isinstance(condition, CurrencyGoalCondition):
+                self.status = GameStatus.COMPLETED
+                winner_info = condition.get_winner_info(self)
+                if winner_info:
+                    # Store the top winner's UID as winner_player_name
+                    self.winner_player_name = winner_info['top_winner_uid']
+            elif isinstance(condition, AllPlayersDeadCondition):
+                self.status = GameStatus.COMPLETED
+                self.winner_player_name = None
+            elif isinstance(condition, MaxTurnsCondition):
+                # Game ended by max turns - find richest player as winner
+                self.status = GameStatus.COMPLETED
+                if self.players:
+                    richest = max(self.players.items(), key=lambda x: x[1].values.money)
+                    self.winner_player_name = richest[0]
+            
+            print(f"[Game] Game ended: {reason}")
+    
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
-        return tile.to_dict()
+        return tile.clean_to_dict() #Prevents player from seeing secrets
+    @staticmethod
+    def _full_tile_payload(tile: Tile) -> dict:
+        """Plain-Python view of a tile for prompts/serialization."""
+        return tile.to_dict() #Prevents player from seeing secrets
     
     @override
     def save(self) -> str:
@@ -77,7 +136,20 @@ class Game(Savable):
         dm_model = DungeonMasterModel(**dm_data)
         
         # Convert tiles to TileModel format
-        tiles_data = [TileModel(**tile.to_dict()) for tile in self.tiles.values()]
+        tiles_data = []
+        for (x, y), val in self.tiles.items():
+            tile = val[0] if isinstance(val, tuple) else val  # handle (Tile, ...) cases
+            # Convert Secret objects to dicts for TileModel
+            secrets = [secret.to_dict() for secret in tile.secrets]
+            tiles_data.append(
+                TileModel(
+                    position=[int(x), int(y)],
+                    description=getattr(tile, "description", ""),
+                    secrets=secrets,
+                    terrainType=getattr(tile, "terrainType", "plains"),
+                    terrainEmoji=getattr(tile, "terrainEmoji", "🌾"),
+                )
+            )
         
         # Create game state for this turn
         game_state = GameStateModel(
@@ -90,16 +162,25 @@ class Game(Savable):
             # Include decomposed verdict components
             character_state_change=self.verdict_character_state,
             world_state_change=self.verdict_world_state,
-            narrative_result=self.verdict_narrative_result
+            narrative_result=self.verdict_narrative_result,
+            # Include game over state
+            is_game_over=self.is_game_over,
+            game_over_reason=self.game_over_reason
         )
         
         # Create/update game metadata (without game_state)
         game_id = getattr(self, 'game_id', str(uuid.uuid4()))
+        # Determine status based on game_over state
+        if self.is_game_over:
+            status = getattr(self, 'status', GameStatus.COMPLETED)
+        else:
+            status = getattr(self, 'status', GameStatus.ACTIVE)
+        
         game_data = GameModel(
             id=game_id,
             name=getattr(self, 'name', 'Untitled Game'),
             description=getattr(self, 'description', ''),
-            status=getattr(self, 'status', 'active'),
+            status=status,
             model=getattr(self, 'model', 'mock'),
             world_size=self.world_size,
             winner_player_name=getattr(self, 'winner_player_name', None),
@@ -228,6 +309,16 @@ class Game(Savable):
         self.max_turns = getattr(game_model, 'max_turns', None)
         self.total_players = getattr(game_model, 'total_players', None)
         self.game_duration = getattr(game_model, 'game_duration', None)
+        
+        # Load game over state from game_state
+        self.is_game_over = getattr(game_state, 'is_game_over', False)
+        self.game_over_reason = getattr(game_state, 'game_over_reason', None)
+        
+        # Reinitialize condition manager after loading
+        self.condition_manager = GameConditionManager()
+        self.condition_manager.add_condition(MaxTurnsCondition())
+        self.condition_manager.add_condition(AllPlayersDeadCondition())
+        self.condition_manager.add_condition(CurrencyGoalCondition())
 
     def get_viewable_tiles(self,position:tuple[int,int], vision:int = 1) -> list[Tile]:
         tiles = []
@@ -238,6 +329,9 @@ class Game(Savable):
     
     def _get_viewable_tiles_payload(self,position:tuple[int,int], vision:int = 1) -> list[dict]:
         return [self._tile_payload(t) for t in self.get_viewable_tiles(position, vision)]
+    
+    def _get_tiles_full_payload(self) -> list[dict]:
+        return [self._full_tile_payload(t) for t in self.tiles.values()]
     def _get_responses_at_frame(self, frame:int) -> dict[str,str]:
         responses = {}
         for uid, player in self.players.items():
@@ -340,13 +434,18 @@ class Game(Savable):
             for td in tiles_payload:
                 try:
                     if isinstance(td, dict):
-                        t = Tile.from_dict(td)
+                        pos = list(td["position"])
+                        desc = td.get("description", "")
+                        secrets = [(str(k), int(v)) for k, v in td.get("secrets", [])]
                     else:
-                        # Attribute-style fallback
-                        pos_attr = list(getattr(td, "position")) #Throw exception when invalid position
-                        desc_attr = getattr(td, "description", "")
-                        t = Tile.from_dict({"position": pos_attr, "description": desc_attr})
-                    self.tiles[(t.position[0], t.position[1])].update_description(t.description)
+                        pos = list(getattr(td, "position"))
+                        desc = getattr(td, "description", "")
+                        secrets = [(str(k), int(v)) for k, v in getattr(td, "secrets", [])]
+
+                    key = (int(pos[0]), int(pos[1]))
+                    t = self.tiles[key]
+                    t.update_description(desc)
+                    t.update_secrets(secrets)
                 except Exception:
                     continue
         
@@ -370,3 +469,13 @@ class Game(Savable):
         return self.players
     def get_dm(self) -> DungeonMaster:  
         return self.dm
+    def get_game_status(self) -> dict:
+        """Get current game status including win/end conditions."""
+        return {
+            'is_game_over': self.is_game_over,
+            'game_over_reason': self.game_over_reason,
+            'status': getattr(self, 'status', 'active'),
+            'current_turn': self.current_turn_number,
+            'max_turns': getattr(self, 'max_turns', None),
+            'winner': getattr(self, 'winner_player_name', None)
+        }

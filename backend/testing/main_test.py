@@ -3,7 +3,7 @@
 Local test runner for DungeonMaster / Game.
 
 Usage examples:
-  python main.py --num-players 3 --rounds 5 --model "gpt-4.1-nano" --openai-key YOUR_KEY
+  python main.py --num-players 3 --rounds 5 --model "gpt-4.1-mini" --openai-key YOUR_KEY
   python main.py --num-players 2 --rounds 2 --mock
   python main.py -v --num-players 2 --rounds 2 --mock   # verbose step-by-step
 """
@@ -52,7 +52,7 @@ class StepPrinter:
             print(f"[v] {pairs}", flush=True)
 
 
-def make_player_payload(uid: str, model: str = "gpt-4.1-nano") -> Dict[str, Any]:
+def make_player_payload(uid: str, model: str = "gpt-4.1-mini") -> Dict[str, Any]:
     return {
         "position": [0, 0],
         "UID": uid,
@@ -62,7 +62,7 @@ def make_player_payload(uid: str, model: str = "gpt-4.1-nano") -> Dict[str, Any]
         "responses": []
     }
 
-def make_dm_payload(model: str = "gpt-4.1-nano") -> Dict[str, Any]:
+def make_dm_payload(model: str = "gpt-4.1-mini") -> Dict[str, Any]:
     return {
         "model": model
     }
@@ -83,40 +83,40 @@ def run_game_rounds(game: Game, rounds: int, vprint: StepPrinter):
     game_index = datetime.now().strftime("%d_%H%M%S")
     for r in range(1, rounds + 1):
         vprint.banner(f"Round {r}/{rounds} — begin")
-        try:
+#        try:
             # Pre-step snapshot
-            vprint("Pre-step snapshot:")
-            for uid, player in sorted(game.get_all_players().items()):
-                vprint.kv(
-                    uid=uid,
-                    position=player.get_position(),
-                    money=getattr(player.values, "money", "?"),
-                    health=getattr(player.values, "health", "?"),
-                    last=len(player.get_responses_history() or []),
-                )
+        vprint("Pre-step snapshot:")
+        for uid, player in sorted(game.get_all_players().items()):
+            vprint.kv(
+                uid=uid,
+                position=player.get_position(),
+                money=getattr(player.values, "money", "?"),
+                health=getattr(player.values, "health", "?"),
+                last=len(player.get_responses_history() or []),
+            )
 
-            vprint(f"Executing game.step() {r} …")
-            game.step()
+        vprint(f"Executing game.step() {r} …")
+        game.step()
 
-            # vprint("Post-step updates:")
-            # for uid, player in sorted(game.get_all_players().items()):
-            #     pos = player.get_position()
-            #     hist = player.get_responses_history()
-            #     last = hist[-1] if hist else "(no response)"
-            #     vprint.kv(
-            #         uid=uid,
-            #         position=pos,
-            #         money=getattr(player.values, "money", "?"),
-            #         health=getattr(player.values, "health", "?"),
-            #         last_response=last,
-            #     )
-            vprint.banner(f"Round {r}/{rounds} — end")
-            save_game_to_file(game, path=f"data/game_save_{game_index}.json")
-            save_game_to_file(game, path=f"data/rounds/rounds_game_save_{r}_{game_index}.json")
+        # vprint("Post-step updates:")
+        # for uid, player in sorted(game.get_all_players().items()):
+        #     pos = player.get_position()
+        #     hist = player.get_responses_history()
+        #     last = hist[-1] if hist else "(no response)"
+        #     vprint.kv(
+        #         uid=uid,
+        #         position=pos,
+        #         money=getattr(player.values, "money", "?"),
+        #         health=getattr(player.values, "health", "?"),
+        #         last_response=last,
+        #     )
+        vprint.banner(f"Round {r}/{rounds} — end")
+        save_game_to_file(game, path=f"data/game_save_{game_index}.json")
+        save_game_to_file(game, path=f"data/rounds/rounds_game_save_{r}_{game_index}.json")
 
-        except Exception as e:
-            print(f"[ERROR] Exception during game step: {e}")
-            raise
+        # except Exception as e:
+        #     print(f"[ERROR] Exception during game step: {e}")
+        #     raise
 
 
 def save_game_to_file(game: "Game", path: str = "data/game_save.json") -> None:
@@ -144,7 +144,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="Local test runner for DungeonMaster/Game")
     p.add_argument("--num-players", type=int, default=2, help="Number of fake players to create")
     p.add_argument("--rounds", type=int, default=3, help="Number of game rounds to run")
-    p.add_argument("--model", type=str, default="gpt-4.1-nano", help="Model id to attach to players / DM")
+    p.add_argument("--model", type=str, default="gpt-4.1-mini", help="Model id to attach to players / DM")
     p.add_argument("--openai-key", type=str, default=None, help="OpenAI API key (optional)")
     p.add_argument("--anthropic-key", type=str, default=None, help="Anthropic API key (optional)")
     p.add_argument("--mock", action="store_true", help="Enable mock LLM responses (no network)")
@@ -177,8 +177,8 @@ def main():
         run_game_rounds(game, args.rounds, vprint)
     except KeyboardInterrupt:
         print("\n[INFO] Interrupted by user.")
-    except Exception as e:
-        print(f"[ERROR] Uncaught exception while running game: {e}")
+    # except Exception as e:
+    #     print(f"[ERROR] Uncaught exception while running game: {e}")
 
     save_game_to_file(game, args.save)
     print("[INFO] Done.")

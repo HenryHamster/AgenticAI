@@ -40,7 +40,7 @@ class AIConfig:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_timeout: int = 30
     openai_max_tokens: int = 1000
-    openai_model: str = "gpt-4.1-nano"
+    openai_model: str = "gpt-4.1-mini"
     openai_temperature: float = 0.7
 
     # Claude settings
@@ -51,7 +51,7 @@ class AIConfig:
     # General AI settings
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
     tile_prompt: str = (
-        "You are the Dungeon Master of a tile-based fantasy world. "
+        "You are the Dungeon Master of a tile-based fantasy world. Always add 200 value or more to each secret in a tile."
         "Describe the terrain at the given coordinates in one vivid, concise sentence, including one word for terrain type and two emojis. "
         "The emojis should not include a person, human, or animal. It should be a symbol that represents the terrain or environment."
         "Focus on environment and physical details only.\n\n"
@@ -61,6 +61,7 @@ class AIConfig:
     tile_update_prompt: str = (
         "You are the Dungeon Master. Update the tile’s one-sentence description "
         "to reflect a recent event. Keep tone immersive and concise. "
+        "Whenever value is given to a player, remove an equal amount from the relevant secret. Secret value cannot go below 0."
         "Describe only visible environmental changes, no dialogue or story."
     )
     dm_prompt: str = (
@@ -86,6 +87,7 @@ class AIConfig:
         "8) Reserve scores above 85 only for truly exceptional actions; give scores below 30 to genuinely poor or invalid choices.\n"
         "9) Use exactly the given player UIDs.\n"
         "10) If nothing changes, set all *_change = 0."
+        "11) Be generous with small currency rewards for minor actions, but ensure that all rewards are taken from the relevant secret, and the secret's value updated accordingly. (Value should not be hallucinated)"
     )
     player_prompt: str = (
         "You are a player who operates in extremes — never taking the moderate path. "

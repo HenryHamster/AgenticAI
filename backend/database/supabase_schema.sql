@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_turns_created_at ON turns(created_at DESC);
 CREATE TABLE IF NOT EXISTS players (
     uid TEXT PRIMARY KEY,
     position INTEGER[] NOT NULL,
-    model TEXT NOT NULL DEFAULT 'gpt-4.1-nano',
+    model TEXT NOT NULL DEFAULT 'gpt-4.1-mini',
     player_class TEXT NOT NULL DEFAULT 'human',
     values JSONB NOT NULL DEFAULT '{"money": 0, "health": 100}'::jsonb,
     responses TEXT[] NOT NULL DEFAULT '{}'::text[],
