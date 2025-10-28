@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide walks you through setting up your Supabase database for AgenticAI.
+This guide walks you through setting up your Supabase database for Dungeons & Dialogue.
 
 ## Quick Setup (5 minutes)
 

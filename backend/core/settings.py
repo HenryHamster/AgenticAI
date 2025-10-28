@@ -1,5 +1,5 @@
 """
-Configuration settings for the AgenticAI game
+Configuration settings for the Dungeons & Dialogue game
 """
 import os
 from dataclasses import dataclass

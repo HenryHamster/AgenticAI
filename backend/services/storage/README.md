@@ -262,4 +262,4 @@ set_storage_factory(factory)
 
 ## License
 
-This module is part of the AgenticAI project.
+This module is part of the Dungeons & Dialogue project.

@@ -1,4 +1,4 @@
-# AgenticAI Development Makefile
+# Dungeons & Dialogue Development Makefile
 # Docker-based development setup for FastAPI backend and Next.js frontend
 
 # Load environment variables from .env file if it exists
@@ -28,7 +28,7 @@ FRONTEND_PORT := 3000
 # Help target
 .PHONY: help
 help: ## Show this help message
-	@echo "$(GREEN)AgenticAI Docker Development Commands$(NC)"
+	@echo "$(GREEN)Dungeons & Dialogue Docker Development Commands$(NC)"
 	@echo "=========================================="
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(YELLOW)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 

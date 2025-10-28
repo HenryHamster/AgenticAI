@@ -1,10 +1,10 @@
-# AgenticAI: LLM-Powered Roguelike Economy Simulator
+# Dungeons & Dialogue
 
 > A turn-based, tile-centric economy simulator where LLM-powered agents explore, trade, and compete under the guidance of a Dungeon Master AI.
 
 ## Overview
 
-AgenticAI is an experimental game where autonomous AI agents navigate a shared world, make decisions, and compete for wealth. Each tile on the game board carries a natural-language description that evolves as players interact with it. A Dungeon Master AI orchestrates the world, adjudicates actions, and narrates outcomes, creating an emergent narrative driven entirely by language models.
+Dungeons & Dialogue is an experimental game where autonomous AI agents navigate a shared world, make decisions, and compete for wealth. Each tile on the game board carries a natural-language description that evolves as players interact with it. A Dungeon Master AI orchestrates the world, adjudicates actions, and narrates outcomes, creating an emergent narrative driven entirely by language models.
 
 ### Key Features
 
@@ -210,63 +210,106 @@ Save/load operations use JSON format with comprehensive validation.
 
 ## Configuration
 
-### Game Settings (`backend/src/core/settings.py`)
+### Environment Variables
 
-```python
-class GameConfig:
-    max_turns: int = 100              # Maximum turns per game
-    world_size: int = 10              # Grid size (10x10 by default)
-    starting_wealth: int = 100        # Initial player money
-    starting_health: int = 100        # Initial player health
-    player_vision: int = 2            # Visible tile radius (0 = current tile only)
-    num_responses: int = 1            # DM verdicts per turn
+Create a `backend/.env` file with the following variables:
+
+```bash
+# AI Provider API Keys
+OPENAI_API_KEY="your_openai_key"
+CLAUDE_API_KEY="your_claude_key"
+
+# Storage Configuration
+STORAGE_TYPE="file"  # or "supabase"
+FILE_DATA_DIR="./data"
+
+# Supabase Configuration (if using Supabase storage)
+SUPABASE_URL="your_supabase_url"
+SUPABASE_KEY="your_supabase_key"
 ```
 
-### AI Settings (`backend/src/core/settings.py`)
+### Game Settings
+
+Game configuration is managed through the API when creating games:
 
 ```python
-class AIConfig:
-    openai_api_key: str               # From OPENAI_API_KEY env var
-    claude_api_key: str               # From CLAUDE_API_KEY env var
-    openai_model: str = "gpt-4o"      # Default OpenAI model
-    claude_model: str = "claude-3-5-sonnet-20241022"
-    openai_temperature: float = 0.7   # Response randomness
+# Example game configuration
+{
+    "world_size": 10,           # Grid size (10x10)
+    "max_turns": 100,           # Maximum turns per game
+    "currency_target": 1000,    # Victory condition
+    "model_mode": "openai",      # AI provider
+    "players": [
+        {
+            "name": "Player1",
+            "starting_health": 100,
+            "starting_currency": 100
+        }
+    ]
+}
 ```
 
 ## Testing
 
-### Backend Tests
+### Docker-based Testing
 
 ```bash
-# Test response parser (no API calls)
-python testing/test_parser.py
+# Run all tests
+make test
 
-# Test OpenAI integration (requires OPENAI_API_KEY)
-python testing/test_openai_integration.py
+# Run backend tests only
+make test-backend
+
+# Run frontend tests only
+make test-frontend
 ```
 
-### Frontend Mock Data
-
-The frontend includes auto-generated mock data for testing:
+### Manual Testing
 
 ```bash
-# Generate custom mock data
+# Backend tests
+cd backend
+python testing/main_test.py
+
+# Frontend mock data generation
 cd frontend
 npx tsx src/scripts/generateAndSave.ts 5  # Generate 5 game runs
 ```
 
-## API Integration (Coming Soon)
+## API Reference
 
-### Expected Endpoints
+### Implemented Endpoints
 
 ```
-GET  /api/game-runs          # List all game runs
-GET  /api/game-runs/:id      # Get game run details
-POST /api/game-runs          # Create new game
-GET  /api/game-runs/:id/turn/:turnNumber  # Get specific turn state
+GET  /api/v1/health                    # Health check
+POST /api/v1/games/create              # Create new game
+GET  /api/v1/games                     # List all games
+GET  /api/v1/game/{game_id}            # Get game details
+GET  /api/v1/game/eval/{game_id}       # Evaluate game responses
 ```
+
+### API Documentation
+
+Interactive API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs) when running the backend server.
 
 ## Development
+
+### Docker Development Workflow
+
+```bash
+# Start development environment
+make dev
+
+# View logs
+make logs
+
+# Access container shells
+make shell-backend
+make shell-frontend
+
+# Clean up resources
+make clean
+```
 
 ### Adding New Player Classes
 
@@ -283,31 +326,40 @@ GET  /api/game-runs/:id/turn/:turnNumber  # Get specific turn state
 ### Adding Custom AI Providers
 
 1. Extend `AiServicesBase` in `backend/src/services/aiServices/`
-2. Implement `ask_ai_response()`, `ask_ai_response_with_structured_output()`, `ask_isolated_ai_response()`
-3. Register in `AIWrapper.py`
+2. Implement required methods for AI communication
+3. Register in `wrapper.py`
 
 ### Customizing Victory Conditions
 
 Modify `backend/src/app/Game.py` to check custom win conditions during turn processing.
 
+### Storage Backend Configuration
+
+Switch between storage backends by setting `STORAGE_TYPE` in your `.env` file:
+- `file`: JSON-based file storage (default)
+- `supabase`: Cloud database storage
+
 ## Documentation
 
 - **Backend Architecture**: See `backend/ReadMe.md`
-- **Frontend Guide**: See `frontend/README_DUNGEON_MASTER.md`
+- **Frontend Guide**: See `frontend/README.md`
 - **Design Document**: See `backend/data/Agentic AI Master File.txt`
+- **Supabase Setup**: See `SUPABASE_QUICKSTART.md`
+- **Docker Development**: See `Makefile` for all available commands
 
 ## Contributing
 
-This project is under active development. Key areas for contribution:
-- AI prompt engineering for better DM and player behaviors
-- Enhanced response parsing and error recovery
-- Additional terrain types and world mechanics
-- Performance optimization for concurrent AI calls
-- Alternative victory conditions and game modes
+Dungeons & Dialogue is under active development. Key areas for contribution:
+- **AI Prompt Engineering**: Improve DM and player behaviors
+- **Response Parsing**: Enhanced error recovery and validation
+- **World Mechanics**: Additional terrain types and interactions
+- **Performance**: Concurrent AI call optimization
+- **Game Modes**: Alternative victory conditions and scenarios
+- **Testing**: Comprehensive test coverage and mock services
 
 ## License
 
-Part of the AgenticAI Dungeon Master project. Educational use encouraged.
+Part of the Dungeons & Dialogue project. Educational use encouraged.
 
 ## Acknowledgments
 
@@ -320,4 +372,4 @@ Built with:
 
 ---
 
-**Status**: Experimental | **Last Updated**: October 2024
+**Status**: Active Development | **Last Updated**: December 2024

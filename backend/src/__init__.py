@@ -1,1 +1,1 @@
-# AgenticAI - Text-based RPG with AI Agents
+# Dungeons & Dialogue - Text-based RPG with AI Agents
