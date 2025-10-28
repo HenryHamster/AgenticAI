@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS turns (
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     turn_number INTEGER NOT NULL,
     game_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    experience_awarded JSONB NOT NULL DEFAULT '{}'::jsonb,
+    level_ups JSONB NOT NULL DEFAULT '{}'::jsonb,
+    unlocked_skills JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(game_id, turn_number)
 );
@@ -398,5 +401,41 @@ BEGIN
         AND column_name = 'player_configs'
     ) THEN
         ALTER TABLE games ADD COLUMN player_configs JSONB;
+    END IF;
+END $$;
+
+-- Add experience_awarded column to turns table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'turns' 
+        AND column_name = 'experience_awarded'
+    ) THEN
+        ALTER TABLE turns ADD COLUMN experience_awarded JSONB NOT NULL DEFAULT '{}'::jsonb;
+    END IF;
+END $$;
+
+-- Add level_ups column to turns table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'turns' 
+        AND column_name = 'level_ups'
+    ) THEN
+        ALTER TABLE turns ADD COLUMN level_ups JSONB NOT NULL DEFAULT '{}'::jsonb;
+    END IF;
+END $$;
+
+-- Add unlocked_skills column to turns table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'turns' 
+        AND column_name = 'unlocked_skills'
+    ) THEN
+        ALTER TABLE turns ADD COLUMN unlocked_skills JSONB NOT NULL DEFAULT '{}'::jsonb;
     END IF;
 END $$;
