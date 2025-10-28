@@ -24,9 +24,11 @@ class DungeonMaster(Savable):
         tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
     def respond_actions(self, info: dict) -> GameResponse:
         enriched_info = self._enrich_info_with_character_templates(info)
-
+        print("info:", info)
+        print("enriched_info:", enriched_info)
+        print("formatted info:", format_request(AIConfig.dm_prompt, info))
         structured_response = AIWrapper.ask(
-            format_request(AIConfig.dm_prompt, enriched_info),
+            format_request(AIConfig.dm_prompt, info),
             self.model,
             "DungeonMaster",
             structured_output = GameResponse
@@ -79,6 +81,8 @@ class DungeonMaster(Savable):
                                 'inventory': player_data.get('inventory', [])
                             }
                         }
+                    else:
+                        print(f"[DM] Warning: Player {uid} has no character template")
                 except Exception as e:
                     print(f"[DM] Warning: Could not load template for player {uid}: {e}")
 

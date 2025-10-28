@@ -58,6 +58,7 @@ class Player(Savable):
     position: tuple[int,int]
     _responses: list[str]
     character_template: Optional[CharacterTemplate]
+    character_template_name: Optional[str]  # Store the template name for serialization
     current_abilities: List[str]
     resource_pools: Dict[str, int]
     skill_cooldowns: Dict[str, int]
@@ -79,6 +80,7 @@ class Player(Savable):
         self._responses = []
 
         self.character_template = None
+        self.character_template_name = character_template_name  # Store the template name
         self.current_abilities = []
         self.resource_pools = {}
         self.skill_cooldowns = {}
@@ -206,7 +208,7 @@ class Player(Savable):
             "player_class": self.player_class.name,
             "values": Savable.fromJSON(self.values.save()),
             "responses": list(getattr(self, "_responses", [])),
-            "character_template_name": self.character_template.character_class if self.character_template else None,
+            "character_template_name": self.character_template_name,  # Use the stored template name
             "current_abilities": list(self.current_abilities),
             "resource_pools": dict(self.resource_pools),
             "skill_cooldowns": dict(self.skill_cooldowns),
@@ -249,6 +251,9 @@ class Player(Savable):
 
         self._responses = list(player_model.responses)
 
+        # Store the template name
+        self.character_template_name = player_model.character_template_name
+        
         if player_model.character_template_name:
             try:
                 self.character_template = load_character_template(player_model.character_template_name)
