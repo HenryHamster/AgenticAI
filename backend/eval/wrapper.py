@@ -63,6 +63,11 @@ class EvalWrapper:
             raise
 
     @classmethod
+    def evaluate_game(cls, environment_text: str, log_text: str, service_type: str = "custom", **kwargs) -> Dict[str, Any]:
+        raise NotImplementedError("evaluate_game is not implemented")
+        
+
+    @classmethod
     def _get_service(cls, service_type: str, eval_id: str, ai_model: str):
         """Get evaluation service instance"""
         if service_type == "mock":

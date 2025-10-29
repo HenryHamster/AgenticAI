@@ -6,8 +6,8 @@ from typing import Any, Dict
 
 import tomllib
 
-from agentbeats.client import send_message
-from agentbeats.models import EvalRequest
+from agentbeats.src.client import send_message
+from agentbeats.src.models import EvalRequest
 from a2a.types import (
     AgentCard,
     Message,

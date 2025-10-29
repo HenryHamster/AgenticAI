@@ -17,7 +17,7 @@ from a2a.utils import (
 )
 from a2a.utils.errors import ServerError
 
-from agentbeats.models import EvalRequest
+from .models import EvalRequest
 
 
 class GreenAgent:

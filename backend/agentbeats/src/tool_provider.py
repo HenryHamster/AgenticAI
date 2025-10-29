@@ -1,4 +1,4 @@
-from agentbeats.client import send_message
+from .client import send_message
 
 
 class ToolProvider:
