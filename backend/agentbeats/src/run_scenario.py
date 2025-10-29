@@ -153,7 +153,7 @@ def main():
                     time.sleep(0.5)
         else:
             client_proc = subprocess.Popen(
-                [sys.executable, "-m", "agentbeats.client_cli", args.scenario],
+                [sys.executable, "-m", "agentbeats.src.client_cli", args.scenario],
                 env=base_env,
                 start_new_session=True,
             )

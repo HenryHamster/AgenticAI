@@ -93,11 +93,11 @@ class DnDMaster(GreenAgent):
         finally:
             self._tool_provider.reset()
 
-    async def orchestrate_debate(
+    async def orchestrate_game(
         self,
         participants: dict[str, str],
-        topic: str,
-        num_rounds: int,
+        scenario: str,
+        num_turns: int,
         updater: TaskUpdater,
     ) -> dict[str, list[str]]:
         scenario_context: dict[str, list[str]] = {"player0": [], "player1": []}
@@ -114,7 +114,7 @@ class DnDMaster(GreenAgent):
         response = await turn("player1", f"Scenario: {scenario_context}. Present your opening action. Your opponent opened with: {response}")
 
         # Remaining rounds
-        for _ in range(num_rounds - 1):
+        for _ in range(num_turns - 1):
             response = await turn("player0", f"Your opponent said: {response}. Present your next action.")
             response = await turn("player1", f"Your opponent said: {response}. Present your next action.")
 
