@@ -5,6 +5,7 @@ FastAPI main application entry point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
+from api.greenAgentRoutes import router as green_agent_router
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -24,3 +25,4 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router, prefix="/api/v1")
+app.include_router(green_agent_router, prefix="/api/agentic/v1")
