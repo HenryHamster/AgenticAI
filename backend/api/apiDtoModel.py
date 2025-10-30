@@ -19,7 +19,7 @@ class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
     secrets: Optional[List[SecretKV]] = Field(default_factory=list)
-    description: str
+    description: str = Field(default="")
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
 
@@ -36,6 +36,7 @@ class GameResponse(BaseModel):
     character_state_change: List[CharacterState]
     world_state_change: WorldState
     narrative_result: str = Field(default ="")
+    # resource_changes: Dict[str, int] = Field(default_factory=dict)
 
 class PlayerConfig(BaseModel):
     """Configuration for a single player"""

@@ -24,9 +24,9 @@ class DungeonMaster(Savable):
         tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))
     def respond_actions(self, info: dict) -> GameResponse:
         enriched_info = self._enrich_info_with_character_templates(info)
-        print("info:", info)
-        print("enriched_info:", enriched_info)
-        print("formatted info:", format_request(AIConfig.dm_prompt, info))
+        # print("info:", info)
+        # print("enriched_info:", enriched_info)
+        # print("formatted info:", format_request(AIConfig.dm_prompt, info))
         structured_response = AIWrapper.ask(
             format_request(AIConfig.dm_prompt, info),
             self.model,

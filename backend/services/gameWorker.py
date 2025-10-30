@@ -103,7 +103,7 @@ class GameWorker:
         
         for turn_num in range(1, max_turns + 1):
             try:
-                self._log(f"=== Turn {turn_num}/{max_turns} - Begin ===")
+                self._log(f"=== Turn {turn_num} - Begin ===")
                 
                 # Log pre-step snapshot if verbose
                 if self.verbose:
@@ -118,8 +118,12 @@ class GameWorker:
                 self._log(f"Executing game.step() for turn {turn_num}...")
                 self.game.step()
                 
-                self._log(f"=== Turn {turn_num}/{max_turns} - Complete ===")
+                self._log(f"=== Turn {turn_num} - Complete ===")
                 
+                 # Check if game is over
+                if getattr(self.game, 'is_game_over', False):
+                    self._log(f"Game ended after {turn_num} turns")
+                    break
             except Exception as e:
                 self._log(f"Error during turn {turn_num}: {str(e)}", prefix="[ERROR]")
                 # Update game status to error
@@ -128,7 +132,7 @@ class GameWorker:
         
         # Mark game as completed
         self._update_game_status("completed")
-        self._log(f"Game run completed successfully after {max_turns} turns")
+        self._log(f"Game run completed successfully")
         
     def _update_game_status(self, status: str):
         """Update the game status in database"""

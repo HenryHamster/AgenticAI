@@ -119,7 +119,7 @@ class OpenAiService(AiServicesBase):
             chat_history = self._convert_history_to_messages()
             
             # Create the chain with prompt template and LLM with structured output
-            chain = self.chat_prompt | self.llm.with_structured_output(structured_output_class)
+            chain = self.chat_prompt | self.llm.with_structured_output(structured_output_class, method="function_calling")
             
             # Prepare input data with message and chat history
             input_data = {
