@@ -4,7 +4,7 @@ from src.services.Utils import format_request
 from src.services.aiServices.wrapper import AIWrapper
 from api.apiDtoModel import GameResponse
 from core.settings import AIConfig
-from typing import override
+from typing_extensions import override
 from schema.tileModel import TileModel
 
 class DungeonMaster(Savable):
