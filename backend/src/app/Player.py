@@ -55,18 +55,34 @@ class Player(Savable):
     player_class: PlayerClass
     position: tuple[int,int]
     _responses: list[str]
+    _negotiation_messages: list[str]
     def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "gpt-4.1-mini", chat_id:str = "DefaultID"): #Force UID to exist
         self.model = model
         self.UID = UID
         self.position = position
+        self.agent_prompt: str = ""
         if player_class not in PLAYER_CLASSES:
             raise ValueError(f"Invalid player class {player_class}")
         self.player_class = PLAYER_CLASSES[player_class]
 
         self.values = PlayerValues()
         self._responses = []
+        self._negotiation_messages = []
+    def _augment_prompt(self, base_prompt: str) -> str:
+        if getattr(self, "agent_prompt", ""):
+            extra = self.agent_prompt.strip()
+            if extra:
+                return f"{base_prompt}\n\nAgent-specific instructions:\n{extra}"
+        return base_prompt
+    def get_negotiation_message(self, context: dict) -> str:
+        """Get a negotiation message during the planning phase. This is discussion only, not a final action."""
+        prompt = self._augment_prompt(AIConfig.negotiation_prompt)
+        response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
+        self._negotiation_messages.append(response)
+        return response
     def get_action(self,context: dict) -> str:
-        response = AIWrapper.ask(format_request(AIConfig.player_prompt, context), self.model,self.UID)
+        prompt = self._augment_prompt(AIConfig.player_prompt)
+        response = AIWrapper.ask(format_request(prompt, context), self.model,self.UID)
         self._responses.append(response)
         return response
     #region: Accessor functions
@@ -80,6 +96,8 @@ class Player(Savable):
         return self.player_class
     def get_responses_history(self) -> list[str]:
         return self._responses
+    def get_negotiation_history(self) -> list[str]:
+        return self._negotiation_messages
     def get_values(self) -> PlayerValues:
         return self.values
     #endregion
@@ -101,7 +119,10 @@ class Player(Savable):
             "model": self.model,
             "player_class": self.player_class.name,
             "values": Savable.fromJSON(self.values.save()),
-            "responses": list(getattr(self, "_responses", []))
+            "responses": (
+                [self._responses[-1]] if getattr(self, "_responses", None) else []
+            ),
+            "agent_prompt": getattr(self, "agent_prompt", ""),
         }
         
         # Validate with PlayerModel
@@ -134,6 +155,7 @@ class Player(Savable):
         self.position = tuple(player_model.position)
         self.UID = player_model.uid
         self.model = player_model.model
+        self.agent_prompt = getattr(player_model, "agent_prompt", "")
         
         # Load player class
         cls_key = player_model.player_class
@@ -145,3 +167,7 @@ class Player(Savable):
         
         # Load responses
         self._responses = list(player_model.responses)
+        
+        # Initialize negotiation messages (not persisted, so always start fresh)
+        if not hasattr(self, '_negotiation_messages'):
+            self._negotiation_messages = []

@@ -1,6 +1,6 @@
 # implements the AiServicesBase class for Claude
 
-from typing import Optional
+from typing import Optional, List, Dict
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
@@ -14,7 +14,7 @@ class ClaudeService(AiServicesBase):
     llm: ChatAnthropic
     chat_prompt: ChatPromptTemplate
 
-    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "claude-3-sonnet-20240229", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
+    def __init__(self, chat_id: str = uuid.uuid4(), history: Optional[List[Dict]] = None, model: str = "claude-3-sonnet-20240229", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
         """
         Initialize the Claude service.
         Args:

@@ -3,13 +3,15 @@ from src.app.Player import Player
 from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
+from src.services.aiServices.wrapper import AIWrapper
 from src.app.GameConditions import (
     GameConditionManager,
     MaxTurnsCondition,
     AllPlayersDeadCondition,
     CurrencyGoalCondition
 )
-from typing import override
+import copy
+from typing import Any, override
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
@@ -38,6 +40,7 @@ class Game(Savable):
     game_over_reason: str | None
 
     def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
+        AIWrapper.reset("DungeonMaster")
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
         self.players = {}
@@ -48,6 +51,7 @@ class Game(Savable):
         self.verdict_character_state = []
         self.verdict_world_state = None
         self.verdict_narrative_result = ""
+        self.last_round_history: list[dict[str, Any]] = []
         # Initialize game condition manager
         self.condition_manager = GameConditionManager()
         self.is_game_over = False
@@ -59,27 +63,49 @@ class Game(Savable):
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
+            AIWrapper.reset(uid)
             p = Player(uid)
             p.load(pdata)
             if p.UID != uid:
                 p.UID = uid  # enforce key ↔ object UID consistency
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
+        # Reset all AI histories after initialization to ensure clean state
+        AIWrapper.reset("DungeonMaster")
+        for uid in self.players.keys():
+            AIWrapper.reset(uid)
     def step(self):
         # Check if game is already over
         if self.is_game_over:
             print(f"[Game] Game is already over: {self.game_over_reason}")
             return
         
-        player_responses, verdict = [], ""
+        player_responses, verdict = {}, ""
+        negotiation_history: list[dict[str,str]] = []
         sorted_uids = sorted(self.players.keys())
-        for _ in range(GameConfig.num_responses):
-            player_responses = {
-                UID: self.players[UID].get_action({"Self":self.players[UID].save(), "Players (excluding self)": {id: self.players[id].save() for id in sorted_uids if id != UID}, "tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
-                              "verdict": verdict, "uid": UID, "position": self.players[UID].position})
+        print(f"narrative: {self.verdict_narrative_result}")
+        
+        # Negotiation phase: players discuss before committing to actions
+        for negotiation_round in range(GameConfig.num_negotiation_rounds):
+            negotiation_messages = {
+                UID: self.players[UID].get_negotiation_message(
+                    self._build_player_context(UID, sorted_uids, negotiation_history)
+                )
                 for UID in sorted_uids
             }
-            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
+            negotiation_history.append(negotiation_messages)
+            print(f"negotiation_round_{negotiation_round + 1}: {negotiation_messages}")
+        
+        # Action phase: players commit to final actions after negotiation
+        player_responses = {
+            UID: self.players[UID].get_action(
+                self._build_player_context(UID, sorted_uids, negotiation_history)
+            )
+            for UID in sorted_uids
+        }
+        print(f"final_actions: {player_responses}")
+        
+        verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
         self.handle_verdict(verdict)
         self.current_turn_number += 1
         
@@ -332,6 +358,40 @@ class Game(Savable):
     
     def _get_tiles_full_payload(self) -> list[dict]:
         return [self._full_tile_payload(t) for t in self.tiles.values()]
+
+    def _build_player_context(self, uid: str, sorted_uids: list[str], negotiation_history: list[dict[str,str]]) -> dict:
+        """Build sanitized context for a player request."""
+        player = self.players[uid]
+        tiles_payload = self._get_viewable_tiles_payload(player.position, GameConfig.player_vision)
+        # Debug: Check if any secrets are leaking
+        for tile in tiles_payload:
+            if "secrets" in tile:
+                print(f"[WARNING] Secret leak detected in tile payload for {uid}: {tile}")
+            # Debug: Print tile keys and descriptions to verify structure
+            if self.current_turn_number == 0:  # Only on first turn
+                print(f"[DEBUG] Tile keys for {uid}: {list(tile.keys())}")
+                print(f"[DEBUG] Tile description at {tile.get('position')}: {tile.get('description', 'N/A')}")
+        
+        # Format negotiation history as a list of messages per round
+        formatted_negotiation_history = []
+        for round_messages in negotiation_history:
+            formatted_round = [round_messages[other_uid] for other_uid in sorted_uids]
+            formatted_negotiation_history.append(formatted_round)
+        
+        context = {
+            "Self": player.save(),
+            "Players (excluding self)": {
+                other_uid: self.players[other_uid].save()
+                for other_uid in sorted_uids
+                if other_uid != uid
+            },
+            "tiles": tiles_payload,
+            "uid": uid,
+            "position": player.position,
+            "negotiation_history": formatted_negotiation_history,
+            "previous_turn_narrative": self.verdict_narrative_result,
+        }
+        return context
     def _get_responses_at_frame(self, frame:int) -> dict[str,str]:
         responses = {}
         for uid, player in self.players.items():

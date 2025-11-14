@@ -28,7 +28,7 @@ class PlayerEvaluation(BaseModel):
 
 class GameResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    character_state_change: List[CharacterState]
+    character_state_change: List[CharacterState]  = Field(..., min_length=1, max_length=10, description="List of character state changes") 
     world_state_change: WorldState
     narrative_result: str = Field(default ="")
 
@@ -39,6 +39,7 @@ class PlayerConfig(BaseModel):
     starting_health: int = Field(default=100, ge=1, description="Starting health for this player")
     starting_currency: int = Field(default=0, ge=0, description="Starting currency for this player")
     character_class: Optional[str] = Field(default=None, description="Character class (Warrior, Mage, Rogue)")
+    agent_prompt: Optional[str] = Field(default="", description="Additional instructions for this player's agent")
 
 class GameConfig(BaseModel):
     """Game-level configuration"""

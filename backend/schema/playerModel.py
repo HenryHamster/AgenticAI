@@ -16,3 +16,4 @@ class PlayerModel(BaseModel):
     player_class: str = Field(default="human")
     values: PlayerValuesModel = Field(default_factory=PlayerValuesModel)
     responses: List[str] = Field(default_factory=list)
+    agent_prompt: str = Field(default="")

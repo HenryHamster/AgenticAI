@@ -36,7 +36,8 @@ def create_default_player_info(
             "model": model,
             "player_class": "human",
             "values": {"money": starting_currency, "health": starting_health},
-            "responses": []
+            "responses": [],
+            "agent_prompt": "",
         }
     
     return player_info
@@ -70,7 +71,8 @@ def create_player_info_from_configs(
                 "money": config.starting_currency if hasattr(config, 'starting_currency') else 0,
                 "health": config.starting_health if hasattr(config, 'starting_health') else 100
             },
-            "responses": []
+            "responses": [],
+            "agent_prompt": getattr(config, 'agent_prompt', "") or "",
         }
     
     return player_info
