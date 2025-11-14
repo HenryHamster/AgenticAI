@@ -27,10 +27,13 @@ class OpenAiService(AiServicesBase):
         """
         super().__init__(chat_id, history, system_prompt)
 
+        max_tokens_value = ai_config.openai_max_tokens
+        print(f"[OpenAiService] Initializing with max_tokens={max_tokens_value} for model={model}")
+        
         self.llm = ChatOpenAI(
             model=model,
             temperature=temperature,
-            max_tokens=ai_config.openai_max_tokens,
+            max_tokens=max_tokens_value,
             timeout=ai_config.openai_timeout,
             api_key=ai_config.openai_api_key,
             max_retries=2,

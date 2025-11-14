@@ -40,7 +40,7 @@ class AIConfig:
     # OpenAI settings
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_timeout: int = 30
-    openai_max_tokens: int = 1000
+    openai_max_tokens: int = 4000
     openai_model: str = "gpt-4.1-mini"
     openai_temperature: float = 0.7
 
@@ -48,6 +48,8 @@ class AIConfig:
     claude_api_key: str = os.getenv("CLAUDE_API_KEY", "")
     claude_model: str = "claude-3-sonnet-20240229"
     claude_temperature: float = 0.7
+    claude_max_tokens: int = 4000
+    claude_timeout: int = 30
 
     # General AI settings
     system_prompt: str = "You are a D&D player character focused on maximizing wealth. Make strategic decisions to selfishly maximize your wealth at any cost. Be aware that you're actions may not follow through as intended."
@@ -87,12 +89,12 @@ class AIConfig:
         "   Never output absolute totals.\n"
         "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
         "5) Let players recover health slowly over time if they take no risks.\n"
-        "6) Include a one-sentence narration describing the outcome of players' actions. Write narrative that describes what happened naturally without explicitly revealing secret details. Describe outcomes and consequences from the player's perspective, not the underlying secret mechanics. For example, say 'you discover something valuable' or 'your search reveals hidden treasure' rather than stating exact secret values or keys.\n"
-        "7) Evaluate each player's action on three axes using the FULL scale (0-100):\n"
+        "6) Write a detailed narrative (2-4 sentences or more) describing the outcome of players' actions. The narrative should be immersive and descriptive, giving agents rich context to work with. Write narrative that describes what happened naturally without explicitly revealing secret details. Describe outcomes and consequences from the player's perspective, not the underlying secret mechanics. Include sensory details, environmental changes, interactions between players, and the consequences of their actions. For example, say 'you discover something valuable' or 'your search reveals hidden treasure' rather than stating exact secret values or keys. The narrative should be pure story - do not include score evaluations or reasoning in the narrative.\n"
+        "7) SEPARATELY from the narrative, evaluate each player's action on three axes using the FULL scale (0-100):\n"
         "   - creativity: 0-20 = mundane/obvious, 21-40 = slightly clever, 41-60 = creative, 61-80 = very innovative, 81-100 = exceptionally imaginative\n"
         "   - action_validity: 0-20 = impossible/breaks rules, 21-40 = questionable, 41-60 = plausible with stretches, 61-80 = reasonable, 81-100 = perfectly legal/feasible\n"
         "   - progress_made: 0-20 = counterproductive, 21-40 = minimal gain, 41-60 = moderate advance, 61-80 = significant progress, 81-100 = major wealth opportunity\n"
-        "Before you assign a score, consider a possible score and evaluate whether it is justified based on the action's creativity, validity, and potential for progress. Then keep thinking until you are sure it aligns. Add the reasoning for your scores as part of the narrative result."
+        "   Before you assign a score, consider a possible score and evaluate whether it is justified based on the action's creativity, validity, and potential for progress. Then keep thinking until you are sure it aligns. Do NOT include score reasoning in the narrative - keep scores and their reasoning separate from the story.\n"
         "8) CRITICAL: Spread scores widely — avoid clustering around 50 or 70. Differentiate between actions meaningfully.\n"
         "9) Reserve scores above 85 only for truly exceptional actions; give scores below 30 to genuinely poor or invalid choices.\n"
         "10) Use exactly the given player UIDs.\n"

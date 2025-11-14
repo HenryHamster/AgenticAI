@@ -15,17 +15,20 @@ class PlayerClass:
 class PlayerValues(Savable):
     money: int
     health: int
-    def __init__(self, money:int = 0, health:int = 100):
+    def __init__(self, money:int = 0, health:int = 100, player = None):
         if money < 0 or health < 0:
             raise ValueError("Money and health must be positive.")
         self.money = money
         self.health = health
+        self.player = player
     def update_money(self, change: int):
         self.money = max(self.money+change,0)
         if self.money < 0:
             raise ValueError("Money is below zero.")
     def update_health(self, change: int):
         self.health = max(self.health+change,0)
+        if self.health <= 0 and self.player:
+            self.player.handle_death()
     @override
     def save(self) -> str:
         # Create PlayerValuesModel for validation
@@ -65,7 +68,7 @@ class Player(Savable):
             raise ValueError(f"Invalid player class {player_class}")
         self.player_class = PLAYER_CLASSES[player_class]
 
-        self.values = PlayerValues()
+        self.values = PlayerValues(player=self)
         self._responses = []
         self._negotiation_messages = []
     def _augment_prompt(self, base_prompt: str) -> str:
@@ -74,13 +77,28 @@ class Player(Savable):
             if extra:
                 return f"{base_prompt}\n\nAgent-specific instructions:\n{extra}"
         return base_prompt
+    def is_dead(self) -> bool:
+        """Check if the player is dead (health <= 0)."""
+        return self.values.health <= 0
+    
+    def handle_death(self) -> None:
+        """
+        Handle player death: convert money to secret on tile and set money to 0.
+        This is called when the player dies to immediately remove their wealth.
+        """
+        self.values.money = 0
+        print(f"[Player] {self.UID} died at {self.position}.")
     def get_negotiation_message(self, context: dict) -> str:
         """Get a negotiation message during the planning phase. This is discussion only, not a final action."""
+        if self.is_dead():
+            return "This player is dead."
         prompt = self._augment_prompt(AIConfig.negotiation_prompt)
         response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
         self._negotiation_messages.append(response)
         return response
     def get_action(self,context: dict) -> str:
+        if self.is_dead():
+            return "This player is dead."
         prompt = self._augment_prompt(AIConfig.player_prompt)
         response = AIWrapper.ask(format_request(prompt, context), self.model,self.UID)
         self._responses.append(response)
@@ -162,7 +180,7 @@ class Player(Savable):
         self.player_class = PLAYER_CLASSES.get(cls_key, PLAYER_CLASSES["human"])
         
         # Load values
-        self.values = PlayerValues()
+        self.values = PlayerValues(player=self)
         self.values.load(Savable.toJSON(player_model.values.model_dump()))
         
         # Load responses

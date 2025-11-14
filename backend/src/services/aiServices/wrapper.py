@@ -78,14 +78,18 @@ class AIWrapper:
 
     @classmethod
     def reset(cls, chat_id: str):
-        """Reset chat history for a session"""
+        """Reset chat history for a session and remove the service to force fresh creation"""
         if chat_id in cls._services:
             cls._services[chat_id].reset_history()
+            # Remove the service to ensure it's recreated fresh, preventing history accumulation
+            del cls._services[chat_id]
 
     @classmethod
     def get_history(cls, chat_id: str) -> list[dict]:
         """Get chat history for a session"""
-        return cls._services.get(chat_id, None).get_history() if chat_id in cls._services else []
+        if chat_id in cls._services:
+            return cls._services[chat_id].get_history()
+        return []
 
     @classmethod
     def _get_service(cls, model: str, chat_id: str, system_prompt: Optional[str]) -> AiServicesBase:
