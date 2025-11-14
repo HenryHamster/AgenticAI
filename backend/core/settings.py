@@ -3,8 +3,7 @@ Configuration settings for the AgenticAI game
 """
 import os
 from dataclasses import dataclass
-from typing import Dict, Any
-from typing import Final
+from typing import Dict, Any, Final
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -86,8 +85,9 @@ class AIConfig:
         "7) CRITICAL: Spread scores widely — avoid clustering around 50 or 70. Differentiate between actions meaningfully.\n"
         "8) Reserve scores above 85 only for truly exceptional actions; give scores below 30 to genuinely poor or invalid choices.\n"
         "9) Use exactly the given player UIDs.\n"
-        "10) If nothing changes, set all *_change = 0."
-        "11) Be generous with small currency rewards for minor actions, but ensure that all rewards are taken from the relevant secret, and the secret's value updated accordingly. (Value should not be hallucinated)"
+        "10) If nothing changes, set all *_change = 0.\n"
+        "11) MONEY REWARDS: When players 'search', 'explore', 'investigate', or move to tiles with secrets, give money_change = +50 to +250 (taken from tile secrets). Update secret values. Moving without searching = +0.\n"
+        "12) HEALTH: Heal +5 health for safe actions. Dangerous actions may cost -10 to -30 health."
     )
     player_prompt: str = (
         "You are a player who operates in extremes — never taking the moderate path. "

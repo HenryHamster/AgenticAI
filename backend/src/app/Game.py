@@ -9,7 +9,7 @@ from src.app.GameConditions import (
     AllPlayersDeadCondition,
     CurrencyGoalCondition
 )
-from typing import override
+from typing_extensions import override
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
