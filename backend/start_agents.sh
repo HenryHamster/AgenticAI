@@ -62,37 +62,8 @@ pkill -f "cloudflared tunnel" 2>/dev/null || echo "  No existing tunnels found"
 sleep 1
 echo -e "${GREEN}✓ Tunnels cleared${NC}"
 echo ""
-
-# Step 3: Start the agents
-echo -e "${YELLOW}Step 3: Starting agents...${NC}"
-
-# Start Green Agent (port 9009)
-venv/bin/python scenarios/roguelike/green_agent.py --host 0.0.0.0 --port 9009 > logs/green_agent.log 2>&1 &
-GREEN_PID=$!
-echo $GREEN_PID > logs/green_agent.pid
-echo -e "${GREEN}  ✓ Green Agent started (PID: $GREEN_PID)${NC}"
-sleep 1
-
-# Start Purple Agent 1 (port 9018)
-venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9018 > logs/purple_agent_1.log 2>&1 &
-PURPLE1_PID=$!
-echo $PURPLE1_PID > logs/purple_agent_1.pid
-echo -e "${GREEN}  ✓ Purple Agent 1 started (PID: $PURPLE1_PID)${NC}"
-sleep 1
-
-# Start Purple Agent 2 (port 9019)
-venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9019 > logs/purple_agent_2.log 2>&1 &
-PURPLE2_PID=$!
-echo $PURPLE2_PID > logs/purple_agent_2.pid
-echo -e "${GREEN}  ✓ Purple Agent 2 started (PID: $PURPLE2_PID)${NC}"
-echo ""
-
-# Wait a bit for agents to fully start
-echo -e "${YELLOW}Waiting for agents to initialize...${NC}"
-sleep 3
-
-# Step 4: Create cloudflared tunnels
-echo -e "${YELLOW}Step 4: Creating cloudflared tunnels...${NC}"
+# Step 3: Create cloudflared tunnels FIRST (so we can pass URLs to agents)
+echo -e "${YELLOW}Step 3: Creating cloudflared tunnels...${NC}"
 
 if ! command -v cloudflared &> /dev/null; then
     echo -e "${RED}✗ cloudflared not found${NC}"
@@ -105,30 +76,98 @@ if ! command -v cloudflared &> /dev/null; then
     exit 0
 fi
 
-# Start cloudflared tunnel for Green Agent
+# Clear old cloudflared logs so we don't extract stale URLs
+rm -f logs/cloudflared_green.log logs/cloudflared_purple1.log logs/cloudflared_purple2.log
+
+# Start cloudflared tunnel for Green Agent (port 9009)
 cloudflared tunnel --url http://localhost:9009 > logs/cloudflared_green.log 2>&1 &
 TUNNEL_GREEN_PID=$!
 echo $TUNNEL_GREEN_PID > logs/tunnel_green.pid
 echo -e "${GREEN}  ✓ Tunnel for Green Agent started (PID: $TUNNEL_GREEN_PID)${NC}"
-sleep 2
 
-# Start cloudflared tunnel for Purple Agent 1
+# Start cloudflared tunnel for Purple Agent 1 (port 9018)
 cloudflared tunnel --url http://localhost:9018 > logs/cloudflared_purple1.log 2>&1 &
 TUNNEL_PURPLE1_PID=$!
 echo $TUNNEL_PURPLE1_PID > logs/tunnel_purple1.pid
 echo -e "${GREEN}  ✓ Tunnel for Purple Agent 1 started (PID: $TUNNEL_PURPLE1_PID)${NC}"
-sleep 2
 
-# Start cloudflared tunnel for Purple Agent 2
+# Start cloudflared tunnel for Purple Agent 2 (port 9019)
 cloudflared tunnel --url http://localhost:9019 > logs/cloudflared_purple2.log 2>&1 &
 TUNNEL_PURPLE2_PID=$!
 echo $TUNNEL_PURPLE2_PID > logs/tunnel_purple2.pid
 echo -e "${GREEN}  ✓ Tunnel for Purple Agent 2 started (PID: $TUNNEL_PURPLE2_PID)${NC}"
 echo ""
 
-# Wait for tunnels to establish
-echo -e "${YELLOW}Waiting for tunnels to establish (5 seconds)...${NC}"
-sleep 5
+# Wait for tunnels to establish and URLs to appear in logs
+echo -e "${YELLOW}Waiting for tunnel URLs to be assigned (15 seconds)...${NC}"
+for i in {1..15}; do
+    sleep 1
+    # Check if all URLs are available
+    if grep -q "trycloudflare.com" logs/cloudflared_green.log && \
+       grep -q "trycloudflare.com" logs/cloudflared_purple1.log && \
+       grep -q "trycloudflare.com" logs/cloudflared_purple2.log; then
+        echo -e "${GREEN}  ✓ All tunnel URLs assigned!${NC}"
+        break
+    fi
+    if [ $i -eq 15 ]; then
+        echo -e "${YELLOW}  ⚠ Timeout waiting for tunnel URLs (continuing anyway)${NC}"
+    fi
+done
+echo ""
+
+# Extract public URLs from cloudflared logs
+GREEN_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' logs/cloudflared_green.log | head -1 || echo "")
+PURPLE1_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' logs/cloudflared_purple1.log | head -1 || echo "")
+PURPLE2_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' logs/cloudflared_purple2.log | head -1 || echo "")
+
+echo -e "${BLUE}Extracted Public URLs:${NC}"
+echo "  Green:   ${GREEN_URL:-Not yet available}"
+echo "  Purple1: ${PURPLE1_URL:-Not yet available}"
+echo "  Purple2: ${PURPLE2_URL:-Not yet available}"
+echo ""
+
+# Step 4: Start the agents with public URLs
+echo -e "${YELLOW}Step 4: Starting agents with public URLs...${NC}"
+
+# Start Green Agent (port 9009) with public URL
+if [ -n "$GREEN_URL" ]; then
+    venv/bin/python scenarios/roguelike/green_agent.py --host 0.0.0.0 --port 9009 --card-url "$GREEN_URL" > logs/green_agent.log 2>&1 &
+else
+    echo -e "${YELLOW}  ⚠ Starting Green Agent without public URL${NC}"
+    venv/bin/python scenarios/roguelike/green_agent.py --host 0.0.0.0 --port 9009 > logs/green_agent.log 2>&1 &
+fi
+GREEN_PID=$!
+echo $GREEN_PID > logs/green_agent.pid
+echo -e "${GREEN}  ✓ Green Agent started (PID: $GREEN_PID)${NC}"
+sleep 1
+
+# Start Purple Agent 1 (port 9018) with public URL
+if [ -n "$PURPLE1_URL" ]; then
+    venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9018 --card-url "$PURPLE1_URL" > logs/purple_agent_1.log 2>&1 &
+else
+    echo -e "${YELLOW}  ⚠ Starting Purple Agent 1 without public URL${NC}"
+    venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9018 > logs/purple_agent_1.log 2>&1 &
+fi
+PURPLE1_PID=$!
+echo $PURPLE1_PID > logs/purple_agent_1.pid
+echo -e "${GREEN}  ✓ Purple Agent 1 started (PID: $PURPLE1_PID)${NC}"
+sleep 1
+
+# Start Purple Agent 2 (port 9019) with public URL
+if [ -n "$PURPLE2_URL" ]; then
+    venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9019 --card-url "$PURPLE2_URL" > logs/purple_agent_2.log 2>&1 &
+else
+    echo -e "${YELLOW}  ⚠ Starting Purple Agent 2 without public URL${NC}"
+    venv/bin/python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9019 > logs/purple_agent_2.log 2>&1 &
+fi
+PURPLE2_PID=$!
+echo $PURPLE2_PID > logs/purple_agent_2.pid
+echo -e "${GREEN}  ✓ Purple Agent 2 started (PID: $PURPLE2_PID)${NC}"
+echo ""
+
+# Wait a bit for agents to fully start
+echo -e "${YELLOW}Waiting for agents to initialize...${NC}"
+sleep 3
 
 # Step 5: Extract and display public URLs
 echo ""

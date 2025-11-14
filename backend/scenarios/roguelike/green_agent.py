@@ -116,20 +116,55 @@ class RoguelikeJudge(GreenAgent):
                         if winner and hasattr(req, '_role_to_agent_id'):
                             winner_agent_id = req._role_to_agent_id.get(winner, "draw")
 
+                        # Convert role-based keys to agent_id-based keys for frontend
+                        role_to_agent = req._role_to_agent_id if hasattr(req, '_role_to_agent_id') else {}
+                        
+                        # Map final wealth with agent_ids as keys
+                        final_wealth = {}
+                        for role, p in game.players.items():
+                            agent_id = role_to_agent.get(role, role)
+                            final_wealth[agent_id] = p.values.money
+                        
+                        # Map final health with agent_ids as keys
+                        final_health = {}
+                        for role, p in game.players.items():
+                            agent_id = role_to_agent.get(role, role)
+                            final_health[agent_id] = p.values.health
+                        
+                        # Map final actions with agent_ids as keys
+                        final_actions = {}
+                        for role, action in actions.items():
+                            agent_id = role_to_agent.get(role, role)
+                            final_actions[agent_id] = action
+                        
+                        # Add agent metadata with fallback values to prevent undefined errors
+                        agent_metadata = {}
+                        for role, agent_id in role_to_agent.items():
+                            agent_metadata[agent_id] = {
+                                "identifier": agent_id,
+                                "name": f"Player {role.split('_')[1]}",
+                                "avatar_url": None,
+                                "description": "Roguelike player agent"
+                            }
+
                         battle_result = {
                             "is_result": True,
                             "winner": winner_agent_id,
+                            "reported_by": "green_agent",
+                            "message": f"Battle completed - Winner: {winner_agent_id if winner_agent_id != 'draw' else 'Draw'}",
                             "detail": {
-                                "final_wealth": {uid: p.values.money for uid, p in game.players.items()},
-                                "final_health": {uid: p.values.health for uid, p in game.players.items()},
+                                "final_wealth": final_wealth,
+                                "final_health": final_health,
                                 "turns_played": game.current_turn_number,
                                 "turn": turn + 1,
-                                "final_actions": actions
+                                "final_actions": final_actions
                             },
+                            "agent_metadata": agent_metadata,
                             "timestamp": datetime.utcnow().isoformat() + "Z"
                         }
 
                         try:
+                            logger.info(f"Submitting battle result with agent_ids: {json.dumps(battle_result, indent=2)}")
                             async with httpx.AsyncClient(timeout=5.0) as client:
                                 resp = await client.post(f"{req._backend_url}/battles/{req._battle_id}", json=battle_result)
                                 logger.info(f"Result submitted: {resp.status_code}")
@@ -147,11 +182,39 @@ class RoguelikeJudge(GreenAgent):
                 # Send turn update for non-final turns only
                 if hasattr(req, '_battle_id') and hasattr(req, '_backend_url'):
                     try:
+                        # Convert role-based keys to agent_id-based keys for frontend
+                        role_to_agent = req._role_to_agent_id if hasattr(req, '_role_to_agent_id') else {}
+                        
+                        # Map actions with agent_ids as keys
+                        actions_by_agent = {}
+                        for role, action in actions.items():
+                            agent_id = role_to_agent.get(role, role)
+                            actions_by_agent[agent_id] = action
+                        
+                        # Map player stats with agent_ids as keys
+                        stats_by_agent = {}
+                        for role, p in game.players.items():
+                            agent_id = role_to_agent.get(role, role)
+                            stats_by_agent[agent_id] = {"money": p.values.money, "health": p.values.health}
+                        
+                        # Add agent metadata with fallback values
+                        agent_metadata = {}
+                        for role, agent_id in role_to_agent.items():
+                            agent_metadata[agent_id] = {
+                                "identifier": agent_id,
+                                "name": f"Player {role.split('_')[1]}",
+                                "avatar_url": None,
+                                "description": "Roguelike player agent"
+                            }
+                        
                         turn_event = {
                             "is_result": False,
                             "turn": turn + 1,
-                            "actions": actions,
-                            "player_stats": {uid: {"money": p.values.money, "health": p.values.health} for uid, p in game.players.items()},
+                            "reported_by": "green_agent",
+                            "message": f"Turn {turn + 1} completed",
+                            "actions": actions_by_agent,
+                            "player_stats": stats_by_agent,
+                            "agent_metadata": agent_metadata,
                             "timestamp": datetime.utcnow().isoformat() + "Z"
                         }
                         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -257,8 +320,62 @@ async def main():
             logger.error(f"Reset error: {e}")
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+    async def notify(request):
+        """Handle battle notifications from AgentBeats"""
+        try:
+            body = await request.body()
+            payload = json.loads(body) if body else {}
+            logger.info(f"Notify request received: {payload}")
+            
+            # Extract battle info from AgentBeats notification
+            battle_id = payload.get("battle_id")
+            backend_url = payload.get("backend_url", "https://agentbeats.org/api")
+            
+            if "localhost" in backend_url:
+                backend_url = "https://agentbeats.org/api"
+            
+            logger.info(f"Battle notification - ID: {battle_id}, Backend: {backend_url}")
+            
+            # Create an A2A message to trigger the executor
+            battle_message = {
+                "type": "battle_start",
+                "battle_id": battle_id,
+                "backend_url": backend_url
+            }
+            
+            # Use the A2A client to send message to ourselves
+            # This will trigger the green_executor.execute() method
+            try:
+                from agentbeats_lib.client import send_message
+                
+                # Send the battle notification as an A2A message
+                result = await send_message(
+                    message=json.dumps(battle_message),
+                    base_url=base_url,
+                    streaming=False
+                )
+                
+                logger.info(f"Battle notification forwarded successfully: {result}")
+                return JSONResponse({
+                    "success": True, 
+                    "message": "Battle notification received and processing started",
+                    "battle_id": battle_id
+                }, status_code=200)
+                
+            except Exception as e:
+                logger.error(f"Error forwarding battle notification: {e}\n{traceback.format_exc()}")
+                return JSONResponse({
+                    "success": False, 
+                    "error": f"Internal error: {str(e)}"
+                }, status_code=500)
+                
+        except Exception as e:
+            logger.error(f"Notify error: {e}\n{traceback.format_exc()}")
+            return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
+    app.routes.append(Route("/notify", notify, methods=["POST"]))
 
     uvicorn_config = uvicorn.Config(app, host=args.host, port=args.port)
     uvicorn_server = uvicorn.Server(uvicorn_config)

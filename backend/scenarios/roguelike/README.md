@@ -26,6 +26,7 @@ A2A server implementing `GreenAgent` interface.
 - `validate_request()`: Validates battle has required roles and config
 - `run_eval()`: Main game loop execution
 - `/reset`: Endpoint for AgentBeats to reset agent state
+- `/notify`: Endpoint for AgentBeats to send battle notifications
 - `/status`: Health check endpoint
 
 ### `purple_agent.py` - Player Agent
@@ -102,24 +103,23 @@ Defines agents and battle parameters.
 5. AgentBeats polls every 5s until all agents ready (120s timeout)
 
 ### Phase 3: Battle Notification
-**AgentBeats sends:** A2A message to green agent
+**AgentBeats sends:** POST request to `/notify` endpoint
 ```json
+POST {launcher_url}/notify
 {
-  "type": "battle_start",
   "battle_id": "uuid",
-  "green_battle_context": {...},
-  "red_battle_contexts": {...},
-  "opponent_infos": [
-    {"name": "player", "agent_url": "https://..."}
-  ]
+  "backend_url": "https://agentbeats.org/api"
 }
 ```
 
 **What happens:**
-1. `green_executor.py` receives message
-2. Fetches battle details: `GET {backend_url}/battles/{battle_id}`
-3. Converts to `EvalRequest` with participants and config
-4. Calls `green_agent.run_eval()`
+1. Green agent's `/notify` endpoint receives the battle notification
+2. Converts it to an A2A message with `battle_start` type
+3. Sends A2A message to itself using the `send_message` client
+4. `green_executor.py` receives the A2A message via `execute()` method
+5. Fetches battle details: `GET {backend_url}/battles/{battle_id}`
+6. Converts to `EvalRequest` with participants and config
+7. Calls `green_agent.run_eval()` to start the battle
 
 ### Phase 4: Game Execution
 **Green agent orchestrates:**
@@ -144,11 +144,13 @@ For each turn (1 to max_turns):
    {
      "is_result": false,
      "turn": 1,
-     "actions": {"player_1": "...", "player_2": "..."},
-     "player_stats": {"player_1": {"money": 100, "health": 100}},
+     "actions": {"agent_id_1": "...", "agent_id_2": "..."},
+     "player_stats": {"agent_id_1": {"money": 100, "health": 100}, "agent_id_2": {"money": 100, "health": 100}},
      "timestamp": "ISO8601"
    }
    ```
+   
+   **Note:** Uses agent_ids as keys, not role names.
 
 5. **Check game over:**
    - If game ends (max turns or win condition), break loop
@@ -159,15 +161,19 @@ For each turn (1 to max_turns):
 POST {backend_url}/battles/{battle_id}
 {
   "is_result": true,
-  "winner": "agent_id",
+  "winner": "agent_id_uuid",
   "detail": {
-    "final_wealth": {"player_1": 850, "player_2": 750},
-    "final_health": {"player_1": 100, "player_2": 100},
-    "turns_played": 3
+    "final_wealth": {"agent_id_1": 850, "agent_id_2": 750},
+    "final_health": {"agent_id_1": 100, "agent_id_2": 100},
+    "turns_played": 3,
+    "turn": 3,
+    "final_actions": {"agent_id_1": "action...", "agent_id_2": "action..."}
   },
   "timestamp": "ISO8601"
 }
 ```
+
+**Note:** All keys in `detail` use agent_ids (UUIDs) rather than role names (player_1, player_2) so the frontend can properly look up agent information.
 
 **What happens:**
 1. AgentBeats receives result
@@ -195,6 +201,7 @@ AgentBeats may send duplicate `battle_start` after completion.
 
 ### AgentBeats Backend → Agent
 - `POST {launcher_url}/reset` - Trigger agent reset
+- `POST {launcher_url}/notify` - Send battle notification to start a battle
 - A2A message with battle context - Start battle
 
 ### Frontend → AgentBeats Backend
