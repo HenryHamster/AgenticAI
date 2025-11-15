@@ -15,11 +15,13 @@ class PlayerClass:
 class PlayerValues(Savable):
     money: int
     health: int
-    def __init__(self, money:int = 0, health:int = 100, player = None):
+    inventory: list[str]
+    def __init__(self, money:int = 0, health:int = 100, player = None, inventory: list[str] | None = None):
         if money < 0 or health < 0:
             raise ValueError("Money and health must be positive.")
         self.money = money
         self.health = health
+        self.inventory = inventory if inventory is not None else []
         self.player = player
     def update_money(self, change: int):
         self.money = max(self.money+change,0)
@@ -29,10 +31,20 @@ class PlayerValues(Savable):
         self.health = max(self.health+change,0)
         if self.health <= 0 and self.player:
             self.player.handle_death()
+    def add_inventory(self, items: list[str]):
+        """Add items to inventory."""
+        self.inventory.extend(items)
+    def remove_inventory(self, items: list[str]):
+        """Remove one instance of each item from inventory. Logs warning if item doesn't exist."""
+        for item in items:
+            try:
+                self.inventory.remove(item)
+            except ValueError:
+                print(f"[PlayerValues] Warning: Attempted to remove item '{item}' that doesn't exist in inventory.")
     @override
     def save(self) -> str:
         # Create PlayerValuesModel for validation
-        values_model = PlayerValuesModel(money=self.money, health=self.health)
+        values_model = PlayerValuesModel(money=self.money, health=self.health, inventory=self.inventory)
         return Savable.toJSON(values_model.model_dump())
     
     @override
@@ -44,6 +56,7 @@ class PlayerValues(Savable):
             values_model = PlayerValuesModel(**loaded_data)
             self.money = values_model.money
             self.health = values_model.health
+            self.inventory = getattr(values_model, "inventory", [])
         except Exception as e:
             raise ValueError(f"Invalid player values data: {str(e)}")
 

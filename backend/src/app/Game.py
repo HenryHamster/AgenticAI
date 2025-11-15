@@ -39,7 +39,7 @@ class Game(Savable):
     is_game_over: bool
     game_over_reason: str | None
 
-    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
+    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None, verbose_level: int = 0):
         AIWrapper.reset("DungeonMaster")
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
@@ -47,6 +47,8 @@ class Game(Savable):
         self.current_turn_number = 0
         # Use provided world_size or fallback to GameConfig default
         self.world_size = world_size if world_size is not None else GameConfig.world_size
+        # Verbose level: 0=non-verbose, 1=verbose, 2=full_verbose
+        self.verbose_level = verbose_level
         # Initialize verdict components
         self.verdict_character_state = []
         self.verdict_world_state = None
@@ -111,6 +113,14 @@ class Game(Savable):
         
         # Check win/end conditions after processing the turn
         self._check_game_conditions()
+        
+        # Print player state after each step
+        print(f"\n[Player State] Turn {self.current_turn_number}:")
+        for uid in sorted(self.players.keys()):
+            player = self.players[uid]
+            inventory_str = ", ".join(player.values.inventory) if player.values.inventory else "empty"
+            print(f"  {uid}: health={player.values.health}, wealth={player.values.money}, "
+                  f"inventory=[{inventory_str}], position={player.position}")
         
         self.save()  # Save state after each turn
     def _check_game_conditions(self) -> None:
@@ -363,14 +373,6 @@ class Game(Savable):
         """Build sanitized context for a player request."""
         player = self.players[uid]
         tiles_payload = self._get_viewable_tiles_payload(player.position, GameConfig.player_vision)
-        # Debug: Check if any secrets are leaking
-        for tile in tiles_payload:
-            if "secrets" in tile:
-                print(f"[WARNING] Secret leak detected in tile payload for {uid}: {tile}")
-            # Debug: Print tile keys and descriptions to verify structure
-            if self.current_turn_number == 0:  # Only on first turn
-                print(f"[DEBUG] Tile keys for {uid}: {list(tile.keys())}")
-                print(f"[DEBUG] Tile description at {tile.get('position')}: {tile.get('description', 'N/A')}")
         
         # Format negotiation history as a list of messages per round
         formatted_negotiation_history = []
@@ -483,6 +485,21 @@ class Game(Savable):
             player.update_position(new_pos)
             player.values.update_money(money)
             player.values.update_health(health)
+
+            # Inventory changes (process add first, then remove)
+            try:
+                inventory_add = getattr(cs, "inventory_add", None)
+                if inventory_add is not None and isinstance(inventory_add, list):
+                    player.values.add_inventory(inventory_add)
+            except Exception as e:
+                print(f"[handle_verdict] Error processing inventory_add for {uid}: {e}")
+
+            try:
+                inventory_remove = getattr(cs, "inventory_remove", None)
+                if inventory_remove is not None and isinstance(inventory_remove, list):
+                    player.values.remove_inventory(inventory_remove)
+            except Exception as e:
+                print(f"[handle_verdict] Error processing inventory_remove for {uid}: {e}")
 
         if unknown_uids:
             print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")

@@ -86,6 +86,8 @@ class AIConfig:
         "   - money_change: gold ±int\n"
         "   - health_change: HP ±int\n"
         "   - position_change: [dx, dy]\n"
+        "   - inventory_add: list of items to add for this player (optional, list of strings)\n"
+        "   - inventory_remove: list of items to remove for this player (optional, list of strings)\n"
         "   Never output absolute totals.\n"
         "4) world_state.tiles fully replaces tile descriptions but keeps coordinates fixed.\n"
         "5) Let players recover health slowly over time if they take no risks.\n"
@@ -126,38 +128,38 @@ class AIConfig:
         "You may also move to a different tile, one step at a time, to search for new opportunities when your current location offers little upside."
     )
     # Schema instruction for structured responses
-    verdict_instruction: str = """
-IMPORTANT: You must include at the end of your response a JSON object with the following structure:
+#     verdict_instruction: str = """
+# IMPORTANT: You must include at the end of your response a JSON object with the following structure:
 
-{
-    "character_state_change": {
-        "money": <integer>,
-        "skill_level": <integer>,
-        "attributes": {
-            "strength": <1-20>,
-            "dexterity": <1-20>,
-            "intelligence": <1-20>,
-            "wisdom": <1-20>,
-            "constitution": <1-20>,
-            "charisma": <1-20>
-        },
-        "position": [x, y],
-        "current_action": "<string>",
-        "inventory": ["<item1>", "<item2>"],
-        "health": <integer>,
-        "experience": <integer>
-    },
-    "world_state_change": {
-        "environment_type": "<string>",
-        "description": "<string>",
-        "available_actions": ["<action1>", "<action2>"],
-        "npcs": ["<npc1>", "<npc2>"],
-        "treasures": ["<treasure1>"],
-        "hazards": ["<hazard1>"]
-    },
-    "narrative": "<your response text>"
-}
-"""
+# {
+#     "character_state_change": {
+#         "money": <integer>,
+#         "skill_level": <integer>,
+#         "attributes": {
+#             "strength": <1-20>,
+#             "dexterity": <1-20>,
+#             "intelligence": <1-20>,
+#             "wisdom": <1-20>,
+#             "constitution": <1-20>,
+#             "charisma": <1-20>
+#         },
+#         "position": [x, y],
+#         "current_action": "<string>",
+#         "inventory": ["<item1>", "<item2>"],
+#         "health": <integer>,
+#         "experience": <integer>
+#     },
+#     "world_state_change": {
+#         "environment_type": "<string>",
+#         "description": "<string>",
+#         "available_actions": ["<action1>", "<action2>"],
+#         "npcs": ["<npc1>", "<npc2>"],
+#         "treasures": ["<treasure1>"],
+#         "hazards": ["<hazard1>"]
+#     },
+#     "narrative": "<your response text>"
+# }
+# """
 
 # Global configuration instances
 game_config = GameConfig()

@@ -8,6 +8,8 @@ class CharacterState(BaseModel):
     money_change: int = Field()
     health_change: int = Field()
     position_change: List[int] = Field(min_length=2, max_length=2)
+    inventory_add: Optional[List[str]] = Field(default=None)
+    inventory_remove: Optional[List[str]] = Field(default=None)
 
 class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")

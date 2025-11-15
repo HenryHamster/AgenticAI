@@ -22,7 +22,7 @@ class AIWrapper:
             chat_id: Optional[str] = None,
             system_prompt: Optional[str] = None,
             structured_output: Optional[Type[BaseModel]] = None,
-            isolated: bool = False, verbose: bool = True) -> Optional[str | BaseModel]:
+            isolated: bool = False, verbose: int = 1) -> Optional[str | BaseModel]:
         """
         Send message to AI service and get response
 
@@ -33,12 +33,14 @@ class AIWrapper:
             system_prompt: Override default system prompt
             structured_output: Pydantic model for structured responses
             isolated: If True, don't use chat history
+            verbose: Verbose level (0=non-verbose, 1=verbose, 2=full_verbose)
 
         Returns:
             Response string or Pydantic model instance
         """
         try:
-            if verbose:
+            # Level 2 (full_verbose): Show all debug info (like old verbose=True)
+            if verbose >= 2:
                 print("\n[AI] === New request ===")
                 print(f"[AI] Model: {model}")
                 print(f"[AI] Message: {message[:250]}{'...' if len(message) > 250 else ''}")
@@ -47,13 +49,13 @@ class AIWrapper:
                 assert issubclass(structured_output, BaseModel), "GameResponse must subclass pydantic.BaseModel"
                 assert structured_output is not BaseModel, "You are passing BaseModel itself!"
             chat_id = chat_id or str(uuid.uuid4())
-            if verbose:
+            if verbose >= 2:
                 print(f"[AI] Using chat session: {chat_id}")
                 print(f"[AI] Initializing backend for model '{model}'...")
                 print(f"[AI] Model supports structured output: {'yes' if structured_output else 'no'}")
         
             service = cls._get_service(model, chat_id, system_prompt)
-            if verbose:
+            if verbose >= 2:
                 print("[AI] Service ready.")
                 print(f"[AI] Current history length: {len(service.history)} messages")
                 cls._debug_prompt_lengths(message)
@@ -64,7 +66,8 @@ class AIWrapper:
                 result = service.ask_isolated_ai_response(message)
             else:
                 result = service.ask_ai_response(message)
-            if verbose:
+            # Level 1 and 2: Show outputs and structured_outputs
+            if verbose >= 1:
                 if isinstance(result, str):
                     print(f"[AI] Output: {result[:200]}{'...' if len(result) > 200 else ''}")
                 else:
