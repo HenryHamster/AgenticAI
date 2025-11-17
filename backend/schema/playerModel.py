@@ -8,6 +8,7 @@ from typing import List
 class PlayerValuesModel(BaseModel):
     money: int = Field(ge=0, default=0)
     health: int = Field(ge=0, default=100)
+    inventory: List[str] = Field(default_factory=list)
 
 class PlayerModel(BaseModel):
     uid: str = Field(min_length=1)
@@ -16,3 +17,4 @@ class PlayerModel(BaseModel):
     player_class: str = Field(default="human")
     values: PlayerValuesModel = Field(default_factory=PlayerValuesModel)
     responses: List[str] = Field(default_factory=list)
+    agent_prompt: str = Field(default="")

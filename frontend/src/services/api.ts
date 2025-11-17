@@ -73,6 +73,7 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
       name: player.name,
       starting_health: player.startingHealth,
       starting_currency: player.startingCurrency,
+      agent_prompt: player.agentPrompt?.trim() ?? "",
     })),
   };
   

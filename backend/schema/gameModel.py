@@ -26,6 +26,7 @@ class PlayerConfigModel(BaseModel):
     name: str
     starting_health: int = 100
     starting_currency: int = 0
+    agent_prompt: Optional[str] = ""
 
 class GameModel(BaseModel):
     id: str = Field(min_length=1)
