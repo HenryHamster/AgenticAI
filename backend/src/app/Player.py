@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import override
+from typing_extensions import override
 from database.fileManager import Savable
 from core.settings import AIConfig, GameConfig
 from src.services.Utils import format_request

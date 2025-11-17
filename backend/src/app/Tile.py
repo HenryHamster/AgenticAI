@@ -1,5 +1,5 @@
 from database.fileManager import Savable
-from typing import override, List
+from typing_extensions import override, List
 import json
 
 class Secret:

@@ -3,8 +3,7 @@ Configuration settings for the AgenticAI game
 """
 import os
 from dataclasses import dataclass
-from typing import Dict, Any
-from typing import Final
+from typing import Dict, Any, Final
 from dotenv import load_dotenv
 
 load_dotenv()
