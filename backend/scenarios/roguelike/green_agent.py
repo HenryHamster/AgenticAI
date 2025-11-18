@@ -259,7 +259,12 @@ async def main():
         base_url = args.card_url.rstrip('/')
         logger.info(f"Using public URL from --card-url: {base_url}")
     else:
-        base_url = f"http://{args.host}:{args.port}"
+        # Use 127.0.0.1 instead of 0.0.0.0 for local connections
+        if args.host == "0.0.0.0":
+            connectable_host = "127.0.0.1"
+        else:
+            connectable_host = args.host
+        base_url = f"http://{connectable_host}:{args.port}"
         logger.warning(f"Using local URL (no --card-url provided): {base_url}")
 
     agent_card = AgentCard(
@@ -343,19 +348,42 @@ async def main():
                 "backend_url": backend_url
             }
             
-            # Use the A2A client to send message to ourselves
-            # This will trigger the green_executor.execute() method
+            # Directly call the executor instead of sending A2A message to ourselves
+            # This avoids network issues and circular dependencies
             try:
-                from agentbeats_lib.client import send_message
+                from a2a.server.agent_execution import RequestContext
+                from a2a.server.events import EventQueue
+                from a2a.types import Message, Part, TextPart
+                from uuid import uuid4
                 
-                # Send the battle notification as an A2A message
-                result = await send_message(
-                    message=json.dumps(battle_message),
-                    base_url=base_url,
-                    streaming=False
+                # Create a request context with the battle message
+                message_text = json.dumps(battle_message)
+                message = Message(
+                    kind="message",
+                    role="user",
+                    parts=[Part(root=TextPart(kind="text", text=message_text))],
+                    message_id=uuid4().hex,
+                    context_id=None
                 )
                 
-                logger.info(f"Battle notification forwarded successfully: {result}")
+                # Create a simple request context
+                class SimpleRequestContext:
+                    def __init__(self, msg, msg_text):
+                        self.message = msg
+                        self.context_id = None
+                        self._msg_text = msg_text
+                    
+                    def get_user_input(self):
+                        return self._msg_text
+                
+                context = SimpleRequestContext(message, message_text)
+                event_queue = EventQueue()
+                
+                # Execute directly using the executor (runs in background)
+                import asyncio
+                asyncio.create_task(executor.execute(context, event_queue))
+                
+                logger.info(f"Battle notification queued for processing")
                 return JSONResponse({
                     "success": True, 
                     "message": "Battle notification received and processing started",
@@ -363,7 +391,7 @@ async def main():
                 }, status_code=200)
                 
             except Exception as e:
-                logger.error(f"Error forwarding battle notification: {e}\n{traceback.format_exc()}")
+                logger.error(f"Error processing battle notification: {e}\n{traceback.format_exc()}")
                 return JSONResponse({
                     "success": False, 
                     "error": f"Internal error: {str(e)}"
