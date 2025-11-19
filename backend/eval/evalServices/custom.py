@@ -54,7 +54,7 @@ Provide a comprehensive evaluation with scores from 0.0 to 1.0 for each metric."
                 model=self.ai_model,
                 structured_output=EvaluationResult,
                 isolated=True,
-                verbose=False
+                verbose=1
             )
             
         return result.model_dump()

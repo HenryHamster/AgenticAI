@@ -1,0 +1,18 @@
+[green_agent]
+endpoint = "http://localhost:9009"
+cmd = "python scenarios/roguelike/green_agent.py --host 0.0.0.0 --port 9009"
+
+[[participants]]
+role = "player_1"
+endpoint = "http://localhost:9018"
+cmd = "python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9018"
+
+[[participants]]
+role = "player_2"
+endpoint = "http://localhost:9019"
+cmd = "python scenarios/roguelike/purple_agent.py --host 0.0.0.0 --port 9019"
+
+[config]
+max_turns = 1
+world_size = 1
+starting_wealth = 100

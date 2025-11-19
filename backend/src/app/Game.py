@@ -3,13 +3,14 @@ from src.app.Player import Player
 from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
 from src.app.DungeonMaster import DungeonMaster
+from src.services.aiServices.wrapper import AIWrapper
 from src.app.GameConditions import (
     GameConditionManager,
     MaxTurnsCondition,
     AllPlayersDeadCondition,
     CurrencyGoalCondition
 )
-from typing_extensions import override
+from typing_extensions import override, Any
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
@@ -37,20 +38,24 @@ class Game(Savable):
     is_game_over: bool
     game_over_reason: str | None
 
-    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None):
+    def __init__(self, player_info:dict[str,dict], dm_info:dict | None = None, world_size: int | None = None, verbose_level: int = 0):
+        AIWrapper.reset("DungeonMaster")
         self.dm = DungeonMaster()
         self.dm.load(dm_info if dm_info is not None else {})
         self.players = {}
         self.current_turn_number = 0
         # Use provided world_size or fallback to GameConfig default
         self.world_size = world_size if world_size is not None else GameConfig.world_size
+        # Verbose level: 0=non-verbose, 1=verbose, 2=full_verbose
+        self.verbose_level = verbose_level
         # Initialize verdict components
         self.verdict_character_state = []
         self.verdict_world_state = None
-        self.verdict_narrative_result = ""
+        self.verdict_narrative_result = "This is the first turn."
         # Initialize game condition manager
         self.condition_manager = GameConditionManager()
         self.is_game_over = False
+        self.status = GameStatus.ACTIVE
         self.game_over_reason = None
         # Add default conditions
         self.condition_manager.add_condition(MaxTurnsCondition())
@@ -60,32 +65,62 @@ class Game(Savable):
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
             character_template_name = pdata.get('character_template_name')
+            AIWrapper.reset(uid)
             p = Player(uid, character_template_name=character_template_name)
             p.load(pdata)
             if p.UID != uid:
                 p.UID = uid
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
+        # Reset all AI histories after initialization to ensure clean state
+        AIWrapper.reset("DungeonMaster")
+        for uid in self.players.keys():
+            AIWrapper.reset(uid)
     def step(self):
         # Check if game is already over
         if self.is_game_over:
             print(f"[Game] Game is already over: {self.game_over_reason}")
             return
         
-        player_responses, verdict = [], ""
+        player_responses, verdict = {}, ""
+        negotiation_history: list[dict[str,str]] = []
         sorted_uids = sorted(self.players.keys())
-        for _ in range(GameConfig.num_responses):
-            player_responses = {
-                UID: self.players[UID].get_action({"Self":self.players[UID].save(), "Players (excluding self)": {id: self.players[id].save() for id in sorted_uids if id != UID}, "tiles": self._get_viewable_tiles_payload(self.players[UID].position, GameConfig.player_vision),
-                              "verdict": verdict, "uid": UID, "position": self.players[UID].position})
+        print(f"narrative: {self.verdict_narrative_result}")
+        
+        # Negotiation phase: players discuss before committing to actions
+        for negotiation_round in range(GameConfig.num_negotiation_rounds):
+            negotiation_messages = {
+                UID: self.players[UID].get_negotiation_message(
+                    self._build_player_context(UID, sorted_uids, negotiation_history)
+                )
                 for UID in sorted_uids
             }
-            verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
+            negotiation_history.append(negotiation_messages)
+            print(f"negotiation_round_{negotiation_round + 1}: {negotiation_messages}")
+        
+        # Action phase: players commit to final actions after negotiation
+        player_responses = {
+            UID: self.players[UID].get_action(
+                self._build_player_context(UID, sorted_uids, negotiation_history)
+            )
+            for UID in sorted_uids
+        }
+        print(f"final_actions: {player_responses}")
+        
+        verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict Narrative": self.verdict_narrative_result, "tiles": self._get_tiles_full_payload()})    
         self.handle_verdict(verdict)
         self.current_turn_number += 1
         
         # Check win/end conditions after processing the turn
         self._check_game_conditions()
+        
+        # Print player state after each step
+        print(f"\n[Player State] Turn {self.current_turn_number}:")
+        for uid in sorted(self.players.keys()):
+            player = self.players[uid]
+            inventory_str = ", ".join(player.values.inventory) if player.values.inventory else "empty"
+            print(f"  {uid}: health={player.values.health}, wealth={player.values.money}, "
+                  f"inventory=[{inventory_str}], position={player.position}")
         
         self.save()  # Save state after each turn
     def _check_game_conditions(self) -> None:
@@ -113,8 +148,7 @@ class Game(Savable):
                     richest = max(self.players.items(), key=lambda x: x[1].values.money)
                     self.winner_player_name = richest[0]
             
-            print(f"[Game] Game ended: {reason}")
-    
+            print(f"[Game] Game ended: {reason}") 
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
@@ -333,6 +367,32 @@ class Game(Savable):
     
     def _get_tiles_full_payload(self) -> list[dict]:
         return [self._full_tile_payload(t) for t in self.tiles.values()]
+
+    def _build_player_context(self, uid: str, sorted_uids: list[str], negotiation_history: list[dict[str,str]]) -> dict:
+        """Build sanitized context for a player request."""
+        player = self.players[uid]
+        tiles_payload = self._get_viewable_tiles_payload(player.position, GameConfig.player_vision)
+        
+        # Format negotiation history as a list of messages per round
+        formatted_negotiation_history = []
+        for round_messages in negotiation_history:
+            formatted_round = [round_messages[other_uid] for other_uid in sorted_uids]
+            formatted_negotiation_history.append(formatted_round)
+        
+        context = {
+            "Self": player.get_open_context(),
+            "Players (excluding self)": {
+                other_uid: self.players[other_uid].get_open_context()
+                for other_uid in sorted_uids
+                if other_uid != uid
+            },
+            "tiles": tiles_payload,
+            "uid": uid,
+            "position": player.position,
+            "negotiation_history": formatted_negotiation_history,
+            "previous_turn_narrative": self.verdict_narrative_result,
+        }
+        return context
     def _get_responses_at_frame(self, frame:int) -> dict[str,str]:
         responses = {}
         for uid, player in self.players.items():
@@ -423,7 +483,6 @@ class Game(Savable):
             player.update_position(new_pos)
             player.values.update_money(money)
             player.values.update_health(health)
-
             xp_gain = getattr(cs, "experience_change", 0)
             if xp_gain != 0:
                 player.experience += xp_gain
@@ -432,15 +491,6 @@ class Game(Savable):
             resource_changes = getattr(cs, "resource_changes", {})
             if resource_changes:
                 player.update_resources(resource_changes)
-
-            inventory_changes = getattr(cs, "inventory_changes", {})
-            if inventory_changes:
-                for item in inventory_changes.get("added", []):
-                    if item not in player.inventory:
-                        player.inventory.append(item)
-                for item in inventory_changes.get("removed", []):
-                    if item in player.inventory:
-                        player.inventory.remove(item)
 
             cooldowns = getattr(cs, "skill_cooldowns", {})
             for skill_name, turns in cooldowns.items():
@@ -463,6 +513,20 @@ class Game(Savable):
             if new_unlocks_from_dm:
                 for skill in new_unlocks_from_dm:
                     player.unlock_skill(skill)
+            # Inventory changes (process add first, then remove)
+            try:
+                inventory_add = getattr(cs, "inventory_add", None)
+                if inventory_add is not None and isinstance(inventory_add, list):
+                    player.values.add_inventory(inventory_add)
+            except Exception as e:
+                print(f"[handle_verdict] Error processing inventory_add for {uid}: {e}")
+
+            try:
+                inventory_remove = getattr(cs, "inventory_remove", None)
+                if inventory_remove is not None and isinstance(inventory_remove, list):
+                    player.values.remove_inventory(inventory_remove)
+            except Exception as e:
+                print(f"[handle_verdict] Error processing inventory_remove for {uid}: {e}")
 
         if unknown_uids:
             print(f"[handle_verdict] Ignored unknown UIDs: {sorted(set(unknown_uids))}")
@@ -514,7 +578,7 @@ class Game(Savable):
         return {
             'is_game_over': self.is_game_over,
             'game_over_reason': self.game_over_reason,
-            'status': getattr(self, 'status', 'active'),
+            'status': getattr(self, 'status', GameStatus.ACTIVE),
             'current_turn': self.current_turn_number,
             'max_turns': getattr(self, 'max_turns', None),
             'winner': getattr(self, 'winner_player_name', None)

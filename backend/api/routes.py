@@ -47,7 +47,8 @@ async def create_game_endpoint(
                 name=p.name,
                 starting_health=p.starting_health,
                 starting_currency=p.starting_currency,
-                character_class=p.character_class
+                character_class=p.character_class,
+                agent_prompt=p.agent_prompt or ""
             )
             for p in players
         ]

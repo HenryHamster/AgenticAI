@@ -28,7 +28,7 @@ class DungeonMaster(Savable):
         # print("enriched_info:", enriched_info)
         # print("formatted info:", format_request(AIConfig.dm_prompt, info))
         structured_response = AIWrapper.ask(
-            format_request(AIConfig.dm_prompt, info),
+            format_request(AIConfig.dm_prompt, enriched_info),
             self.model,
             "DungeonMaster",
             structured_output = GameResponse
@@ -78,7 +78,7 @@ class DungeonMaster(Savable):
                                 'current_abilities': player_data.get('current_abilities', []),
                                 'resource_pools': player_data.get('resource_pools', {}),
                                 'skill_cooldowns': player_data.get('skill_cooldowns', {}),
-                                'inventory': player_data.get('inventory', [])
+                                'inventory': player_data.get('values', {}).get('inventory', [])
                             }
                         }
                     else:
