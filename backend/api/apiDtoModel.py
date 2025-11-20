@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from typing import List, Dict, Any, Optional
 from schema.tileModel import SecretKV
 
@@ -24,6 +24,28 @@ class TileState(BaseModel):
     description: str = Field(default="")
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
+    
+    @model_validator(mode='before')
+    @classmethod
+    def transform_secrets(cls, data: Any) -> Any:
+        """Transform secrets from {'key': value} format to {'key': 'key', 'value': value} format"""
+        if isinstance(data, dict) and 'secrets' in data:
+            secrets = data['secrets']
+            if isinstance(secrets, list):
+                transformed_secrets = []
+                for secret in secrets:
+                    if isinstance(secret, dict):
+                        # Check if it's already in the correct format
+                        if 'key' in secret and 'value' in secret:
+                            transformed_secrets.append(secret)
+                        else:
+                            # Transform from {'coin stash': 12} to {'key': 'coin stash', 'value': 12}
+                            for k, v in secret.items():
+                                transformed_secrets.append({'key': k, 'value': v})
+                    else:
+                        transformed_secrets.append(secret)
+                data['secrets'] = transformed_secrets
+        return data
 
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")
