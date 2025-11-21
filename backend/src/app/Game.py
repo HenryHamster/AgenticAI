@@ -1,4 +1,5 @@
 #Handles game logic and loop
+from concurrent.futures import ThreadPoolExecutor
 from src.app.Player import Player
 from src.app.Tile import Tile
 from database.fileManager import FileManager, Savable
@@ -71,11 +72,40 @@ class Game(Savable):
             if p.UID != uid:
                 p.UID = uid
             self.players[uid] = p
-        self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
+        
+        self._generate_initial_tiles()
+
         # Reset all AI histories after initialization to ensure clean state
         AIWrapper.reset("DungeonMaster")
         for uid in self.players.keys():
             AIWrapper.reset(uid)
+
+    def _generate_initial_tiles(self):
+        positions = [
+            (i, j)
+            for i in range(-self.world_size, self.world_size + 1)
+            for j in range(-self.world_size, self.world_size + 1)
+        ]
+
+        def _create_tile(position: tuple[int, int]) -> tuple[tuple[int, int], Tile]:
+            session_id = f"DungeonMaster_tile_{position[0]}_{position[1]}_{uuid.uuid4().hex}"
+            tile = self.dm.generate_tile(position, session_id=session_id)
+            AIWrapper.reset(session_id)
+            return position, tile
+
+        max_workers = min(32, len(positions)) or 1
+        self.tiles = {}
+        if max_workers == 1:
+            for pos in positions:
+                position, tile = _create_tile(pos)
+                self.tiles[position] = tile
+        else:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [executor.submit(_create_tile, pos) for pos in positions]
+                for future in futures:
+                    position, tile = future.result()
+                    self.tiles[position] = tile
+
     def step(self):
         # Check if game is already over
         if self.is_game_over:

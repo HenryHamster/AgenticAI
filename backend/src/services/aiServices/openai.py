@@ -81,6 +81,8 @@ class OpenAiService(AiServicesBase):
             return ai_response.content
         except Exception as e:
             print(f"OpenAI API error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def ask_isolated_ai_response(self, message: str) -> Optional[str]:
@@ -109,6 +111,8 @@ class OpenAiService(AiServicesBase):
 
         except Exception as e:
             print(f"OpenAI API error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def ask_ai_response_with_structured_output(self, message: str, structured_output_class: BaseModel) -> Optional[str]:
@@ -130,6 +134,8 @@ class OpenAiService(AiServicesBase):
                 "chat_history": chat_history
             }
             
+            print(f"[OpenAiService] Input data: {input_data}")
+            print(f"[OpenAiService] Chain: {chain}")
             # Generate response using the chain
             ai_response = chain.invoke(input_data)
             
@@ -140,6 +146,8 @@ class OpenAiService(AiServicesBase):
             return ai_response
         except Exception as e:
             print(f"OpenAI API error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def reset_history(self):
