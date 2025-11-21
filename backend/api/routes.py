@@ -40,13 +40,15 @@ async def create_game_endpoint(
         number_of_players = len(players)
         
 
+        print("characters:", players)
         # Convert player configs to PlayerConfigModel
         player_config_models = [
             PlayerConfigModel(
                 name=p.name,
                 starting_health=p.starting_health,
                 starting_currency=p.starting_currency,
-                agent_prompt=p.agent_prompt or "",
+                character_class=p.character_class,
+                agent_prompt=p.agent_prompt or ""
             )
             for p in players
         ]

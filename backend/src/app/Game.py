@@ -10,7 +10,7 @@ from src.app.GameConditions import (
     AllPlayersDeadCondition,
     CurrencyGoalCondition
 )
-from typing_extensions import override
+from typing_extensions import override, Any
 import uuid
 from api.apiDtoModel import GameResponse, CharacterState, WorldState
 from schema.gameModel import GameModel, GameStateModel
@@ -51,11 +51,11 @@ class Game(Savable):
         # Initialize verdict components
         self.verdict_character_state = []
         self.verdict_world_state = None
-        self.verdict_narrative_result = ""
-        self.last_round_history: list[dict[str, Any]] = []
+        self.verdict_narrative_result = "This is the first turn."
         # Initialize game condition manager
         self.condition_manager = GameConditionManager()
         self.is_game_over = False
+        self.status = GameStatus.ACTIVE
         self.game_over_reason = None
         # Add default conditions
         self.condition_manager.add_condition(MaxTurnsCondition())
@@ -64,11 +64,12 @@ class Game(Savable):
         for uid, pdata in player_info.items():
             if not isinstance(pdata, dict):
                 raise ValueError(f"Player info for {uid} must be a dict, got {type(pdata)}")
+            character_template_name = pdata.get('character_template_name')
             AIWrapper.reset(uid)
-            p = Player(uid)
+            p = Player(uid, character_template_name=character_template_name)
             p.load(pdata)
             if p.UID != uid:
-                p.UID = uid  # enforce key ↔ object UID consistency
+                p.UID = uid
             self.players[uid] = p
         self.tiles = {(i, j): self.dm.generate_tile((i,j)) for i in range(-self.world_size, self.world_size + 1) for j in range(-self.world_size, self.world_size + 1)}
         # Reset all AI histories after initialization to ensure clean state
@@ -106,7 +107,7 @@ class Game(Savable):
         }
         print(f"final_actions: {player_responses}")
         
-        verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict": verdict, "tiles": self._get_tiles_full_payload()})    
+        verdict = self.dm.respond_actions({"Players": {UID: self.players[UID].save() for UID in sorted_uids},"Responses": player_responses, "Past Verdict Narrative": self.verdict_narrative_result, "tiles": self._get_tiles_full_payload()})    
         self.handle_verdict(verdict)
         self.current_turn_number += 1
         
@@ -147,8 +148,7 @@ class Game(Savable):
                     richest = max(self.players.items(), key=lambda x: x[1].values.money)
                     self.winner_player_name = richest[0]
             
-            print(f"[Game] Game ended: {reason}")
-    
+            print(f"[Game] Game ended: {reason}") 
     @staticmethod
     def _tile_payload(tile: Tile) -> dict:
         """Plain-Python view of a tile for prompts/serialization."""
@@ -380,9 +380,9 @@ class Game(Savable):
             formatted_negotiation_history.append(formatted_round)
         
         context = {
-            "Self": player.save(),
+            "Self": player.get_open_context(),
             "Players (excluding self)": {
-                other_uid: self.players[other_uid].save()
+                other_uid: self.players[other_uid].get_open_context()
                 for other_uid in sorted_uids
                 if other_uid != uid
             },
@@ -442,8 +442,9 @@ class Game(Savable):
 
         # --- Apply per-player character updates ---
         unknown_uids: list[str] = []
+        level_up_events: dict[str, list[str]] = {}
+
         for cs in parsed.character_state_change:
-            # Tolerate entries that aren't CharacterState (e.g., dicts)
             try:
                 if not isinstance(cs, CharacterState):
                     cs = _pyd_parse_dict(CharacterState, cs if isinstance(cs, dict) else cs.__dict__)
@@ -460,7 +461,6 @@ class Game(Savable):
                 unknown_uids.append(uid)
                 continue
 
-            # Position (len 2, ints). Fall back to current if malformed.
             try:
                 pos_raw = list(getattr(cs, "position_change", []))
                 if len(pos_raw) >= 2:
@@ -470,21 +470,49 @@ class Game(Savable):
             except Exception:
                 new_pos = (0,0)
 
-            # Money/Health (clamp to >= 0). Keep current if absent.
             try:
-                money = getattr(cs, "money_change", player.values.money)
+                money = getattr(cs, "money_change", 0)
             except Exception:
                 money = 0
 
             try:
-                health = getattr(cs, "health_change", player.values.health)
+                health = getattr(cs, "health_change", 0)
             except Exception:
                 health = 0
 
             player.update_position(new_pos)
             player.values.update_money(money)
             player.values.update_health(health)
+            xp_gain = getattr(cs, "experience_change", 0)
+            if xp_gain != 0:
+                player.experience += xp_gain
+                print(f"[handle_verdict] Player {uid} gained {xp_gain} XP (total: {player.experience})")
 
+            resource_changes = getattr(cs, "resource_changes", {})
+            if resource_changes:
+                player.update_resources(resource_changes)
+
+            cooldowns = getattr(cs, "skill_cooldowns", {})
+            for skill_name, turns in cooldowns.items():
+                player.set_cooldown(skill_name, turns)
+
+            player.update_cooldowns(turn_delta=0)
+
+            player.total_action_count += 1
+            action_was_invalid = getattr(cs, "action_was_invalid", False)
+            if action_was_invalid:
+                player.invalid_action_count += 1
+
+            new_unlocks_from_dm = getattr(cs, "new_unlocks", [])
+
+            new_unlocks_from_level = player.check_level_up()
+            if new_unlocks_from_level:
+                level_up_events[uid] = new_unlocks_from_level
+                print(f"[handle_verdict] Player {uid} leveled up to {player.level}! New skills: {new_unlocks_from_level}")
+
+            if new_unlocks_from_dm:
+                for skill in new_unlocks_from_dm:
+                    player.unlock_skill(skill)
             # Inventory changes (process add first, then remove)
             try:
                 inventory_add = getattr(cs, "inventory_add", None)
@@ -550,7 +578,7 @@ class Game(Savable):
         return {
             'is_game_over': self.is_game_over,
             'game_over_reason': self.game_over_reason,
-            'status': getattr(self, 'status', 'active'),
+            'status': getattr(self, 'status', GameStatus.ACTIVE),
             'current_turn': self.current_turn_number,
             'max_turns': getattr(self, 'max_turns', None),
             'winner': getattr(self, 'winner_player_name', None)

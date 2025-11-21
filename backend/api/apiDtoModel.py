@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from typing import List, Dict, Any, Optional
 from schema.tileModel import SecretKV
 
@@ -8,6 +8,12 @@ class CharacterState(BaseModel):
     money_change: int = Field()
     health_change: int = Field()
     position_change: List[int] = Field(min_length=2, max_length=2)
+    experience_change: int = Field(default=0)
+    resource_changes: Dict[str, int] = Field(default_factory=dict)
+    #inventory_changes: Dict[str, List[str]] = Field(default_factory=lambda: {"added": [], "removed": []})
+    skill_cooldowns: Dict[str, int] = Field(default_factory=dict)
+    new_unlocks: List[str] = Field(default_factory=list)
+    action_was_invalid: bool = Field(default=False)
     inventory_add: Optional[List[str]] = Field(default=None)
     inventory_remove: Optional[List[str]] = Field(default=None)
 
@@ -15,9 +21,31 @@ class TileState(BaseModel):
     model_config = ConfigDict(extra="forbid")
     position: List[int] = Field(min_length=2, max_length=2)
     secrets: Optional[List[SecretKV]] = Field(default_factory=list)
-    description: str
+    description: str = Field(default="")
     terrainType: str = Field(default="plains")
     terrainEmoji: str = Field(default="🌾")
+    
+    @model_validator(mode='before')
+    @classmethod
+    def transform_secrets(cls, data: Any) -> Any:
+        """Transform secrets from {'key': value} format to {'key': 'key', 'value': value} format"""
+        if isinstance(data, dict) and 'secrets' in data:
+            secrets = data['secrets']
+            if isinstance(secrets, list):
+                transformed_secrets = []
+                for secret in secrets:
+                    if isinstance(secret, dict):
+                        # Check if it's already in the correct format
+                        if 'key' in secret and 'value' in secret:
+                            transformed_secrets.append(secret)
+                        else:
+                            # Transform from {'coin stash': 12} to {'key': 'coin stash', 'value': 12}
+                            for k, v in secret.items():
+                                transformed_secrets.append({'key': k, 'value': v})
+                    else:
+                        transformed_secrets.append(secret)
+                data['secrets'] = transformed_secrets
+        return data
 
 class WorldState(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -33,6 +61,7 @@ class GameResponse(BaseModel):
     character_state_change: List[CharacterState]  = Field(..., min_length=1, max_length=10, description="List of character state changes") 
     world_state_change: WorldState
     narrative_result: str = Field(default ="")
+    # resource_changes: Dict[str, int] = Field(default_factory=dict)
 
 class PlayerConfig(BaseModel):
     """Configuration for a single player"""
