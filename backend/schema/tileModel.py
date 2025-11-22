@@ -33,6 +33,9 @@ class TileModel(BaseModel):
                             # Transform from {'coin stash': 12} to {'key': 'coin stash', 'value': 12}
                             for k, v in secret.items():
                                 transformed_secrets.append({'key': k, 'value': v})
+                    elif isinstance(secret, list) and len(secret) == 2:
+                        # Handle [key, value] list format
+                        transformed_secrets.append({'key': str(secret[0]), 'value': int(secret[1])})
                     else:
                         transformed_secrets.append(secret)
                 data['secrets'] = transformed_secrets

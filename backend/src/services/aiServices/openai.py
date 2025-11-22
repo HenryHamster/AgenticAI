@@ -1,6 +1,5 @@
 # implements the AiServicesBase class for OpenAI
 
-import openai
 from typing import Optional, List, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -134,8 +133,6 @@ class OpenAiService(AiServicesBase):
                 "chat_history": chat_history
             }
             
-            print(f"[OpenAiService] Input data: {input_data}")
-            print(f"[OpenAiService] Chain: {chain}")
             # Generate response using the chain
             ai_response = chain.invoke(input_data)
             

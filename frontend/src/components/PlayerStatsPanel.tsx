@@ -20,15 +20,15 @@ export default function PlayerStatsPanel({ players, targetCurrency }: PlayerStat
         {players.map((player) => {
           // Extract values with backwards compatibility
           const playerId = player.uid || (player as any).id;
-          const playerName = player.name || player.uid;
-          const playerEmoji = player.emoji || '🎮';
+          const playerName = (player as any).name || player.uid; // Player name might not be in PlayerState
+          const playerEmoji = (player as any).emoji || '🧙';
           const health = player.values?.health ?? (player as any).health ?? 0;
           const currency = player.values?.money ?? (player as any).currency ?? 0;
-          const isActive = player.isActive ?? (health > 0);
+          const isActive = (player as any).isActive ?? (health > 0);
           const posX = Array.isArray(player.position) ? player.position[0] : (player.position as any)?.x ?? 0;
           const posY = Array.isArray(player.position) ? player.position[1] : (player.position as any)?.y ?? 0;
-          const validityScore = player.validityScore ?? 0;
-          const creativityScore = player.creativityScore ?? 0;
+          const validityScore = (player as any).validityScore ?? 0;
+          const creativityScore = (player as any).creativityScore ?? 0;
           const level = player.level ?? 1;
           const experience = player.experience ?? 0;
           const invalidActions = player.invalid_action_count ?? 0;

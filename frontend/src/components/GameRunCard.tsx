@@ -7,11 +7,16 @@ interface GameRunCardProps {
 
 export default function GameRunCard({ gameRun }: GameRunCardProps) {
   // Convert players dictionary to array
-  const playersArray = gameRun.players ? Object.values(gameRun.players) : [];
-  const winner = gameRun.winnerId && gameRun.players ? gameRun.players[gameRun.winnerId] : null;
-  const startDate = new Date(gameRun.startTime);
-  const endDate = new Date(gameRun.endTime);
-  const duration = Math.round((endDate.getTime() - startDate.getTime()) / 1000 / 60); // minutes
+  const playersArray = gameRun.player_configs || [];
+  const winnerName = gameRun.winner_player_name;
+  // Find winner config if possible
+  const winner = winnerName ? playersArray.find(p => p.name === winnerName) : null;
+  
+  const startDate = new Date(gameRun.created_at || '');
+  const endDate = new Date(gameRun.updated_at || '');
+  const duration = startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) 
+    ? Math.round((endDate.getTime() - startDate.getTime()) / 1000 / 60) 
+    : 0;
   
   // Determine status badge color
   const statusColors: { [key: string]: { bg: string; text: string } } = {
@@ -30,7 +35,7 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg font-bold text-gray-800">
-                {gameRun.id}
+                {gameRun.name || gameRun.id}
               </h3>
               <span className={`${statusColor.bg} ${statusColor.text} px-2 py-0.5 rounded text-xs font-semibold uppercase`}>
                 {status}
@@ -43,7 +48,7 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           
           {winner && (
             <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded ml-2">
-              <span className="text-lg">{winner.emoji || '🏆'}</span>
+              <span className="text-lg">🏆</span>
               <span className="text-xs font-semibold text-yellow-800">Winner</span>
             </div>
           )}
@@ -52,12 +57,12 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
         <div className="grid grid-cols-2 gap-3 text-sm mb-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Players:</span>
-            <span className="font-semibold text-gray-600">{gameRun.totalPlayers}</span>
+            <span className="font-semibold text-gray-600">{gameRun.total_players}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Max Turns:</span>
-            <span className="font-semibold text-gray-600">{gameRun.maxTurns}</span>
+            <span className="font-semibold text-gray-600">{gameRun.max_turns}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -67,14 +72,14 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
           
           <div className="flex items-center gap-2">
             <span className="text-gray-600">Target:</span>
-            <span className="font-semibold text-gray-600">💰 {gameRun.targetCurrency}</span>
+            <span className="font-semibold text-gray-600">💰 {gameRun.currency_target}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1 pt-2 border-t">
-          {playersArray.slice(0, 4).map((player) => (
-            <span key={player.uid || (player as any).id} className="text-xl" title={player.name || player.uid}>
-              {player.emoji || '🧙'}
+          {playersArray.slice(0, 4).map((player, idx) => (
+            <span key={idx} className="text-xl" title={player.name}>
+              🧙
             </span>
           ))}
           {playersArray.length > 4 && (

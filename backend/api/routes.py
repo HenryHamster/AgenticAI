@@ -12,12 +12,20 @@ from services.database.gameService import (
 )
 from services.gameWorker import run_game_async
 from schema.gameModel import GameModel, PlayerConfigModel
+from schema.turnModel import TurnModel
 from schema.enums import GameStatus
 from api.apiDtoModel import CreateGameRequest
-from api.transformers import transform_game_for_frontend
 from services.evaluationService import evaluate_game_responses
 
 router = APIRouter()
+
+
+class GameDetailResponse(GameModel):
+    """
+    Response model for game details including full turn history.
+    Inherits all fields from GameModel and adds the list of turns.
+    """
+    turns: List[TurnModel]
 
 
 @router.get("/health")
@@ -95,17 +103,17 @@ async def create_game_endpoint(
         raise HTTPException(status_code=500, detail=f"Failed to create game: {str(e)}")
 
 
-@router.get("/games")
+@router.get("/games", response_model=List[GameModel])
 async def get_all_games():
     """Get all games without their turns"""
     try:
         games = get_all_games_from_database()
-        return [transform_game_for_frontend(game, include_turns=False) for game in games]
+        return games
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get games: {str(e)}")
 
 
-@router.get("/game/{game_id}")
+@router.get("/game/{game_id}", response_model=GameDetailResponse)
 async def get_game_detail(
     game_id: str,
     include_turns: bool = Query(
@@ -114,7 +122,16 @@ async def get_game_detail(
 ):
     try:
         game_run = get_game_run_from_database(game_id)
-        return transform_game_for_frontend(game_run, include_turns=include_turns)
+        
+        turns = []
+        if include_turns:
+            from services.database.turnService import get_turns_by_game_id
+            turns = get_turns_by_game_id(game_id)
+            
+        return GameDetailResponse(
+            **game_run.model_dump(),
+            turns=turns
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=f"Game not found: {str(e)}")
     except Exception as e:
