@@ -1,6 +1,5 @@
 # implements the AiServicesBase class for OpenAI
 
-import openai
 from typing import Optional, List, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder

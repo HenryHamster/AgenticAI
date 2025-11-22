@@ -24,14 +24,14 @@ interface PlayerAction {
 function extractPlayerActions(turn: Turn): PlayerAction[] {
   const playerActions: PlayerAction[] = [];
 
-  if (!turn.players) {
+  if (!turn.game_state?.players && !(turn as any).players) {
     return playerActions;
   }
 
   // Create a map of character states for quick lookup
   const characterStateMap = new Map<string, { healthChange: number; currencyChange: number }>();
-  if (turn.character_state_change) {
-    turn.character_state_change.forEach((cs) => {
+  if (turn.game_state?.character_state_change) {
+    turn.game_state.character_state_change.forEach((cs) => {
       characterStateMap.set(cs.uid, {
         healthChange: cs.health_change,
         currencyChange: cs.money_change,
@@ -39,7 +39,8 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
     });
   }
 
-  Object.entries(turn.players).forEach(([playerId, player]) => {
+  const players = turn.game_state?.players || (turn as any).players || {};
+  Object.entries(players).forEach(([playerId, player]: [string, any]) => {
     if (player.responses && player.responses.length > 0) {
       // Get the most recent response for this turn
       const latestResponse = player.responses[player.responses.length - 1];
@@ -51,7 +52,7 @@ function extractPlayerActions(turn: Turn): PlayerAction[] {
         playerId,
         playerName: player.name || player.uid,
         response: latestResponse,
-        emoji: player.emoji,
+        emoji: player.emoji || '🧙',
         healthChange: changes.healthChange,
         currencyChange: changes.currencyChange,
       });
@@ -127,14 +128,14 @@ function TurnActions({ turn }: { turn: Turn }) {
       ))}
       
       {/* Display narrative result if available */}
-      {turn.narrative_result && (
+      {turn.game_state?.narrative_result && (
         <div className="mt-4 border-l-4 pl-4 py-3 rounded-r border-purple-500 bg-purple-50/50">
           <div className="font-bold text-purple-900 mb-2 flex items-center gap-2">
             <span>🎲</span>
             <span>Dungeon Master's Verdict</span>
           </div>
           <div className="text-sm text-gray-700 bg-white/70 p-3 rounded">
-            {turn.narrative_result}
+            {turn.game_state.narrative_result}
           </div>
         </div>
       )}
@@ -165,13 +166,13 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
       
       <div className="space-y-5">
         {turns.map((turn) => {
-          const isSelected = turn.turnNumber === selectedTurnNumber;
+          const isSelected = turn.turn_number === selectedTurnNumber;
           
           return (
             <div
-              key={turn.turnNumber}
+              key={turn.turn_number}
               ref={isSelected ? selectedRef : null}
-              onClick={() => onTurnSelect(turn.turnNumber)}
+              onClick={() => onTurnSelect(turn.turn_number)}
               className={`border-2 rounded-xl p-5 cursor-pointer transition-all ${
                 isSelected 
                   ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
@@ -180,7 +181,7 @@ export default function TurnTimeline({ turns, selectedTurnNumber, onTurnSelect }
             >
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-xl font-bold text-gray-800">
-                  Turn {turn.turnNumber}
+                  Turn {turn.turn_number}
                 </h4>
                 {isSelected && (
                   <span className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full font-semibold">

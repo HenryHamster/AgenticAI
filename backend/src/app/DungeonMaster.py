@@ -17,8 +17,13 @@ class DungeonMaster(Savable):
         self._responses = []
         if loaded_data is not None:
             self.load(loaded_data)
-    def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None) -> Tile:
-        generated_description = AIWrapper.ask(format_request(AIConfig.tile_prompt, {"position": position}), self.model, "DungeonMaster", structured_output = TileModel)
+    def generate_tile(self, position:tuple[int,int] = (0,0), context: dict | None = None, session_id: str = "DungeonMaster") -> Tile:
+        generated_description = AIWrapper.ask(
+            format_request(AIConfig.tile_prompt, {"position": position}),
+            self.model,
+            session_id,
+            structured_output = TileModel
+        )
         return Tile(generated_description.description, position, secrets = generated_description.secrets, terrainType=generated_description.terrainType, terrainEmoji=generated_description.terrainEmoji)
     def update_tile(self, tile: Tile, event: str):
         tile.update_description(AIWrapper.ask(format_request(AIConfig.tile_update_prompt, {"current_tile_description": tile.description, "event": event}), self.model, "DungeonMaster"))

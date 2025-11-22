@@ -65,7 +65,7 @@ class AIConfig:
         "- Sparse or harsh tiles (deserts, salt flats, barren tundra, blasted wastelands) should include 0-2 secrets and may legitimately total 0 value by leaning on flavor, hazards, or depleted discoveries instead of treasure.\n"
         "- Keep total secret value low overall: barren tiles should usually be 0; harsh tiles 0-10; average tiles around 20 ±10; rich tiles 30-40; only truly exceptional sites may reach 50, and even then rarely.\n"
         "- Split value so that no single secret holds more than half of its tile's total value, and use small integer values that reflect the terrain's plausibility.\n"
-        "- Provide each secret as a key/value pair suited for TileModel.secrets, and favor variety (currencies, resources, information, hazards, favors, tools, social leverage) rather than repeating the same type.\n\n"
+        "- Provide each secret as an object with 'key' and 'value' fields (e.g. {'key': 'coin stash', 'value': 10}), and favor variety (currencies, resources, information, hazards, favors, tools, social leverage) rather than repeating the same type.\n\n"
         "Ensure that all tiles are interesting and provide opportunities even if value is low. "
         "Keep tone immersive and neutral-fantasy. Avoid repetition between nearby tiles.\n"
     )
