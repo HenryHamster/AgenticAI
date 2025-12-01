@@ -46,7 +46,7 @@ Once deployed, your agents will be available at:
 
 2. **Configure Build Settings**
    - **Build Pack**: Docker Compose
-   - **Docker Compose File**: `coolify/docker-compose.yml`
+   - **Docker Compose File**: `docker-compose.coolify.yml`
    - **Base Directory**: `/` (root of repository)
 
 3. **Set Environment Variables**
@@ -143,7 +143,7 @@ docker run -p 80:80 \
 PUBLIC_URL=http://localhost \
 OPENAI_API_KEY=your-key \
 GOOGLE_API_KEY=your-key \
-docker-compose -f coolify/docker-compose.yml up --build
+docker-compose -f docker-compose.coolify.yml up --build
 ```
 
 ## Viewing Logs
@@ -195,9 +195,10 @@ This setup runs all agents in a single container. For production scaling:
 ## Files Reference
 
 ```
+docker-compose.coolify.yml     # Docker Compose for Coolify (at repo root)
+
 coolify/
 ├── Dockerfile                 # Multi-agent Dockerfile
-├── docker-compose.yml         # Docker Compose for Coolify
 ├── README.md                  # This file
 └── docker/
     ├── nginx.conf            # Nginx reverse proxy config

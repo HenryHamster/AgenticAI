@@ -4,7 +4,7 @@
 services:
   agents:
     build:
-      context: ..
+      context: .
       dockerfile: coolify/Dockerfile
     ports:
       - "80:80"
