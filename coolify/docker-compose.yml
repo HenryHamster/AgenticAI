@@ -1,0 +1,30 @@
+# Docker Compose for Multi-Agent Deployment (Coolify compatible)
+# This runs 1 Green Agent + 2 Purple Agents in a single container
+
+services:
+  agents:
+    build:
+      context: ..
+      dockerfile: coolify/Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      # Set your public URL here (Coolify will provide this)
+      - PUBLIC_URL=${PUBLIC_URL:-http://localhost}
+      # API Keys (set these in Coolify environment variables)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+    volumes:
+      # Persist logs
+      - agent_logs:/var/log/agents
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  agent_logs:
