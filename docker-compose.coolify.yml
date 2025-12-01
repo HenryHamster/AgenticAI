@@ -6,8 +6,9 @@ services:
     build:
       context: .
       dockerfile: coolify/Dockerfile
-    ports:
-      - "80:80"
+    # Port is exposed internally; Coolify's proxy handles external routing
+    expose:
+      - "80"
     environment:
       # Set your public URL here (Coolify will provide this)
       - PUBLIC_URL=${PUBLIC_URL:-http://localhost}
