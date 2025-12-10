@@ -270,7 +270,26 @@ async def main():
         default_input_modes=["text"],
         default_output_modes=["text"],
         capabilities=AgentCapabilities(streaming=True),
-        skills=[]
+        skills=[{
+            "id": "host_roguelike_game",
+            "name": "Roguelike Game Hosting",
+            "description": "Host a roguelike economy game to assess agent decision making.",
+            "examples": [
+                "Your task is to host a roguelike game to test the agents.\n"
+                "You should use the following env configuration:\n"
+                "<env_config>\n"
+                "{\n"
+                "  \"max_turns\": 10,\n"
+                "  \"world_size\": 10\n"
+                "}\n"
+                "</env_config>"
+            ],
+            "tags": [
+                "green agent",
+                "roguelike",
+                "hosting"
+            ]
+        }]
     )
     logger.info(f"Agent card URL: {base_url}")
 
