@@ -1,31 +1,63 @@
 # Docker Compose for Multi-Agent Deployment (Coolify compatible)
-# This runs 1 Green Agent + 2 Purple Agents in a single container
+# Each agent runs in its own container with AgentBeats controller
+# Architecture follows AgentBeats integration pattern with earthshaker
 
 services:
-  agents:
+  # Green Agent - Game Judge/Orchestrator
+  # Uses agentbeats run_ctrl for lifecycle management
+  green_agent:
     build:
       context: .
-      dockerfile: coolify/Dockerfile
-    # Port is exposed internally; Coolify's proxy handles external routing
-    expose:
-      - "80"
+      dockerfile: coolify/green_agent/Dockerfile
+    ports:
+      - "8080:8080"
     environment:
-      # Set your public URL here (Coolify will provide this)
-      - PUBLIC_URL=${PUBLIC_URL:-http://localhost}
-      # API Keys (set these in Coolify environment variables)
+      # Public URL for agent card discovery
+      - PUBLIC_URL=${GREEN_AGENT_URL:-http://localhost:8080}
+      # Controller configuration
+      - CONTROLLER_PORT=8080
+      - HOST=0.0.0.0
+      # API Keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
     volumes:
-      # Persist logs
-      - agent_logs:/var/log/agents
+      - green_agent_logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # White Agent - Player Agent
+  # Uses agentbeats run_ctrl for lifecycle management
+  white_agent:
+    build:
+      context: .
+      dockerfile: coolify/white_agent/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      # Public URL for agent card discovery
+      - PUBLIC_URL=${WHITE_AGENT_URL:-http://localhost:8081}
+      # Controller configuration
+      - CONTROLLER_PORT=8080
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - white_agent_logs:/var/log/agents
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
 
 volumes:
-  agent_logs:
+  green_agent_logs:
+  white_agent_logs:

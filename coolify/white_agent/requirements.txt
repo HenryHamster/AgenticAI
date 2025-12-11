@@ -1,0 +1,22 @@
+# White Agent Dependencies
+# Core AgentBeats runtime (includes earthshaker controller)
+earthshaker
+agentbeats>=1.2.5
+
+# LLM providers
+openai>=1.50.0
+anthropic>=0.40.0
+
+# Framework dependencies
+python-dotenv>=1.0.0
+typing_extensions>=4.8.0
+
+# Web server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# A2A protocol and ADK
+google-adk>=1.17.0
+
+# HTTP client
+httpx>=0.27.0
