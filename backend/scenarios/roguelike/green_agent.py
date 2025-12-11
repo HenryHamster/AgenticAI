@@ -392,6 +392,7 @@ async def main():
             logger.error(f"Notify error: {e}\n{traceback.format_exc()}")
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+    app.routes.append(Route("/", status))
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
     app.routes.append(Route("/notify", notify, methods=["POST"]))
