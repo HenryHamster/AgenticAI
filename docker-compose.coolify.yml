@@ -9,11 +9,11 @@ services:
     build:
       context: .
       dockerfile: coolify/green_agent/Dockerfile
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       # Public URL for agent card discovery
-      - PUBLIC_URL=${GREEN_AGENT_URL:-http://localhost:8080}
+      - PUBLIC_URL=${GREEN_AGENT_URL}
       # Controller configuration
       - CONTROLLER_PORT=8080
       - HOST=0.0.0.0
@@ -37,11 +37,11 @@ services:
     build:
       context: .
       dockerfile: coolify/white_agent/Dockerfile
-    ports:
-      - "8081:8080"
+    expose:
+      - "8080"
     environment:
       # Public URL for agent card discovery
-      - PUBLIC_URL=${WHITE_AGENT_URL:-http://localhost:8081}
+      - PUBLIC_URL=${WHITE_AGENT_URL}
       # Controller configuration
       - CONTROLLER_PORT=8080
       - HOST=0.0.0.0
