@@ -75,6 +75,7 @@ def main():
         except Exception as e:
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+    app.routes.append(Route("/", status))
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
 
