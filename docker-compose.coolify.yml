@@ -21,6 +21,8 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - CLOUDRUN_HOST=${GREEN_AGENT_URL_NO_PROTOCOL}
+      - HTTPS_ENABLED=true
     volumes:
       - green_agent_logs:/var/log/agents
     restart: unless-stopped
@@ -48,6 +50,8 @@ services:
       # API Keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLOUDRUN_HOST=${WHITE_AGENT_URL_NO_PROTOCOL}
+      - HTTPS_ENABLED=true
     volumes:
       - white_agent_logs:/var/log/agents
     restart: unless-stopped
