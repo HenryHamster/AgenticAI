@@ -8,7 +8,7 @@ AGENT_PORT="${AGENT_PORT:-9009}"
 echo "Starting Green Agent on ${HOST}:${AGENT_PORT}"
 
 # Build command
-CMD="python scenarios/roguelike/green_agent.py --host $HOST --port $AGENT_PORT"
+CMD="python ../../backend/scenarios/roguelike/green_agent.py --host $HOST --port $AGENT_PORT"
 
 # Add card-url if PUBLIC_URL is set (for agent card discovery)
 if [ -n "$PUBLIC_URL" ]; then

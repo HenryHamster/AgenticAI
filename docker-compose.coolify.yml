@@ -10,12 +10,12 @@ services:
       context: .
       dockerfile: coolify/green_agent/Dockerfile
     expose:
-      - "8080"
+      - "8010"
     environment:
       # Public URL for agent card discovery
       - PUBLIC_URL=${GREEN_AGENT_URL}
       # Controller configuration
-      - CONTROLLER_PORT=8080
+      - CONTROLLER_PORT=8010
       - HOST=0.0.0.0
       # API Keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -25,7 +25,7 @@ services:
       - green_agent_logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,12 +38,12 @@ services:
       context: .
       dockerfile: coolify/white_agent/Dockerfile
     expose:
-      - "8080"
+      - "8010"
     environment:
       # Public URL for agent card discovery
       - PUBLIC_URL=${WHITE_AGENT_URL}
       # Controller configuration
-      - CONTROLLER_PORT=8080
+      - CONTROLLER_PORT=8010
       - HOST=0.0.0.0
       # API Keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -52,7 +52,7 @@ services:
       - white_agent_logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
       interval: 30s
       timeout: 10s
       retries: 3
