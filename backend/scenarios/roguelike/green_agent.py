@@ -392,7 +392,33 @@ async def main():
             logger.error(f"Notify error: {e}\n{traceback.format_exc()}")
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-    app.routes.append(Route("/", status))
+    app.routes.append(Route("/", 
+            Route(
+            "/", lambda request: JSONResponse({
+                "capabilities": {"streaming": True},
+                "defaultInputModes": ["text"],
+                "defaultOutputModes": ["text"],
+                "description": "Roguelike economy game judge",
+                "name": "RoguelikeJudge",
+                "preferredTransport": "JSONRPC",
+                "protocolVersion": "0.3.0",
+                "skills": [
+                    {
+                        "description": "Host a roguelike economy game to assess agent decision making.",
+                        "examples": [
+                            'Your task is to host a roguelike game to test the agents.\nYou should use the following env configuration:\n<env_config>\n{\n  "max_turns": 10,\n  "world_size": 10\n}\n</env_config>'
+                        ],
+                        "id": "host_roguelike_game",
+                        "name": "Roguelike Game Hosting",
+                        "tags": ["green agent", "roguelike", "hosting"],
+                    }
+                ],
+                "url": "https://agents.kamalaldin.com/green",
+                "version": "1.0.0",
+            }),
+        )
+
+    ))
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
     app.routes.append(Route("/notify", notify, methods=["POST"]))
