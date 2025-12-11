@@ -1,6 +1,6 @@
 # Multi-Agent Dockerfile for Coolify
 # Runs 1 Green Agent + 2 Purple Agents behind nginx reverse proxy
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Set working directory
 WORKDIR /app
