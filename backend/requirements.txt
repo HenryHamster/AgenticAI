@@ -14,4 +14,4 @@ google-adk>=1.17.0
 # Optional: Storage backends
 # Uncomment the line below if you want to use Supabase storage
 supabase>=2.0.0
-earthshaker
+earthshaker>=0.2.1

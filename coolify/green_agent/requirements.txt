@@ -1,6 +1,6 @@
 # Green Agent Dependencies
 # Core AgentBeats runtime (includes earthshaker controller)
-earthshaker
+earthshaker>=0.2.1
 agentbeats>=1.2.5
 
 # LLM providers
