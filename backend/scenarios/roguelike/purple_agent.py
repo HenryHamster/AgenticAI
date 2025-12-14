@@ -3,6 +3,8 @@
 import argparse
 import uvicorn
 import json
+import logging
+import os
 import httpx
 from dotenv import load_dotenv
 from starlette.responses import JSONResponse
@@ -13,6 +15,8 @@ load_dotenv()
 from google.adk.agents import Agent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from a2a.types import AgentCapabilities, AgentCard
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("roguelike_judge")
 
 
 def main():
@@ -31,14 +35,18 @@ def main():
 
     # Use public URL if provided
     if args.card_url:
-        base_url = args.card_url.rstrip("/")
+        base_url = args.card_url.rstrip('/')
+        logger.info(f"Using public URL from --card-url: {base_url}")
     else:
-        base_url = f"http://{args.host}:{args.port}"
+        base_url = os.getenv("AGENT_URL")
+        logger.warning(f"Using environment variable URL (no --card-url provided): {base_url}")
+
+    agent_url = os.getenv("AGENT_URL")
 
     card = AgentCard(
         name="player",
         description="Roguelike economy player",
-        url=base_url,
+        url=agent_url,
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
@@ -97,7 +105,7 @@ def main():
                         "tags": ["green agent", "roguelike", "hosting"],
                     }
                 ],
-                "url": base_url,
+                "url": agent_url,
                 "version": "1.0.0",
             }),
         )

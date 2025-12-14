@@ -262,10 +262,12 @@ async def main():
         base_url = f"http://{args.host}:{args.port}"
         logger.warning(f"Using local URL (no --card-url provided): {base_url}")
 
+    agent_url = os.getenv("AGENT_URL")
+
     agent_card = AgentCard(
         name="RoguelikeJudge",
         description="Roguelike economy game judge",
-        url=base_url,
+        url=agent_url,
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
@@ -291,7 +293,7 @@ async def main():
             ]
         }]
     )
-    logger.info(f"Agent card URL: {base_url}")
+    logger.info(f"Agent card URL: {agent_url}")
 
     request_handler = DefaultRequestHandler(
         agent_executor=executor,
@@ -413,7 +415,7 @@ async def main():
                         "tags": ["green agent", "roguelike", "hosting"],
                     }
                 ],
-                "url": "https://agents.kamalaldin.com/green",
+                "url": agent_url,
                 "version": "1.0.0",
             }),
         )
