@@ -60,22 +60,16 @@ class GreenExecutor(AgentExecutor):
         logger.info(f"request_text (len={len(request_text)}): '{request_text[:200] if request_text else 'EMPTY'}'")
 
         try:
-            # Parse incoming message
-            tags = parse_tags(request_text)
-            white_agent_url = tags["white_agent_url"]
-            env_config_str = tags["env_config"]
-            env_config = json.loads(env_config_str) if env_config_str else None
+            # Try parsing as JSON first
+            msg_data = None
+            try:
+                msg_data = json.loads(request_text)
+            except json.JSONDecodeError:
+                pass
 
-            msg_data = json.loads(request_text)
-            # the line below fails because it's not a JSON
-            # logger.info(f"Received message: {json.dumps(msg_data, indent=2)}")
-
-            # Check if this is AgentBeats battle notification format
-            if msg_data.get("type") in ["battle_start", "battle_info"]:
-                # Convert AgentBeats format to EvalRequest format
+            if msg_data and msg_data.get("type") in ["battle_start", "battle_info"]:
+                # Battle notification format
                 logger.info("Converting AgentBeats battle notification to EvalRequest")
-
-                # Fetch battle info from backend
                 battle_id = msg_data.get("battle_id")
                 backend_url = msg_data.get("backend_url", "https://agentbeats.org/api")
                 if "localhost" in backend_url:
@@ -83,7 +77,7 @@ class GreenExecutor(AgentExecutor):
 
                 import httpx
                 participants = {}
-                config = {"max_turns": 3, "world_size": 1, "starting_wealth": 100}
+                config = {"max_turns": 5, "world_size": 3, "starting_wealth": 100, "negotiation_rounds": 1}
                 opponents = []
 
                 try:
@@ -91,38 +85,52 @@ class GreenExecutor(AgentExecutor):
                         resp = await client.get(f"{backend_url}/battles/{battle_id}")
                         battle_data = resp.json()
                         logger.info(f"Fetched battle data: {json.dumps(battle_data, indent=2)}")
-
-                        # Extract opponents
                         opponents = battle_data.get("opponents", [])
                         for idx, opp in enumerate(opponents):
                             role = f"player_{idx + 1}"
                             agent_id = opp.get("agent_id", "")
-                            # Fetch agent info to get URL
                             agent_resp = await client.get(f"{backend_url}/agents/{agent_id}")
                             agent_data = agent_resp.json()
                             participants[role] = agent_data.get("register_info", {}).get("agent_url", "")
-
-                        # Extract config if available
                         if battle_data.get("task_config"):
                             config = json.loads(battle_data["task_config"])
                 except Exception as e:
                     logger.error(f"Failed to fetch battle info: {e}")
-                    # Use defaults
 
                 req = EvalRequest(participants=participants, config=config)
-                # Attach battle context for result submission
                 req._battle_id = battle_id
                 req._backend_url = backend_url
-                # Map role to agent_id for winner reporting
-                req._role_to_agent_id = {}
-                for idx, opp in enumerate(opponents):
-                    role = f"player_{idx + 1}"
-                    req._role_to_agent_id[role] = opp.get("agent_id", "")
+                req._role_to_agent_id = {f"player_{idx + 1}": opp.get("agent_id", "") for idx, opp in enumerate(opponents)}
                 logger.info(f"Converted to EvalRequest: {req.model_dump_json()}")
-                logger.info(f"Role to agent_id mapping: {req._role_to_agent_id}")
-            else:
-                # Standard EvalRequest format
+
+            elif msg_data and "participants" in msg_data:
+                # Direct JSON EvalRequest format
                 req = EvalRequest.model_validate_json(request_text)
+
+            else:
+                # Tag-based format from AgentBeats platform
+                logger.info("Parsing tag-based format from AgentBeats")
+
+                # Extract all white_agent_url tags
+                white_agent_urls = re.findall(r"<white_agent_url>\s*(.*?)\s*</white_agent_url>", request_text, re.DOTALL)
+                logger.info(f"Found {len(white_agent_urls)} white_agent_urls: {white_agent_urls}")
+
+                # Extract env_config if present (optional)
+                env_config_match = re.search(r"<env_config>\s*(.*?)\s*</env_config>", request_text, re.DOTALL)
+                if env_config_match:
+                    config = json.loads(env_config_match.group(1))
+                else:
+                    # Default config
+                    config = {"max_turns": 5, "world_size": 3, "starting_wealth": 100, "negotiation_rounds": 1}
+
+                # Build participants from white_agent_urls
+                participants = {}
+                for idx, url in enumerate(white_agent_urls):
+                    role = f"player_{idx + 1}"
+                    participants[role] = url.strip()
+
+                logger.info(f"Parsed participants: {participants}, config: {config}")
+                req = EvalRequest(participants=participants, config=config)
 
             ok, msg = self.agent.validate_request(req)
             if not ok:

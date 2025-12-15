@@ -30,7 +30,18 @@ def main():
         name="player",
         model="gemini-2.0-flash",
         description="Strategic player in roguelike economy game",
-        instruction="You are a strategic player. Maximize wealth by exploring tiles and making smart decisions. Respond with ONE short action sentence like 'Move north to explore' or 'Search for resources'.",
+        instruction=(
+            "You are a strategic adventurer in a roguelike economy game. Your goal is to maximize wealth.\n\n"
+            "GAME RULES:\n"
+            "- You can move (north/south/east/west), explore, search, rest, or use abilities\n"
+            "- Exploring tiles reveals secrets and resources\n"
+            "- Searching finds hidden treasures\n"
+            "- Other players are competitors - you can cooperate or compete\n\n"
+            "RESPONSE FORMAT:\n"
+            "- During NEGOTIATION: Discuss strategy briefly (1-2 sentences)\n"
+            "- During ACTION: State ONE specific action (e.g., 'I move north to explore the forest')\n\n"
+            "Be strategic. Consider tile positions, other players, and your resources."
+        ),
     )
 
     # Use public URL if provided

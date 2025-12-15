@@ -10,6 +10,7 @@ import logging
 import json
 import httpx
 import traceback
+import random
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -49,6 +50,97 @@ class RoguelikeJudge(GreenAgent):
             return False, f"Missing config keys: {missing_config_keys}"
         return True, "ok"
 
+    def _build_negotiation_context(self, player, other_players: dict, game, turn: int, max_turns: int, negotiation_history: list) -> str:
+        """Build context for negotiation phase (discussion before action)."""
+        tiles = game._get_viewable_tiles_payload(player.position, vision=1)
+
+        # Format negotiation history
+        history_text = ""
+        if negotiation_history:
+            history_text = "\n\nPrevious discussion this turn:\n"
+            for i, round_msgs in enumerate(negotiation_history):
+                history_text += f"Round {i+1}:\n"
+                for role, msg in round_msgs.items():
+                    history_text += f"  {role}: {msg}\n"
+
+        # Character info
+        char_info = ""
+        if player.character_template_name:
+            char_info = f"Class: {player.character_template_name.capitalize()}\n"
+            if player.current_abilities:
+                char_info += f"Abilities: {', '.join(player.current_abilities)}\n"
+            if player.resource_pools:
+                char_info += f"Resources: {json.dumps(player.resource_pools)}\n"
+
+        other_info = "\n".join([
+            f"  {r}: {p['player_class']} at {p['position']}, health={p['values']['health']}, money={p['values']['money']}"
+            for r, p in other_players.items()
+        ])
+
+        return (
+            f"=== NEGOTIATION PHASE (Turn {turn + 1}/{max_turns}) ===\n"
+            f"You are {player.UID}, a strategic adventurer.\n"
+            f"{char_info}"
+            f"Position: {player.position}\n"
+            f"Stats: health={player.values.health}, money={player.values.money}\n"
+            f"Inventory: {player.values.inventory or 'empty'}\n\n"
+            f"Other players:\n{other_info}\n\n"
+            f"Nearby tiles: {json.dumps(tiles)}\n"
+            f"Previous narrative: {game.verdict_narrative_result}\n"
+            f"{history_text}\n"
+            f"This is a PLANNING phase. Discuss strategy with other players. "
+            f"You may propose deals, coordinate, or compete. Respond with 1-2 sentences."
+        )
+
+    def _build_action_context(self, player, other_players: dict, game, turn: int, max_turns: int, negotiation_history: list) -> str:
+        """Build context for action phase (final decision)."""
+        tiles = game._get_viewable_tiles_payload(player.position, vision=1)
+
+        # Format negotiation summary
+        neg_summary = ""
+        if negotiation_history:
+            neg_summary = "\n\nNegotiation summary:\n"
+            for i, round_msgs in enumerate(negotiation_history):
+                for role, msg in round_msgs.items():
+                    neg_summary += f"  {role}: {msg}\n"
+
+        # Character info
+        char_info = ""
+        if player.character_template_name:
+            char_info = f"Class: {player.character_template_name.capitalize()}\n"
+            if player.current_abilities:
+                char_info += f"Abilities: {', '.join(player.current_abilities)}\n"
+            if player.resource_pools:
+                char_info += f"Resources: {json.dumps(player.resource_pools)}\n"
+            if player.skill_cooldowns:
+                char_info += f"Cooldowns: {json.dumps(player.skill_cooldowns)}\n"
+
+        other_info = "\n".join([
+            f"  {r}: {p['player_class']} at {p['position']}, health={p['values']['health']}, money={p['values']['money']}"
+            for r, p in other_players.items()
+        ])
+
+        return (
+            f"=== ACTION PHASE (Turn {turn + 1}/{max_turns}) ===\n"
+            f"You are {player.UID}, a strategic adventurer.\n"
+            f"{char_info}"
+            f"Position: {player.position}\n"
+            f"Stats: health={player.values.health}, money={player.values.money}\n"
+            f"Inventory: {player.values.inventory or 'empty'}\n\n"
+            f"Other players:\n{other_info}\n\n"
+            f"Nearby tiles: {json.dumps(tiles)}\n"
+            f"Previous narrative: {game.verdict_narrative_result}\n"
+            f"{neg_summary}\n"
+            f"Choose ONE action:\n"
+            f"- move north/south/east/west\n"
+            f"- explore (discover tile secrets)\n"
+            f"- search (find hidden resources)\n"
+            f"- rest (recover health)\n"
+            f"- use [ability name]\n"
+            f"- interact with [target]\n\n"
+            f"Respond with your action in 1-2 sentences. Be specific."
+        )
+
     async def run_eval(self, req: EvalRequest, updater: TaskUpdater) -> None:
         logger.info(f"!!! BATTLE START NOTIFICATION RECEIVED !!!")
         logger.info(f"Request: {req}")
@@ -64,31 +156,76 @@ class RoguelikeJudge(GreenAgent):
         try:
             # Init game
             max_turns = int(req.config["max_turns"])
-            world_size = int(req.config["world_size"])
+            world_size = int(req.config.get("world_size", 3))
             starting_wealth = int(req.config.get("starting_wealth", 100))
 
+            # Available character templates
+            templates = ["warrior", "mage", "rogue"]
+            p1_template = random.choice(templates)
+            p2_template = random.choice(templates)
+
+            # Different starting positions (opposite corners)
             player_info = {
-                "player_1": {"uid": "player_1", "position": [0, 0], "model": "mock", "player_class": "human",
-                             "values": {"money": starting_wealth, "health": 100}, "responses": []},
-                "player_2": {"uid": "player_2", "position": [0, 0], "model": "mock", "player_class": "human",
-                             "values": {"money": starting_wealth, "health": 100}, "responses": []}
+                "player_1": {
+                    "uid": "player_1",
+                    "position": [-world_size, -world_size],
+                    "model": "mock",
+                    "player_class": p1_template,
+                    "character_template_name": p1_template,
+                    "values": {"money": starting_wealth, "health": 100},
+                    "responses": []
+                },
+                "player_2": {
+                    "uid": "player_2",
+                    "position": [world_size, world_size],
+                    "model": "mock",
+                    "player_class": p2_template,
+                    "character_template_name": p2_template,
+                    "values": {"money": starting_wealth, "health": 100},
+                    "responses": []
+                }
             }
 
             game = Game(player_info, {"model": "gpt-4o-mini"}, world_size)
             game.max_turns = max_turns
+            logger.info(f"Game initialized: world_size={world_size}, p1={p1_template}, p2={p2_template}")
+
+            num_negotiation_rounds = int(req.config.get("negotiation_rounds", 1))
 
             # Run turns
             for turn in range(max_turns):
                 await updater.update_status(TaskState.working, new_agent_text_message(f"Turn {turn + 1}/{max_turns}"))
 
-                actions = {}
-                for role in self._required_roles:
-                    player = game.players[role]
-                    context = f"Stats: money={player.values.money}, health={player.values.health}. Position: {player.position}. Make one action."
+                sorted_roles = sorted(self._required_roles)
+                negotiation_history = []
 
-                    action = await self._tool_provider.talk_to_agent(context, str(req.participants[role]), new_conversation=False)
+                # Negotiation phase
+                for neg_round in range(num_negotiation_rounds):
+                    round_messages = {}
+                    for role in sorted_roles:
+                        player = game.players[role]
+                        other_players = {r: game.players[r].get_open_context() for r in sorted_roles if r != role}
+
+                        neg_context = self._build_negotiation_context(
+                            player, other_players, game, turn, max_turns, negotiation_history
+                        )
+                        msg = await self._tool_provider.talk_to_agent(neg_context, str(req.participants[role]), new_conversation=False)
+                        round_messages[role] = msg
+                        logger.info(f"[Negotiation R{neg_round+1}] {role}: {msg[:100]}...")
+                    negotiation_history.append(round_messages)
+
+                # Action phase
+                actions = {}
+                for role in sorted_roles:
+                    player = game.players[role]
+                    other_players = {r: game.players[r].get_open_context() for r in sorted_roles if r != role}
+
+                    action_context = self._build_action_context(
+                        player, other_players, game, turn, max_turns, negotiation_history
+                    )
+                    action = await self._tool_provider.talk_to_agent(action_context, str(req.participants[role]), new_conversation=False)
                     actions[role] = action
-                    logger.info(f"{role}: {action}")
+                    logger.info(f"{role} ({player.character_template_name}): {action}")
 
                 # DM processes
                 verdict = game.dm.respond_actions({
