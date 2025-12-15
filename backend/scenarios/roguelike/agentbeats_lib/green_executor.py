@@ -30,6 +30,8 @@ class GreenAgent:
     def validate_request(self, request: EvalRequest) -> tuple[bool, str]:
         pass
 
+import json
+import logging
 
 class GreenExecutor(AgentExecutor):
 
@@ -41,10 +43,11 @@ class GreenExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
-        request_text = context.get_user_input()
-        import json
-        import logging
         logger = logging.getLogger("green_executor")
+        logger.info(f"context.message type: {type(context.message)}")
+        logger.info(f"context.message: {context.message}")
+        request_text = context.get_user_input()
+        logger.info(f"request_text (len={len(request_text)}): '{request_text[:200] if request_text else 'EMPTY'}'")
 
         try:
             # Parse incoming message

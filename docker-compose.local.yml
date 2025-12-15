@@ -36,8 +36,8 @@ services:
       - CLOUDRUN_HOST=${GREEN_AGENT_URL_NO_PROTOCOL:-localhost:8011}
       - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
     volumes:
-      - green_agent_data:/app/data
-      - green_agent_logs:/var/log/agents
+      - ./.local/green_agent/data:/app/data
+      - ./.local/green_agent/logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
@@ -65,8 +65,8 @@ services:
       - CLOUDRUN_HOST=${WHITE_AGENT_1_URL_NO_PROTOCOL:-localhost:8012}
       - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
     volumes:
-      - white_agent_1_data:/app/data
-      - white_agent_1_logs:/var/log/agents
+      - ./.local/white_agent_1/data:/app/data
+      - ./.local/white_agent_1/logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
@@ -94,8 +94,8 @@ services:
       - CLOUDRUN_HOST=${WHITE_AGENT_2_URL_NO_PROTOCOL:-localhost:8013}
       - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
     volumes:
-      - white_agent_2_data:/app/data
-      - white_agent_2_logs:/var/log/agents
+      - ./.local/white_agent_2/data:/app/data
+      - ./.local/white_agent_2/logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
@@ -104,10 +104,5 @@ services:
       retries: 3
       start_period: 15s
 
-volumes:
-  green_agent_data:
-  green_agent_logs:
-  white_agent_1_data:
-  white_agent_1_logs:
-  white_agent_2_data:
-  white_agent_2_logs:
+# Local bind mounts are used instead of named volumes
+# Data is stored in ./.local/ which is gitignored
