@@ -45,3 +45,6 @@ Dockerfile
 
 # Logs
 *.log
+
+# Agent environment files
+.ab*

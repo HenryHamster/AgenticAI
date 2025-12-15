@@ -19,6 +19,16 @@ from a2a.utils.errors import ServerError
 
 from agentbeats_lib.models import EvalRequest
 
+import re
+from typing import Dict
+
+
+def parse_tags(str_with_tags: str) -> Dict[str, str]:
+    """the target str contains tags in the format of <tag_name> ... </tag_name>, parse them out and return a dict"""
+
+    tags = re.findall(r"<(.*?)>(.*?)</\1>", str_with_tags, re.DOTALL)
+    return {tag: content.strip() for tag, content in tags}
+
 
 class GreenAgent:
 
@@ -30,6 +40,8 @@ class GreenAgent:
     def validate_request(self, request: EvalRequest) -> tuple[bool, str]:
         pass
 
+import json
+import logging
 
 class GreenExecutor(AgentExecutor):
 
@@ -41,15 +53,22 @@ class GreenExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
-        request_text = context.get_user_input()
-        import json
-        import logging
         logger = logging.getLogger("green_executor")
+        logger.info(f"context.message type: {type(context.message)}")
+        logger.info(f"context.message: {context.message}")
+        request_text = context.get_user_input()
+        logger.info(f"request_text (len={len(request_text)}): '{request_text[:200] if request_text else 'EMPTY'}'")
 
         try:
             # Parse incoming message
+            tags = parse_tags(request_text)
+            white_agent_url = tags["white_agent_url"]
+            env_config_str = tags["env_config"]
+            env_config = json.loads(env_config_str) if env_config_str else None
+
             msg_data = json.loads(request_text)
-            logger.info(f"Received message: {json.dumps(msg_data, indent=2)}")
+            # the line below fails because it's not a JSON
+            # logger.info(f"Received message: {json.dumps(msg_data, indent=2)}")
 
             # Check if this is AgentBeats battle notification format
             if msg_data.get("type") in ["battle_start", "battle_info"]:
