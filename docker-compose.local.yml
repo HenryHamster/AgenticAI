@@ -1,0 +1,113 @@
+# Docker Compose for Local Development with Multiple Agents
+# Each agent runs internally on port 8010 but is exposed on different external ports
+# Use with Cloudflare tunnels to expose each agent to the internet
+#
+# External ports:
+#   - green_agent:   localhost:8011 -> container:8010
+#   - white_agent_1: localhost:8012 -> container:8010
+#   - white_agent_2: localhost:8013 -> container:8010
+#
+# Usage:
+#   docker compose -f docker-compose.local.yml up --build
+#
+# Cloudflare tunnel setup (run in separate terminals):
+#   cloudflared tunnel --url http://localhost:8011  # Green Agent
+#   cloudflared tunnel --url http://localhost:8012  # White Agent 1
+#   cloudflared tunnel --url http://localhost:8013  # White Agent 2
+
+services:
+  # Green Agent - Game Judge/Orchestrator
+  green_agent:
+    build:
+      context: .
+      dockerfile: coolify/green_agent/Dockerfile
+    ports:
+      - "8011:8010"
+    environment:
+      # Public URL for agent card discovery (set to your Cloudflare tunnel URL)
+      - PUBLIC_URL=${GREEN_AGENT_URL:-http://localhost:8011}
+      # Controller configuration
+      - CONTROLLER_PORT=8010
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - CLOUDRUN_HOST=${GREEN_AGENT_URL_NO_PROTOCOL:-localhost:8011}
+      - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
+    volumes:
+      - green_agent_data:/app/data
+      - green_agent_logs:/var/log/agents
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # White Agent 1 - Player Agent
+  white_agent_1:
+    build:
+      context: .
+      dockerfile: coolify/white_agent/Dockerfile
+    ports:
+      - "8012:8010"
+    environment:
+      # Public URL for agent card discovery (set to your Cloudflare tunnel URL)
+      - PUBLIC_URL=${WHITE_AGENT_1_URL:-http://localhost:8012}
+      # Controller configuration
+      - CONTROLLER_PORT=8010
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLOUDRUN_HOST=${WHITE_AGENT_1_URL_NO_PROTOCOL:-localhost:8012}
+      - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
+    volumes:
+      - white_agent_1_data:/app/data
+      - white_agent_1_logs:/var/log/agents
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # White Agent 2 - Player Agent
+  white_agent_2:
+    build:
+      context: .
+      dockerfile: coolify/white_agent/Dockerfile
+    ports:
+      - "8013:8010"
+    environment:
+      # Public URL for agent card discovery (set to your Cloudflare tunnel URL)
+      - PUBLIC_URL=${WHITE_AGENT_2_URL:-http://localhost:8013}
+      # Controller configuration
+      - CONTROLLER_PORT=8010
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLOUDRUN_HOST=${WHITE_AGENT_2_URL_NO_PROTOCOL:-localhost:8013}
+      - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
+    volumes:
+      - white_agent_2_data:/app/data
+      - white_agent_2_logs:/var/log/agents
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  green_agent_data:
+  green_agent_logs:
+  white_agent_1_data:
+  white_agent_1_logs:
+  white_agent_2_data:
+  white_agent_2_logs:

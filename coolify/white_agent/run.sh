@@ -7,7 +7,6 @@ AGENT_PORT="${AGENT_PORT:-9018}"
 
 echo "Starting White Agent on ${HOST}:${AGENT_PORT}"
 
-echo "Starting Green Agent on ${HOST}:${AGENT_PORT}"
 # Build command - use relative path if running locally
 if [ -n "$LOCAL" ]; then
     CMD="python ../../backend/scenarios/roguelike/purple_agent.py --host $HOST --port $AGENT_PORT"
