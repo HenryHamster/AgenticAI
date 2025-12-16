@@ -1,9 +1,21 @@
-import { fetchGameRuns } from "@/services/api";
+"use client";
+
+import { useEffect, useState } from "react";
+import { fetchGameRunsClient } from "@/services/api";
 import GameRunCard from "@/components/GameRunCard";
 import Link from "next/link";
+import { GameRun } from "@/types/game";
 
-export default async function Home() {
-  const gameRuns = await fetchGameRuns();
+export default function Home() {
+  const [gameRuns, setGameRuns] = useState<GameRun[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGameRunsClient()
+      .then(setGameRuns)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to gray-100 p-6">
@@ -24,7 +36,14 @@ export default async function Home() {
             </Link>
           </div>
         </header>
-        {gameRuns.length === 0 ? (
+        {loading ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <div className="text-6xl mb-4 animate-pulse">⏳</div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+              Loading Games...
+            </h2>
+          </div>
+        ) : gameRuns.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <div className="text-6xl mb-4">🎲</div>
             <h2 className="text-2xl font-semibold text-gray-700 mb-2">

@@ -97,12 +97,12 @@ You can also open the controller link in your browser
 ## Stopping
 
 ```bash
-docker compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.agents.yml down
 ```
 
 
 ## Troubleshooting
 
-- **Port already in use**: Change the external ports in `docker-compose.local.yml` (e.g., 8021, 8022, 8023)
-- **Container won't start**: Check logs with `docker compose -f docker-compose.local.yml logs <service_name>`
+- **Port already in use**: Change the external ports in `docker-compose.local.agents.yml` (e.g., 8021, 8022, 8023)
+- **Container won't start**: Check logs with `docker compose -f docker-compose.local.agents.yml logs <service_name>`
 - **Cloudflare tunnel disconnects**: The free tunnels are temporary; restart the tunnel command to get a new URL
