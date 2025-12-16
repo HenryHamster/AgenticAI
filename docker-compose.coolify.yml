@@ -1,54 +1,67 @@
-# Docker Compose for Backend + Frontend (Coolify compatible)
-# Uses expose instead of ports - Coolify handles reverse proxy
-# Environment variables should be set in Coolify UI
+# Docker Compose for Multi-Agent Deployment (Coolify compatible)
+# Each agent runs in its own container with AgentBeats controller
+# Architecture follows AgentBeats integration pattern with earthshaker
 
 services:
-  backend:
+  # Green Agent - Game Judge/Orchestrator
+  # Uses agentbeats run_ctrl for lifecycle management
+  green_agent:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: coolify/green_agent/Dockerfile
     expose:
-      - "8000"
+      - "8010"
     environment:
-      - PYTHONPATH=/backend
-      # Set these in Coolify UI:
-      # - OPENAI_API_KEY
-      # - GOOGLE_API_KEY
-      # - DATABASE_URL (if needed)
+      # Public URL for agent card discovery
+      - PUBLIC_URL=${GREEN_AGENT_URL}
+      # Controller configuration
+      - CONTROLLER_PORT=8010
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - CLOUDRUN_HOST=${GREEN_AGENT_URL_NO_PROTOCOL}
+      - HTTPS_ENABLED=true
+    volumes:
+      - green_agent_logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
-    networks:
-      - app-network
 
-  frontend:
+  # White Agent - Player Agent
+  # Uses agentbeats run_ctrl for lifecycle management
+  white_agent:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.coolify
-      args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api/v1}
+      context: .
+      dockerfile: coolify/white_agent/Dockerfile
     expose:
-      - "3000"
+      - "8010"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api/v1}
-      - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
-    depends_on:
-      backend:
-        condition: service_healthy
+      # Public URL for agent card discovery
+      - PUBLIC_URL=${WHITE_AGENT_URL}
+      # Controller configuration
+      - CONTROLLER_PORT=8010
+      - HOST=0.0.0.0
+      # API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CLOUDRUN_HOST=${WHITE_AGENT_URL_NO_PROTOCOL}
+      - HTTPS_ENABLED=true
+    volumes:
+      - white_agent_logs:/var/log/agents
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/status"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
-    networks:
-      - app-network
+      start_period: 15s
 
-networks:
-  app-network:
-    driver: bridge
+volumes:
+  green_agent_logs:
+  white_agent_logs:
