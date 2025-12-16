@@ -77,7 +77,7 @@ class GreenExecutor(AgentExecutor):
 
                 import httpx
                 participants = {}
-                config = {"max_turns": 5, "world_size": 3, "starting_wealth": 100, "negotiation_rounds": 1}
+                config = {"max_turns": 5, "world_size": 1, "starting_wealth": 100, "negotiation_rounds": 1}
                 opponents = []
 
                 try:
@@ -121,7 +121,7 @@ class GreenExecutor(AgentExecutor):
                     config = json.loads(env_config_match.group(1))
                 else:
                     # Default config
-                    config = {"max_turns": 5, "world_size": 3, "starting_wealth": 100, "negotiation_rounds": 1}
+                    config = {"max_turns": 5, "world_size": 1, "starting_wealth": 100, "negotiation_rounds": 1}
 
                 # Build participants from white_agent_urls
                 participants = {}

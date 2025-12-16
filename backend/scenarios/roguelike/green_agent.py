@@ -29,9 +29,18 @@ from agentbeats_lib.models import EvalRequest, EvalResult
 from agentbeats_lib.tool_provider import ToolProvider
 
 from src.app.Game import Game
+from schema.characterModel import load_character_template
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("roguelike_judge")
+
+# Verify character templates on import
+for template in ["warrior", "mage", "rogue"]:
+    try:
+        load_character_template(template)
+        logger.info(f"✓ Template '{template}' loaded")
+    except Exception as e:
+        logger.error(f"✗ Template '{template}' failed: {e}")
 
 
 class RoguelikeJudge(GreenAgent):
@@ -156,7 +165,7 @@ class RoguelikeJudge(GreenAgent):
         try:
             # Init game
             max_turns = int(req.config["max_turns"])
-            world_size = int(req.config.get("world_size", 3))
+            world_size = int(req.config.get("world_size", 1))
             starting_wealth = int(req.config.get("starting_wealth", 100))
 
             # Available character templates
