@@ -2,6 +2,8 @@ import { GameRun, Turn, GameCreationRequest } from '@/types/game';
 
 // Use environment variables - now properly configured in docker-compose.yml
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+console.log("API base url:", API_BASE_URL);
+console.log("FRONTEND base url:", process.env.NEXT_PUBLIC_FRONTEND_URL);
 export const FRONTEND_BASE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8000/api/v1';
 
 
@@ -78,7 +80,7 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
     })),
   };
   
-  const response = await fetch(`http://localhost:8000/api/v1/games/create`, {
+  const response = await fetch(`${API_BASE_URL}/games/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -105,9 +107,9 @@ export async function evaluateGame(gameId: string): Promise<any> {
   return response.json();
 }
 
-// Client-side API functions that always use localhost (for browser requests)
+// Client-side API functions (use same API_BASE_URL from environment)
 export async function evaluateGameClient(gameId: string): Promise<any> {
-  const response = await fetch(`http://localhost:8000/api/v1/game/eval/${gameId}`);
+  const response = await fetch(`${API_BASE_URL}/game/eval/${gameId}`);
   
   if (!response.ok) {
     throw new Error(`Failed to evaluate game: ${response.statusText}`);
@@ -117,7 +119,7 @@ export async function evaluateGameClient(gameId: string): Promise<any> {
 }
 
 export async function fetchGameRunsClient(): Promise<GameRun[]> {
-  const response = await fetch(`http://localhost:8000/api/v1/games`);
+  const response = await fetch(`${API_BASE_URL}/games`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch games: ${response.statusText}`);
@@ -129,7 +131,7 @@ export async function fetchGameRunsClient(): Promise<GameRun[]> {
 
 export async function fetchGameRunByIdClient(id: string): Promise<GameRun | null> {
   try {
-    const response = await fetch(`http://localhost:8000/api/v1/game/${id}?include_turns=true`);
+    const response = await fetch(`${API_BASE_URL}/game/${id}?include_turns=true`);
     
     if (response.status === 404) {
       return null;
