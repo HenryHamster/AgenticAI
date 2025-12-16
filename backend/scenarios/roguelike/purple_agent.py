@@ -56,10 +56,7 @@ def main():
         base_url = args.card_url.rstrip('/')
         logger.info(f"Using public URL from --card-url: {base_url}")
     else:
-        base_url = os.getenv("AGENT_URL")
-        logger.warning(f"Using environment variable URL (no --card-url provided): {base_url}")
-
-    agent_url = os.getenv("AGENT_URL")
+        base_url = f"http://{args.host}:{args.port}"
 
     player_skill = AgentSkill(
         id="roguelike_player_action",
@@ -133,7 +130,6 @@ def main():
                     async with httpx.AsyncClient(timeout=10.0) as client:
                         # Send ready signal with agent URL and card content
                         await client.put(
-                            f"{backend_url}/agents/{agent_id}", json={"ready": True}
                             f"{backend_url}/agents/{agent_id}",
                             json={
                                 "ready": True,
