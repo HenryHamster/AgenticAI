@@ -38,3 +38,9 @@ Dockerfile
 
 # Logs
 *.log
+
+# Agent environment files
+.ab*
+
+# Python cache (if any)
+__pycache__/

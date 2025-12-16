@@ -3,11 +3,11 @@ from typing import List, Dict, Any, Optional
 from schema.tileModel import SecretKV
 
 class CharacterState(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     uid: str
-    money_change: int = Field()
-    health_change: int = Field()
-    position_change: List[int] = Field(min_length=2, max_length=2)
+    money_change: int = Field(default=0)
+    health_change: int = Field(default=0)
+    position_change: List[int] = Field(default=[0, 0])
     experience_change: int = Field(default=0)
     resource_changes: Dict[str, int] = Field(default_factory=dict)
     #inventory_changes: Dict[str, List[str]] = Field(default_factory=lambda: {"added": [], "removed": []})
@@ -18,7 +18,7 @@ class CharacterState(BaseModel):
     inventory_remove: Optional[List[str]] = Field(default=None)
 
 class TileState(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     position: List[int] = Field(min_length=2, max_length=2)
     secrets: Optional[List[SecretKV]] = Field(default_factory=list)
     description: str = Field(default="")
@@ -51,7 +51,7 @@ class TileState(BaseModel):
         return data
 
 class WorldState(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     tiles: List[TileState] = Field(default_factory=list)
 
 class PlayerEvaluation(BaseModel): 
@@ -60,7 +60,7 @@ class PlayerEvaluation(BaseModel):
     progress_made: int = Field(default=0, ge=0, le=100)   
 
 class GameResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     character_state_change: List[CharacterState]  = Field(..., min_length=1, max_length=10, description="List of character state changes") 
     world_state_change: WorldState
     narrative_result: str = Field(default ="")
