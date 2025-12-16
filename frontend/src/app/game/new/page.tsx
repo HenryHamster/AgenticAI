@@ -61,6 +61,7 @@ export default function NewGamePage() {
       startingHealth: 100,
       startingPosition: "random",
       agentPrompt: "",
+      characterClass: "Warrior",
     },
     {
       name: getRandomName(),
@@ -69,6 +70,7 @@ export default function NewGamePage() {
       startingHealth: 100,
       startingPosition: "random",
       agentPrompt: "",
+      characterClass: "Warrior",
     },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,6 +90,7 @@ export default function NewGamePage() {
           startingHealth: 100,
           startingPosition: "random",
           agentPrompt: "",
+          characterClass: "Warrior",
         });
       }
     } else {
@@ -123,6 +126,7 @@ export default function NewGamePage() {
     };
 
     try {
+      console.log("trying to create game:", JSON.stringify(gameRequest, null ,2));
       const gameId = await createGame(gameRequest);
       router.push(`/game/${gameId}`);
     } catch (error) {
@@ -200,6 +204,7 @@ export default function NewGamePage() {
                       onChange={(e) => setWorldSize(parseInt(e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
+                      <option value="1">1x1 (Smallest)</option>
                       <option value="1">3×3 (Small)</option>
                       <option value="2">5×5</option>
                       <option value="3">7×7</option>
@@ -293,17 +298,22 @@ export default function NewGamePage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Class
+                        Character Class
                       </label>
                       <select
-                        value={player.class}
+                        value={player.characterClass || ""}
                         onChange={(e) =>
-                          updatePlayer(index, "class", e.target.value)
+                          updatePlayer(index, "characterClass", e.target.value || undefined)
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <option value="human">Human</option>
+                        <option value="Warrior">Warrior</option>
+                        <option value="Mage">Mage</option>
+                        <option value="Rogue">Rogue</option>
                       </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        DnD-style progression with skills and leveling
+                      </p>
                     </div>
 
                     <div>

@@ -20,15 +20,20 @@ export default function PlayerStatsPanel({ players, targetCurrency }: PlayerStat
         {players.map((player) => {
           // Extract values with backwards compatibility
           const playerId = player.uid || (player as any).id;
-          const playerName = player.name || player.uid;
-          const playerEmoji = player.emoji || '🎮';
+          const playerName = (player as any).name || player.uid; // Player name might not be in PlayerState
+          const playerEmoji = (player as any).emoji || '🧙';
           const health = player.values?.health ?? (player as any).health ?? 0;
           const currency = player.values?.money ?? (player as any).currency ?? 0;
-          const isActive = player.isActive ?? (health > 0);
+          const isActive = (player as any).isActive ?? (health > 0);
           const posX = Array.isArray(player.position) ? player.position[0] : (player.position as any)?.x ?? 0;
           const posY = Array.isArray(player.position) ? player.position[1] : (player.position as any)?.y ?? 0;
-          const validityScore = player.validityScore ?? 0;
-          const creativityScore = player.creativityScore ?? 0;
+          const validityScore = (player as any).validityScore ?? 0;
+          const creativityScore = (player as any).creativityScore ?? 0;
+          const level = player.level ?? 1;
+          const experience = player.experience ?? 0;
+          const invalidActions = player.invalid_action_count ?? 0;
+          const totalActions = player.total_action_count ?? 0;
+          const failureRate = totalActions > 0 ? ((invalidActions / totalActions) * 100).toFixed(1) : '0.0';
 
           return (
             <div 
@@ -54,25 +59,39 @@ export default function PlayerStatsPanel({ players, targetCurrency }: PlayerStat
                 </div>
               </div>
             
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-1">
-                  <span className="text-red-500">❤️</span>
-                  <span className="font-medium text-gray-600">{health}</span>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-red-500">❤️</span>
+                    <span className="font-medium text-gray-600">{health}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-500">💰</span>
+                    <span className="font-medium text-gray-600">{currency}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <span className="text-blue-500">⭐</span>
+                    <span className="text-xs text-gray-600">Lvl {level} ({experience} XP)</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <span className="text-red-400">❌</span>
+                    <span className="text-xs text-gray-600">Fail: {failureRate}%</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-500">💰</span>
-                  <span className="font-medium text-gray-600">{currency}</span>
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  <span className="text-green-500">✓</span>
-                  <span className="text-xs text-gray-600">Validity: {validityScore}</span>
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  <span className="text-purple-500">✨</span>
-                  <span className="text-xs text-gray-600">Creativity: {creativityScore}</span>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-500">✓</span>
+                    <span className="text-gray-600">Valid: {validityScore}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <span className="text-purple-500">✨</span>
+                    <span className="text-gray-600">Creative: {creativityScore}</span>
+                  </div>
                 </div>
               </div>
             

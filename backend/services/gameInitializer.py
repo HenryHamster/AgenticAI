@@ -36,7 +36,8 @@ def create_default_player_info(
             "model": model,
             "player_class": "human",
             "values": {"money": starting_currency, "health": starting_health},
-            "responses": []
+            "responses": [],
+            "agent_prompt": "",
         }
     
     return player_info
@@ -48,18 +49,17 @@ def create_player_info_from_configs(
 ) -> Dict[str, Dict[str, Any]]:
     """
     Create player configuration from individual player configs
-    
+
     Args:
-        player_configs: List of player configuration objects with name, starting_health, starting_currency
+        player_configs: List of player configuration objects with name, starting_health, starting_currency, character_class
         model: AI model to use for players (default: "mock")
-        
+
     Returns:
         Dictionary of player data keyed by UID
     """
     player_info = {}
-    
+
     for i, config in enumerate(player_configs):
-        # Use player name as UID if available, otherwise fall back to player{i}
         uid = config.name if hasattr(config, 'name') and config.name else f"player{i}"
         player_info[uid] = {
             "position": [0, 0],
@@ -70,9 +70,11 @@ def create_player_info_from_configs(
                 "money": config.starting_currency if hasattr(config, 'starting_currency') else 0,
                 "health": config.starting_health if hasattr(config, 'starting_health') else 100
             },
-            "responses": []
+            "responses": [],
+            "character_template_name": config.character_class if hasattr(config, 'character_class') and config.character_class else None,
+            "agent_prompt": getattr(config, 'agent_prompt', "") or ""
         }
-    
+
     return player_info
 
 

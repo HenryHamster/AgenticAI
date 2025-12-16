@@ -14,9 +14,9 @@ class AiServicesBase:
     history: list[dict]
     system_prompt: str
 
-    def __init__(self, chat_id: str, history: list[dict] = [], system_prompt: str = ""):
+    def __init__(self, chat_id: str, history: Optional[list[dict]] = None, system_prompt: str = ""):
         self.chat_id = chat_id
-        self.history = history
+        self.history = list(history) if history else []
         self.system_prompt = system_prompt
 
     @abstractmethod

@@ -1,5 +1,6 @@
 from database.fileManager import Savable
-from typing_extensions import override, List
+from typing import List
+from typing_extensions import override
 import json
 
 class Secret:
@@ -83,7 +84,6 @@ class Tile(Savable):
         return {
             "position": [self.position[0], self.position[1]],  # Store as list for JSON compatibility
             "description": self.description,
-            "secrets": json.dumps([[s.key, s.value] for s in self.secrets]),
             "terrainType": self.terrainType,
             "terrainEmoji": self.terrainEmoji
         }

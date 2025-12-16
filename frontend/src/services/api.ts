@@ -16,7 +16,7 @@ export async function fetchGameRuns(): Promise<GameRun[]> {
   }
   
   const data = await response.json() as GameRun[];
-  return data.sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  return data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function fetchGameRunById(id: string): Promise<GameRun | null> {
@@ -51,7 +51,7 @@ export async function fetchTurnByNumber(gameId: string, turnNumber: number): Pro
     }
     
     const gameRun = await response.json();
-    return gameRun.turns?.find((turn: Turn) => turn.turnNumber === turnNumber) || null;
+    return gameRun.turns?.find((turn: Turn) => turn.turn_number === turnNumber) || null;
   } catch (error) {
     console.error('Error fetching turn:', error);
     return null;
@@ -73,6 +73,8 @@ export async function createGame(gameRequest: GameCreationRequest): Promise<stri
       name: player.name,
       starting_health: player.startingHealth,
       starting_currency: player.startingCurrency,
+      character_class: player.characterClass || null,
+      agent_prompt: player.agentPrompt?.trim() ?? "",
     })),
   };
   
@@ -122,7 +124,7 @@ export async function fetchGameRunsClient(): Promise<GameRun[]> {
   }
   
   const data = await response.json() as GameRun[];
-  return data.sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  return data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function fetchGameRunByIdClient(id: string): Promise<GameRun | null> {

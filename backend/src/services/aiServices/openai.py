@@ -1,7 +1,6 @@
 # implements the AiServicesBase class for OpenAI
 
-import openai
-from typing import Optional
+from typing import Optional, List, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
@@ -16,7 +15,7 @@ class OpenAiService(AiServicesBase):
     llm: ChatOpenAI
     chat_prompt: ChatPromptTemplate
 
-    def __init__(self, chat_id: str = uuid.uuid4(), history: list[dict] = [], model: str = "gpt-4.1-mini", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
+    def __init__(self, chat_id: str = uuid.uuid4(), history: Optional[List[Dict]] = None, model: str = "gpt-4.1-mini", temperature: float = 0.7, system_prompt: str = ai_config.system_prompt):
         """
         Initialize the OpenAI service.
         Args:
@@ -27,10 +26,13 @@ class OpenAiService(AiServicesBase):
         """
         super().__init__(chat_id, history, system_prompt)
 
+        max_tokens_value = ai_config.openai_max_tokens
+        print(f"[OpenAiService] Initializing with max_tokens={max_tokens_value} for model={model}")
+        
         self.llm = ChatOpenAI(
             model=model,
             temperature=temperature,
-            max_tokens=ai_config.openai_max_tokens,
+            max_tokens=max_tokens_value,
             timeout=ai_config.openai_timeout,
             api_key=ai_config.openai_api_key,
             max_retries=2,
@@ -119,7 +121,7 @@ class OpenAiService(AiServicesBase):
             chat_history = self._convert_history_to_messages()
             
             # Create the chain with prompt template and LLM with structured output
-            chain = self.chat_prompt | self.llm.with_structured_output(structured_output_class)
+            chain = self.chat_prompt | self.llm.with_structured_output(structured_output_class, method="function_calling")
             
             # Prepare input data with message and chat history
             input_data = {

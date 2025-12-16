@@ -21,8 +21,9 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
   
   // Format start time client-side to avoid hydration mismatch
   useEffect(() => {
-    setFormattedStartTime(new Date(initialGameRun.startTime).toLocaleString());
-  }, [initialGameRun.startTime]);
+    const dateStr = initialGameRun.created_at || (initialGameRun as any).startTime || '';
+    setFormattedStartTime(new Date(dateStr).toLocaleString());
+  }, [initialGameRun.created_at]);
   
   // Refresh page every 1 second if there are no turns yet
   useEffect(() => {
@@ -75,8 +76,10 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
   }
   
   // Convert players dictionary to array for easier iteration
-  const playersArray = Object.values(initialGameRun.players || {});
-  const winner = initialGameRun.winnerId ? initialGameRun.players?.[initialGameRun.winnerId] : null;
+  const playersArray = Object.values(currentTurn?.game_state?.players || {});
+  const winnerName = initialGameRun.winner_player_name;
+  // Find winner object if possible, otherwise just display name
+  const winner = winnerName ? Object.values(currentTurn?.game_state?.players || {}).find(p => (p as any).name === winnerName || p.uid === winnerName) : null;
   
   // Get status badge styling
   const getStatusBadge = (status?: string) => {
@@ -95,6 +98,15 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
   
   const statusBadge = getStatusBadge(initialGameRun.status);
   
+  // Helper to get tiles from turn (new format: game_state.tiles)
+  const getTilesFromTurn = (turn: any): any[] => {
+    if (turn?.game_state?.tiles) {
+      return turn.game_state.tiles;
+    }
+    // Fallback for legacy or if tiles are top-level
+    return (turn as any).tiles || [];
+  };
+
   // Convert tiles array to board state (2D grid) for backwards compatibility
   const getBoardStateFromTiles = (tiles: any): any => {
     if (tiles && Array.isArray(tiles)) {
@@ -102,7 +114,7 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
       return tiles;
     }
     // Fallback to legacy boardState if available
-    return currentTurn.boardState || [];
+    return (currentTurn as any).boardState || [];
   };
   
   // Get player states as array from dictionary
@@ -111,7 +123,7 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
       return Object.values(players);
     }
     // Fallback to legacy playerStates if available
-    return currentTurn.playerStates || [];
+    return (currentTurn as any).playerStates || [];
   };
 
   return (
@@ -143,10 +155,10 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
             {winner && (
               <div className="bg-yellow-100 px-4 py-2 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{winner.emoji || '👑'}</span>
+                  <span className="text-2xl">👑</span>
                   <div>
                     <div className="text-xs text-yellow-700">Winner</div>
-                    <div className="font-bold text-yellow-900">{winner.name || winner.uid}</div>
+                    <div className="font-bold text-yellow-900">{winnerName}</div>
                   </div>
                 </div>
               </div>
@@ -169,7 +181,7 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-gray-700 flex-shrink-0">
-                Turn {currentTurn.turnNumber} / {initialGameRun.turns.length}
+                Turn {currentTurn.turn_number} / {initialGameRun.turns.length}
               </span>
               <input
                 type="range"
@@ -198,9 +210,9 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
         <div className="lg:col-span-8">
           <TurnTimeline
             turns={initialGameRun.turns}
-            selectedTurnNumber={currentTurn.turnNumber}
+            selectedTurnNumber={currentTurn.turn_number}
             onTurnSelect={(turnNumber) => {
-              const index = initialGameRun.turns.findIndex(t => t.turnNumber === turnNumber);
+              const index = initialGameRun.turns.findIndex(t => t.turn_number === turnNumber);
               if (index !== -1) setSelectedTurnIndex(index);
             }}
           />
@@ -215,21 +227,21 @@ export default function GameDetailClient({ gameRun: initialGameRun }: GameDetail
                 Game Board
               </h2>
               <p className="text-xs text-gray-500">
-                Turn {currentTurn.turnNumber}
+                Turn {currentTurn.turn_number}
               </p>
             </div>
             
             <GameBoard
-              boardState={getBoardStateFromTiles(currentTurn.tiles)}
-              players={getPlayerStatesArray(currentTurn.players)}
-              boardSize={currentTurn.board_size || initialGameRun.board_size}
+              boardState={getBoardStateFromTiles(getTilesFromTurn(currentTurn))}
+              players={getPlayerStatesArray(currentTurn.game_state?.players || (currentTurn as any).players)}
+              boardSize={initialGameRun.world_size ? initialGameRun.world_size * 2 + 1 : undefined}
             />
           </div>
 
           {/* Player Stats */}
           <PlayerStatsPanel
-            players={getPlayerStatesArray(currentTurn.players)}
-            targetCurrency={initialGameRun.targetCurrency}
+            players={getPlayerStatesArray(currentTurn.game_state?.players || (currentTurn as any).players)}
+            targetCurrency={initialGameRun.currency_target || 0}
           />
         </div>
       </div>

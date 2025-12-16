@@ -1,7 +1,10 @@
 """Purple Agent - ADK Implementation"""
+
 import argparse
 import uvicorn
 import json
+import logging
+import os
 import httpx
 from dotenv import load_dotenv
 from starlette.responses import JSONResponse
@@ -12,6 +15,9 @@ load_dotenv()
 from google.adk.agents import Agent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from a2a.types import AgentCapabilities, AgentCard
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("roguelike_judge")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -24,24 +30,28 @@ def main():
         name="player",
         model="gemini-2.0-flash",
         description="Strategic player in roguelike economy game",
-        instruction="You are a strategic player. Maximize wealth by exploring tiles and making smart decisions. Respond with ONE short action sentence like 'Move north to explore' or 'Search for resources'."
+        instruction="You are a strategic player. Maximize wealth by exploring tiles and making smart decisions. Respond with ONE short action sentence like 'Move north to explore' or 'Search for resources'.",
     )
 
     # Use public URL if provided
     if args.card_url:
         base_url = args.card_url.rstrip('/')
+        logger.info(f"Using public URL from --card-url: {base_url}")
     else:
-        base_url = f"http://{args.host}:{args.port}"
+        base_url = os.getenv("AGENT_URL")
+        logger.warning(f"Using environment variable URL (no --card-url provided): {base_url}")
+
+    agent_url = os.getenv("AGENT_URL")
 
     card = AgentCard(
         name="player",
         description="Roguelike economy player",
-        url=base_url,
+        url=agent_url,
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
         capabilities=AgentCapabilities(streaming=True),
-        skills=[]
+        skills=[],
     )
 
     app = to_a2a(agent, agent_card=card)
@@ -65,8 +75,7 @@ def main():
                 try:
                     async with httpx.AsyncClient(timeout=10.0) as client:
                         await client.put(
-                            f"{backend_url}/agents/{agent_id}",
-                            json={"ready": True}
+                            f"{backend_url}/agents/{agent_id}", json={"ready": True}
                         )
                 except Exception:
                     pass
@@ -75,10 +84,37 @@ def main():
         except Exception as e:
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+    app.routes.append(
+        Route(
+            "/", lambda request: JSONResponse({
+                "capabilities": {"streaming": True},
+                "defaultInputModes": ["text"],
+                "defaultOutputModes": ["text"],
+                "description": "Roguelike economy game judge",
+                "name": "RoguelikeJudge",
+                "preferredTransport": "JSONRPC",
+                "protocolVersion": "0.3.0",
+                "skills": [
+                    {
+                        "description": "Host a roguelike economy game to assess agent decision making.",
+                        "examples": [
+                            'Your task is to host a roguelike game to test the agents.\nYou should use the following env configuration:\n<env_config>\n{\n  "max_turns": 10,\n  "world_size": 10\n}\n</env_config>'
+                        ],
+                        "id": "host_roguelike_game",
+                        "name": "Roguelike Game Hosting",
+                        "tags": ["green agent", "roguelike", "hosting"],
+                    }
+                ],
+                "url": agent_url,
+                "version": "1.0.0",
+            }),
+        )
+    )
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
 
     uvicorn.run(app, host=args.host, port=args.port)
+
 
 if __name__ == "__main__":
     main()
