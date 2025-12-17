@@ -10,6 +10,8 @@ import logging
 import json
 import httpx
 import traceback
+import random
+import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -28,9 +30,20 @@ from agentbeats_lib.models import EvalRequest, EvalResult
 from agentbeats_lib.tool_provider import ToolProvider
 
 from src.app.Game import Game
+from schema.characterModel import load_character_template
+from services.gameInitializer import initialize_game
+from schema.gameModel import PlayerConfigModel
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("roguelike_judge")
+
+# Verify character templates on import
+for template in ["warrior", "mage", "rogue"]:
+    try:
+        load_character_template(template)
+        logger.info(f"✓ Template '{template}' loaded")
+    except Exception as e:
+        logger.error(f"✗ Template '{template}' failed: {e}")
 
 
 class RoguelikeJudge(GreenAgent):
@@ -64,42 +77,64 @@ class RoguelikeJudge(GreenAgent):
         try:
             # Init game
             max_turns = int(req.config["max_turns"])
-            world_size = int(req.config["world_size"])
+            world_size = int(req.config.get("world_size", 1))
             starting_wealth = int(req.config.get("starting_wealth", 100))
 
-            player_info = {
-                "player_1": {"uid": "player_1", "position": [0, 0], "model": "mock", "player_class": "human",
-                             "values": {"money": starting_wealth, "health": 100}, "responses": []},
-                "player_2": {"uid": "player_2", "position": [0, 0], "model": "mock", "player_class": "human",
-                             "values": {"money": starting_wealth, "health": 100}, "responses": []}
-            }
+            # Available character templates
+            templates = ["warrior", "mage", "rogue"]
+            p1_template = random.choice(templates)
+            p2_template = random.choice(templates)
 
-            game = Game(player_info, {"model": "gpt-4o-mini"}, world_size)
-            game.max_turns = max_turns
+            # Create player configs
+            player_configs = [
+                PlayerConfigModel(
+                    name="player_1",
+                    starting_health=100,
+                    starting_currency=starting_wealth,
+                    character_class=p1_template
+                ),
+                PlayerConfigModel(
+                    name="player_2",
+                    starting_health=100,
+                    starting_currency=starting_wealth,
+                    character_class=p2_template
+                )
+            ]
 
-            # Run turns
+            # Initialize game using gameInitializer
+            game_id = getattr(req, '_battle_id', None) or f"agentbeats_{uuid.uuid4().hex}"
+            game = initialize_game(
+                game_id=game_id,
+                num_players=2,
+                world_size=world_size,
+                model="gpt-4o-mini",
+                name=f"AgentBeats Battle {game_id}",
+                description=f"Roguelike battle: {p1_template} vs {p2_template}",
+                currency_target=None,
+                starting_currency=starting_wealth,
+                starting_health=100,
+                max_turns=max_turns,
+                player_configs=player_configs
+            )
+
+            # Set A2A agent IDs and tool provider on players
+            for role in self._required_roles:
+                if role in game.players:
+                    game.players[role].a2a_agent_id = str(req.participants[role])
+                    game.players[role].tool_provider = self._tool_provider
+
+            logger.info(f"Game initialized: world_size={world_size}, p1={p1_template}, p2={p2_template}")
+
+            # Run turns using game.step()
             for turn in range(max_turns):
                 await updater.update_status(TaskState.working, new_agent_text_message(f"Turn {turn + 1}/{max_turns}"))
 
-                actions = {}
-                for role in self._required_roles:
-                    player = game.players[role]
-                    context = f"Stats: money={player.values.money}, health={player.values.health}. Position: {player.position}. Make one action."
+                # Execute game step in thread pool to avoid blocking event loop
+                await asyncio.to_thread(game.step)
 
-                    action = await self._tool_provider.talk_to_agent(context, str(req.participants[role]), new_conversation=False)
-                    actions[role] = action
-                    logger.info(f"{role}: {action}")
-
-                # DM processes
-                verdict = game.dm.respond_actions({
-                    "Players": {uid: game.players[uid].save() for uid in game.players},
-                    "Responses": actions,
-                    "Past Verdict": "",
-                    "tiles": game._get_tiles_full_payload()
-                })
-                game.handle_verdict(verdict)
-                game.current_turn_number += 1
-                game._check_game_conditions()
+                # Extract actions from player response history for reporting
+                actions = {uid: player.get_responses_history()[-1] if player.get_responses_history() else ""
+                          for uid, player in game.players.items()}
 
                 if game.is_game_over:
                     await updater.update_status(TaskState.working, new_agent_text_message(f"Game ended: {game.game_over_reason}"))
