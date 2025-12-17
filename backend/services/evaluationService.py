@@ -15,15 +15,17 @@ from eval import quick_evaluate, EvalWrapper
 
 class GameEvaluationService:
     """Service for evaluating user responses in games"""
-    
-    def __init__(self, evaluation_service_type: str = "mock"):
+
+    def __init__(self, evaluation_service_type: str = "mock", ai_model: str = "gpt-4.1-nano"):
         """
         Initialize the evaluation service
-        
+
         Args:
             evaluation_service_type: Type of evaluation service ("mock", "custom")
+            ai_model: AI model to use for evaluation (default: gpt-4.1-nano)
         """
         self.evaluation_service_type = evaluation_service_type
+        self.ai_model = ai_model
     
     def evaluate_game_responses(self, game_id: str) -> Dict[str, Any]:
         """
@@ -156,7 +158,7 @@ class GameEvaluationService:
                 environment_text=environment,
                 user_response_text=response,
                 service_type=self.evaluation_service_type,
-                ai_model="gpt-4.1-nano",
+                ai_model=self.ai_model,
             )
             
             turn_evaluation["player_evaluations"][player_uid] = {
@@ -252,9 +254,9 @@ class GameEvaluationService:
 
 
 # Convenience functions for quick access
-def evaluate_game_responses(game_id: str, service_type: str = "mock") -> Dict[str, Any]:
+def evaluate_game_responses(game_id: str, service_type: str = "mock", ai_model: str = "gpt-4.1-nano") -> Dict[str, Any]:
     """Quick function to evaluate all responses in a game"""
-    service = GameEvaluationService(service_type)
+    service = GameEvaluationService(service_type, ai_model=ai_model)
     return service.evaluate_game_responses(game_id)
 
 

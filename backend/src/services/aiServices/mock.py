@@ -39,14 +39,34 @@ class MockAiService(AiServicesBase):
         message: str,
         structured_output_class: Type[BaseModel]
     ) -> Optional[BaseModel | Dict[str, Any]]:
-        payload: Dict[str, Any] = {
-            "character_state_change": [
-                {"uid": "player0", "position_change": [1, 0], "money_change": 2, "health_change": -2},
-                {"uid": "player1", "position_change": [0, -1], "money_change": 5, "health_change": 1},
-            ],
-            "world_state_change": {"tiles": []},
-            "narrative_result": "[MOCK] This is a mock narrative."
-        }
+        # Get the class name to determine which mock payload to use
+        class_name = structured_output_class.__name__
+
+        # Different payloads for different structured output types
+        if class_name == "TileModel":
+            payload: Dict[str, Any] = {
+                "position": [0, 0],
+                "description": "[MOCK] A generic tile with nothing special.",
+                "terrainType": "plains",
+                "terrainEmoji": "🌾",
+                "secrets": []
+            }
+        elif class_name == "PlayerAction":
+            payload: Dict[str, Any] = {
+                "action": "[MOCK] wait",
+                "target": None,
+                "reasoning": "[MOCK] Waiting to see what happens."
+            }
+        else:
+            # Default: GameResponse-shaped payload
+            payload: Dict[str, Any] = {
+                "character_state_change": [
+                    {"uid": "player0", "position_change": [1, 0], "money_change": 2, "health_change": -2},
+                    {"uid": "player1", "position_change": [0, -1], "money_change": 5, "health_change": 1},
+                ],
+                "world_state_change": {"tiles": []},
+                "narrative_result": "[MOCK] This is a mock narrative."
+            }
 
         try:
             if hasattr(structured_output_class, "model_validate"):  # pydantic v2

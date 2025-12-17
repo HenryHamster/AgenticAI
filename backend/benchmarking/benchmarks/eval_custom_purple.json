@@ -1,0 +1,233 @@
+{
+  "benchmark_id": "bench_20251216_213228",
+  "evaluated_at": "2025-12-16T23:45:18.815990",
+  "games_evaluated": 2,
+  "games_skipped": 0,
+  "evaluation_service": "custom",
+  "aggregate_metrics": {
+    "win_rates": {
+      "games_with_winner": 2,
+      "total_games": 2,
+      "win_rate": 1.0,
+      "per_player_wins": {
+        "player0": {
+          "wins": 2,
+          "games": 2,
+          "win_rate": 1.0
+        },
+        "player1": {
+          "wins": 0,
+          "games": 2,
+          "win_rate": 0.0
+        }
+      }
+    },
+    "turn_statistics": {
+      "average_turns": 10,
+      "min_turns": 10,
+      "max_turns": 10,
+      "median_turns": 10.0
+    },
+    "player_statistics": {
+      "average_players_per_game": 2,
+      "total_players_evaluated": 4,
+      "unique_players": 2,
+      "total_responses_evaluated": 40
+    },
+    "evaluation_metrics": {
+      "score": {
+        "mean": 0.727,
+        "std": 0.172,
+        "min": 0.2,
+        "max": 0.95,
+        "median": 0.81
+      },
+      "appropriateness": {
+        "mean": 0.825,
+        "std": 0.147,
+        "min": 0.4,
+        "max": 1.0,
+        "median": 0.9
+      },
+      "completeness": {
+        "mean": 0.685,
+        "std": 0.128,
+        "min": 0.4,
+        "max": 0.9,
+        "median": 0.7
+      },
+      "clarity": {
+        "mean": 0.838,
+        "std": 0.1,
+        "min": 0.5,
+        "max": 1.0,
+        "median": 0.9
+      },
+      "creativity": {
+        "mean": 0.642,
+        "std": 0.161,
+        "min": 0.2,
+        "max": 0.85,
+        "median": 0.7
+      },
+      "action_validity": {
+        "mean": 0.862,
+        "std": 0.244,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.95
+      }
+    },
+    "per_player_metrics": {
+      "player0": {
+        "total_responses": 20,
+        "metrics": {
+          "score": {
+            "mean": 0.763,
+            "std": 0.191,
+            "min": 0.2,
+            "max": 0.95,
+            "median": 0.85
+          },
+          "appropriateness": {
+            "mean": 0.865,
+            "std": 0.148,
+            "min": 0.4,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "completeness": {
+            "mean": 0.725,
+            "std": 0.118,
+            "min": 0.4,
+            "max": 0.9,
+            "median": 0.75
+          },
+          "clarity": {
+            "mean": 0.87,
+            "std": 0.085,
+            "min": 0.6,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "creativity": {
+            "mean": 0.685,
+            "std": 0.164,
+            "min": 0.3,
+            "max": 0.85,
+            "median": 0.75
+          },
+          "action_validity": {
+            "mean": 0.885,
+            "std": 0.258,
+            "min": 0.0,
+            "max": 1.0,
+            "median": 0.95
+          }
+        }
+      },
+      "player1": {
+        "total_responses": 20,
+        "metrics": {
+          "score": {
+            "mean": 0.69,
+            "std": 0.146,
+            "min": 0.4,
+            "max": 0.85,
+            "median": 0.65
+          },
+          "appropriateness": {
+            "mean": 0.785,
+            "std": 0.139,
+            "min": 0.4,
+            "max": 0.9,
+            "median": 0.8
+          },
+          "completeness": {
+            "mean": 0.645,
+            "std": 0.128,
+            "min": 0.4,
+            "max": 0.8,
+            "median": 0.6
+          },
+          "clarity": {
+            "mean": 0.805,
+            "std": 0.106,
+            "min": 0.5,
+            "max": 0.9,
+            "median": 0.8
+          },
+          "creativity": {
+            "mean": 0.6,
+            "std": 0.15,
+            "min": 0.2,
+            "max": 0.8,
+            "median": 0.675
+          },
+          "action_validity": {
+            "mean": 0.84,
+            "std": 0.233,
+            "min": 0.2,
+            "max": 1.0,
+            "median": 0.95
+          }
+        }
+      }
+    },
+    "game_outcomes": {
+      "completed_normally": 0,
+      "max_turns_reached": 2,
+      "all_players_dead": 0
+    }
+  },
+  "per_game_results": [
+    {
+      "game_id": "bench_901ed80b",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.795,
+        "appropriateness": 0.863,
+        "completeness": 0.733,
+        "clarity": 0.873,
+        "creativity": 0.698,
+        "action_validity": 0.932
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "mage",
+        "mage"
+      ]
+    },
+    {
+      "game_id": "bench_1cc4a513",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.658,
+        "appropriateness": 0.787,
+        "completeness": 0.637,
+        "clarity": 0.802,
+        "creativity": 0.588,
+        "action_validity": 0.792
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ]
+    }
+  ]
+}

@@ -68,10 +68,14 @@ class AIWrapper:
                 result = service.ask_ai_response(message)
             # Level 1 and 2: Show outputs and structured_outputs
             if verbose >= 1:
-                if isinstance(result, str):
-                    print(f"[AI] Output: {result[:200]}{'...' if len(result) > 200 else ''}")
-                else:
-                    print(f"[AI] Parsed structured output: {result}")
+                try:
+                    if isinstance(result, str):
+                        print(f"[AI] Output: {result[:200]}{'...' if len(result) > 200 else ''}")
+                    else:
+                        print(f"[AI] Parsed structured output: {result}")
+                except UnicodeEncodeError:
+                    # Handle Windows console encoding issues with emojis
+                    print("[AI] Parsed structured output (contains special characters)")
 
             return result
         except Exception as e:
@@ -100,7 +104,16 @@ class AIWrapper:
         if chat_id not in cls._services:
             prompt = system_prompt or ai_config.system_prompt
 
-            if "gpt" in model.lower() or "openai" in model.lower():
+            if model.lower().startswith("a2a:") or model.lower().startswith("a2a://"):
+                # A2A agent: model format is "a2a://host:port" or "a2a:host:port"
+                # Lazy import to avoid requiring a2a package when not used
+                from .a2a import A2AService
+                cls._services[chat_id] = A2AService(
+                    chat_id=chat_id,
+                    model=model,
+                    system_prompt=prompt
+                )
+            elif "gpt" in model.lower() or "openai" in model.lower():
                 cls._services[chat_id] = OpenAiService(
                     chat_id=chat_id,
                     model=model,

@@ -1,0 +1,359 @@
+{
+  "benchmark_id": "bench_20251217_041247",
+  "source_benchmarks": [
+    "bench_20251217_041247"
+  ],
+  "evaluated_at": "2025-12-17T05:29:26.223600",
+  "games_evaluated": 7,
+  "games_skipped": 3,
+  "games_corrupted": 0,
+  "evaluation_service": "custom",
+  "evaluation_model": "gpt-4.1-nano",
+  "aggregate_metrics": {
+    "win_rates": {
+      "games_with_winner": 7,
+      "total_games": 7,
+      "win_rate": 1.0,
+      "per_player_wins": {
+        "player0": {
+          "wins": 6,
+          "games": 7,
+          "win_rate": 0.857
+        },
+        "player1": {
+          "wins": 1,
+          "games": 7,
+          "win_rate": 0.143
+        }
+      }
+    },
+    "turn_statistics": {
+      "average_turns": 10,
+      "min_turns": 10,
+      "max_turns": 10,
+      "median_turns": 10
+    },
+    "player_statistics": {
+      "average_players_per_game": 2,
+      "total_players_evaluated": 14,
+      "unique_players": 2,
+      "total_responses_evaluated": 140
+    },
+    "evaluation_metrics": {
+      "score": {
+        "mean": 0.54,
+        "std": 0.226,
+        "min": 0.2,
+        "max": 1.0,
+        "median": 0.5
+      },
+      "appropriateness": {
+        "mean": 0.853,
+        "std": 0.172,
+        "min": 0.2,
+        "max": 1.0,
+        "median": 0.9
+      },
+      "completeness": {
+        "mean": 0.669,
+        "std": 0.156,
+        "min": 0.3,
+        "max": 1.0,
+        "median": 0.7
+      },
+      "clarity": {
+        "mean": 0.908,
+        "std": 0.088,
+        "min": 0.6,
+        "max": 1.0,
+        "median": 0.9
+      },
+      "creativity": {
+        "mean": 0.515,
+        "std": 0.153,
+        "min": 0.2,
+        "max": 0.8,
+        "median": 0.5
+      },
+      "action_validity": {
+        "mean": 0.892,
+        "std": 0.155,
+        "min": 0.1,
+        "max": 1.0,
+        "median": 0.9
+      }
+    },
+    "per_player_metrics": {
+      "player0": {
+        "total_responses": 70,
+        "metrics": {
+          "score": {
+            "mean": 0.548,
+            "std": 0.222,
+            "min": 0.2,
+            "max": 0.95,
+            "median": 0.6
+          },
+          "appropriateness": {
+            "mean": 0.859,
+            "std": 0.178,
+            "min": 0.2,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "completeness": {
+            "mean": 0.674,
+            "std": 0.142,
+            "min": 0.3,
+            "max": 1.0,
+            "median": 0.7
+          },
+          "clarity": {
+            "mean": 0.906,
+            "std": 0.096,
+            "min": 0.6,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "creativity": {
+            "mean": 0.511,
+            "std": 0.153,
+            "min": 0.2,
+            "max": 0.8,
+            "median": 0.5
+          },
+          "action_validity": {
+            "mean": 0.891,
+            "std": 0.162,
+            "min": 0.1,
+            "max": 1.0,
+            "median": 0.9
+          }
+        }
+      },
+      "player1": {
+        "total_responses": 70,
+        "metrics": {
+          "score": {
+            "mean": 0.531,
+            "std": 0.232,
+            "min": 0.2,
+            "max": 1.0,
+            "median": 0.45
+          },
+          "appropriateness": {
+            "mean": 0.848,
+            "std": 0.166,
+            "min": 0.3,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "completeness": {
+            "mean": 0.664,
+            "std": 0.17,
+            "min": 0.3,
+            "max": 1.0,
+            "median": 0.7
+          },
+          "clarity": {
+            "mean": 0.91,
+            "std": 0.08,
+            "min": 0.7,
+            "max": 1.0,
+            "median": 0.9
+          },
+          "creativity": {
+            "mean": 0.52,
+            "std": 0.155,
+            "min": 0.2,
+            "max": 0.8,
+            "median": 0.5
+          },
+          "action_validity": {
+            "mean": 0.894,
+            "std": 0.149,
+            "min": 0.2,
+            "max": 1.0,
+            "median": 0.9
+          }
+        }
+      }
+    },
+    "game_outcomes": {
+      "completed_normally": 0,
+      "max_turns_reached": 7,
+      "all_players_dead": 0
+    }
+  },
+  "per_game_results": [
+    {
+      "game_id": "bench_ca7c806d",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.535,
+        "appropriateness": 0.873,
+        "completeness": 0.705,
+        "clarity": 0.93,
+        "creativity": 0.495,
+        "action_validity": 0.887
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "warrior"
+      ]
+    },
+    {
+      "game_id": "bench_145909eb",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.66,
+        "appropriateness": 0.915,
+        "completeness": 0.725,
+        "clarity": 0.943,
+        "creativity": 0.575,
+        "action_validity": 0.92
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ]
+    },
+    {
+      "game_id": "bench_cc03293a",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.44,
+        "appropriateness": 0.76,
+        "completeness": 0.625,
+        "clarity": 0.89,
+        "creativity": 0.48,
+        "action_validity": 0.912
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ]
+    },
+    {
+      "game_id": "bench_b5b6740f",
+      "status": "completed",
+      "winner": "player1",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.52,
+        "appropriateness": 0.82,
+        "completeness": 0.625,
+        "clarity": 0.883,
+        "creativity": 0.555,
+        "action_validity": 0.835
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "mage"
+      ]
+    },
+    {
+      "game_id": "bench_363568f2",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.463,
+        "appropriateness": 0.83,
+        "completeness": 0.635,
+        "clarity": 0.91,
+        "creativity": 0.512,
+        "action_validity": 0.912
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "mage",
+        "warrior"
+      ]
+    },
+    {
+      "game_id": "bench_68c17b56",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.598,
+        "appropriateness": 0.89,
+        "completeness": 0.675,
+        "clarity": 0.905,
+        "creativity": 0.45,
+        "action_validity": 0.87
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "mage"
+      ]
+    },
+    {
+      "game_id": "bench_da980757",
+      "status": "completed",
+      "winner": "player0",
+      "turns_played": 10,
+      "num_players": 2,
+      "player_uids": [
+        "player0",
+        "player1"
+      ],
+      "metrics": {
+        "score": 0.562,
+        "appropriateness": 0.885,
+        "completeness": 0.695,
+        "clarity": 0.895,
+        "creativity": 0.54,
+        "action_validity": 0.91
+      },
+      "game_over_reason": "Maximum turns reached (10/10)",
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ]
+    }
+  ],
+  "corrupted_games": []
+}

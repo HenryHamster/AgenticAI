@@ -1,0 +1,47 @@
+{
+  "benchmark_id": "bench_20251216_010019",
+  "created_at": "2025-12-16T01:00:19.134367",
+  "config": {
+    "model": "mock",
+    "num_games_requested": 2,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_bfed8129",
+      "status": "error",
+      "num_players": 5,
+      "character_templates": [
+        "mage",
+        null,
+        null,
+        "mage",
+        null
+      ],
+      "started_at": "2025-12-16T01:00:19.134440",
+      "completed_at": "2025-12-16T01:00:21.656364",
+      "error": "'charmap' codec can't encode character '\\U0001f33e' in position 140: character maps to <undefined>"
+    },
+    {
+      "game_id": "bench_b92a506c",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        null,
+        "rogue"
+      ],
+      "started_at": "2025-12-16T01:00:23.656797",
+      "completed_at": "2025-12-16T01:00:25.431129",
+      "error": "'charmap' codec can't encode character '\\U0001f33e' in position 140: character maps to <undefined>"
+    }
+  ],
+  "summary": {
+    "total_requested": 2,
+    "completed": 0,
+    "failed": 2,
+    "success_rate": 0.0
+  }
+}

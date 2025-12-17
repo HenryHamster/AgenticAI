@@ -1,0 +1,142 @@
+{
+  "benchmark_id": "bench_20251217_041247",
+  "created_at": "2025-12-17T04:12:47.669965",
+  "config": {
+    "model": "gpt-4.1-mini",
+    "agent_model": null,
+    "num_players": 2,
+    "num_games_requested": 10,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_ca7c806d",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T04:12:47.670352",
+      "completed_at": "2025-12-17T04:20:21.748863",
+      "error": null
+    },
+    {
+      "game_id": "bench_145909eb",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ],
+      "started_at": "2025-12-17T04:20:23.750304",
+      "completed_at": "2025-12-17T04:28:04.485502",
+      "error": null
+    },
+    {
+      "game_id": "bench_b23a2d35",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T04:28:06.487150",
+      "completed_at": "2025-12-17T04:33:41.372607",
+      "error": "1 validation error for PlayerModel\nresponses.8\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.11/v/string_type"
+    },
+    {
+      "game_id": "bench_cc03293a",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ],
+      "started_at": "2025-12-17T04:33:43.373483",
+      "completed_at": "2025-12-17T04:41:29.140734",
+      "error": null
+    },
+    {
+      "game_id": "bench_b5b6740f",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "mage"
+      ],
+      "started_at": "2025-12-17T04:41:31.142091",
+      "completed_at": "2025-12-17T04:48:51.340040",
+      "error": null
+    },
+    {
+      "game_id": "bench_0efa7d3e",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "rogue"
+      ],
+      "started_at": "2025-12-17T04:48:53.340890",
+      "completed_at": "2025-12-17T04:49:06.151189",
+      "error": "'NoneType' object has no attribute 'description'"
+    },
+    {
+      "game_id": "bench_363568f2",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "mage",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T04:49:08.152144",
+      "completed_at": "2025-12-17T04:57:10.342712",
+      "error": null
+    },
+    {
+      "game_id": "bench_68c17b56",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "mage"
+      ],
+      "started_at": "2025-12-17T04:57:12.344608",
+      "completed_at": "2025-12-17T05:04:55.302879",
+      "error": null
+    },
+    {
+      "game_id": "bench_66f4c02b",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "mage"
+      ],
+      "started_at": "2025-12-17T05:04:57.303509",
+      "completed_at": "2025-12-17T05:10:42.542451",
+      "error": "1 validation error for PlayerModel\nresponses.8\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.11/v/string_type"
+    },
+    {
+      "game_id": "bench_da980757",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ],
+      "started_at": "2025-12-17T05:10:44.543874",
+      "completed_at": "2025-12-17T05:18:46.193444",
+      "error": null
+    }
+  ],
+  "summary": {
+    "total_requested": 10,
+    "completed": 7,
+    "failed": 3,
+    "success_rate": 0.7
+  }
+}

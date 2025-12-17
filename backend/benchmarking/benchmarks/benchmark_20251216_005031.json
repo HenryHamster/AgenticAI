@@ -1,0 +1,48 @@
+{
+  "benchmark_id": "bench_20251216_005031",
+  "created_at": "2025-12-16T00:50:31.569418",
+  "config": {
+    "model": "mock",
+    "num_games_requested": 2,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_09427534",
+      "status": "error",
+      "num_players": 3,
+      "character_templates": [
+        "rogue",
+        "rogue",
+        "warrior"
+      ],
+      "started_at": "2025-12-16T00:50:31.569493",
+      "completed_at": "2025-12-16T00:50:35.887989",
+      "error": "'dict' object has no attribute 'description'"
+    },
+    {
+      "game_id": "bench_2c96876b",
+      "status": "error",
+      "num_players": 5,
+      "character_templates": [
+        "warrior",
+        "rogue",
+        "warrior",
+        "warrior",
+        "mage"
+      ],
+      "started_at": "2025-12-16T00:50:37.888866",
+      "completed_at": "2025-12-16T00:50:39.805317",
+      "error": "'dict' object has no attribute 'description'"
+    }
+  ],
+  "summary": {
+    "total_requested": 2,
+    "completed": 0,
+    "failed": 2,
+    "success_rate": 0.0
+  }
+}

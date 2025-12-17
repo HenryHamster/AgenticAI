@@ -1,0 +1,47 @@
+{
+  "benchmark_id": "bench_20251216_134057",
+  "created_at": "2025-12-16T13:40:57.712218",
+  "config": {
+    "model": "gpt-4.1-nano",
+    "num_games_requested": 2,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_2e7f22ac",
+      "status": "error",
+      "num_players": 5,
+      "character_templates": [
+        "mage",
+        "warrior",
+        "rogue",
+        "mage",
+        "mage"
+      ],
+      "started_at": "2025-12-16T13:40:57.712297",
+      "completed_at": "2025-12-16T13:44:42.933903",
+      "error": "[Errno 22] Invalid argument"
+    },
+    {
+      "game_id": "bench_f6527425",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "rogue"
+      ],
+      "started_at": "2025-12-16T13:44:44.934285",
+      "completed_at": "2025-12-16T13:44:46.463980",
+      "error": "[Errno 22] Invalid argument"
+    }
+  ],
+  "summary": {
+    "total_requested": 2,
+    "completed": 0,
+    "failed": 2,
+    "success_rate": 0.0
+  }
+}

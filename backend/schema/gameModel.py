@@ -28,6 +28,7 @@ class PlayerConfigModel(BaseModel):
     starting_currency: int = 0
     character_class: Optional[str] = None
     agent_prompt: Optional[str] = ""
+    model: Optional[str] = None  # Per-player model override (uses game model if None)
 
 class GameModel(BaseModel):
     id: str = Field(min_length=1)

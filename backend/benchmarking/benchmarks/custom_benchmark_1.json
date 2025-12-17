@@ -1,0 +1,46 @@
+{
+  "benchmark_id": "bench_20251216_213228",
+  "created_at": "2025-12-16T21:32:28.553565",
+  "config": {
+    "model": "gpt-4.1-mini",
+    "agent_model": "a2a://localhost:9018",
+    "num_players": 2,
+    "num_games_requested": 2,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_901ed80b",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "mage",
+        "mage"
+      ],
+      "started_at": "2025-12-16T21:32:28.554071",
+      "completed_at": "2025-12-16T21:56:38.583704",
+      "error": null
+    },
+    {
+      "game_id": "bench_1cc4a513",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "rogue"
+      ],
+      "started_at": "2025-12-16T21:56:40.584216",
+      "completed_at": "2025-12-16T22:23:46.714156",
+      "error": null
+    }
+  ],
+  "summary": {
+    "total_requested": 2,
+    "completed": 2,
+    "failed": 0,
+    "success_rate": 1.0
+  }
+}

@@ -93,7 +93,7 @@ class Game(Savable):
             AIWrapper.reset(session_id)
             return position, tile
 
-        max_workers = min(32, len(positions)) or 1
+        max_workers = min(4, len(positions)) or 1  # Reduced from 32 to avoid API rate limits
         self.tiles = {}
         if max_workers == 1:
             for pos in positions:

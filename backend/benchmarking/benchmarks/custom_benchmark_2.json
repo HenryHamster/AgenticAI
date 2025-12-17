@@ -1,0 +1,136 @@
+{
+  "benchmark_id": "bench_20251217_000258",
+  "created_at": "2025-12-17T00:02:58.695884",
+  "config": {
+    "model": "gpt-4.1-mini",
+    "agent_model": "a2a://localhost:9018",
+    "num_players": 2,
+    "num_games_requested": 10,
+    "delay_seconds": 2.0,
+    "world_size": 2,
+    "max_turns": 10,
+    "currency_target": 1000
+  },
+  "games": [
+    {
+      "game_id": "bench_ad23d622",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T00:02:58.696354",
+      "completed_at": "2025-12-17T00:26:35.709593",
+      "error": null
+    },
+    {
+      "game_id": "bench_a8680f7b",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T00:26:37.712167",
+      "completed_at": "2025-12-17T00:51:27.147933",
+      "error": null
+    },
+    {
+      "game_id": "bench_587778d6",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T00:51:29.150485",
+      "completed_at": "2025-12-17T01:18:40.162211",
+      "error": null
+    },
+    {
+      "game_id": "bench_d30807fd",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "mage",
+        "mage"
+      ],
+      "started_at": "2025-12-17T01:18:42.163289",
+      "completed_at": "2025-12-17T01:42:13.638573",
+      "error": null
+    },
+    {
+      "game_id": "bench_061f01d1",
+      "status": "completed",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T01:42:15.639099",
+      "completed_at": "2025-12-17T02:09:59.689490",
+      "error": null
+    },
+    {
+      "game_id": "bench_1b9d2e2c",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "mage"
+      ],
+      "started_at": "2025-12-17T02:10:01.690498",
+      "completed_at": "2025-12-17T02:38:43.972939",
+      "error": "1 validation error for PlayerModel\nresponses.2\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.11/v/string_type"
+    },
+    {
+      "game_id": null,
+      "status": "error",
+      "num_players": 0,
+      "character_templates": [],
+      "started_at": "2025-12-17T02:38:45.973922",
+      "completed_at": "2025-12-17T02:38:46.586154",
+      "error": "Error saving game to Supabase: [Errno 11001] getaddrinfo failed"
+    },
+    {
+      "game_id": "bench_3886a718",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "rogue",
+        "warrior"
+      ],
+      "started_at": "2025-12-17T02:38:48.587404",
+      "completed_at": "2025-12-17T03:06:17.767983",
+      "error": "Error saving game to Supabase: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)"
+    },
+    {
+      "game_id": null,
+      "status": "error",
+      "num_players": 0,
+      "character_templates": [],
+      "started_at": "2025-12-17T03:06:19.769029",
+      "completed_at": "2025-12-17T03:06:21.070740",
+      "error": "Error saving game to Supabase: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)"
+    },
+    {
+      "game_id": "bench_9170af0f",
+      "status": "error",
+      "num_players": 2,
+      "character_templates": [
+        "warrior",
+        "mage"
+      ],
+      "started_at": "2025-12-17T03:06:23.071392",
+      "completed_at": "2025-12-17T03:14:39.212632",
+      "error": "Error saving turn to Supabase: {'message': 'unsupported Unicode escape sequence', 'code': '22P05', 'hint': None, 'details': '\\\\u0000 cannot be converted to text.'}"
+    }
+  ],
+  "summary": {
+    "total_requested": 10,
+    "completed": 5,
+    "failed": 5,
+    "success_rate": 0.5
+  }
+}

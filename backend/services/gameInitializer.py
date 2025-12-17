@@ -51,8 +51,8 @@ def create_player_info_from_configs(
     Create player configuration from individual player configs
 
     Args:
-        player_configs: List of player configuration objects with name, starting_health, starting_currency, character_class
-        model: AI model to use for players (default: "mock")
+        player_configs: List of player configuration objects with name, starting_health, starting_currency, character_class, model
+        model: Default AI model to use for players (default: "mock"). Can be overridden per-player.
 
     Returns:
         Dictionary of player data keyed by UID
@@ -61,10 +61,12 @@ def create_player_info_from_configs(
 
     for i, config in enumerate(player_configs):
         uid = config.name if hasattr(config, 'name') and config.name else f"player{i}"
+        # Use per-player model if set, otherwise fall back to default model
+        player_model = getattr(config, 'model', None) or model
         player_info[uid] = {
             "position": [0, 0],
             "UID": uid,
-            "model": model,
+            "model": player_model,
             "player_class": "human",
             "values": {
                 "money": config.starting_currency if hasattr(config, 'starting_currency') else 0,
