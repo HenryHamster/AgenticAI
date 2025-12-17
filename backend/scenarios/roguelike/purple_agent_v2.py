@@ -1,10 +1,7 @@
-"""Purple Agent - ADK Implementation"""
-
+"""Purple Agent - ADK Multi-Agent Ensemble Implementation"""
 import argparse
 import uvicorn
 import json
-import logging
-import os
 import httpx
 from dotenv import load_dotenv
 from starlette.responses import JSONResponse
@@ -12,12 +9,8 @@ from starlette.routing import Route
 
 load_dotenv()
 
-from google.adk.agents import Agent
+from google.adk.agents import Agent, SequentialAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
-from a2a.types import AgentCapabilities, AgentCard
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("roguelike_judge")
-
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 
 AGENT_DESCRIPTION = '''
@@ -44,36 +37,70 @@ def main():
     parser.add_argument("--card-url", type=str, help="Public URL for agent card")
     args = parser.parse_args()
 
-    agent = Agent(
+    # Sub-agent 1: Aggressive strategy
+    aggressive_agent = Agent(
+        name="aggressive",
+        model="gemini-2.5-pro",
+        description="Aggressive wealth-focused player",
+        instruction="You prioritize wealth above all. Take risks for high rewards. Suggest ONE bold action.",
+        output_key="aggressive_action"
+    )
+
+    # Sub-agent 2: Defensive strategy
+    defensive_agent = Agent(
+        name="defensive",
+        model="gemini-2.5-pro",
+        description="Defensive survival-focused player",
+        instruction="You prioritize survival. Avoid risks, prefer safe steady gains. Suggest ONE safe action.",
+        output_key="defensive_action"
+    )
+
+    # Sub-agent 3: Explorer strategy
+    explorer_agent = Agent(
+        name="explorer",
+        model="gemini-2.5-pro",
+        description="Exploration-focused player",
+        instruction="You prioritize discovering new areas and opportunities. Suggest ONE exploration action.",
+        output_key="explorer_action"
+    )
+
+    # Coordinator agent: Picks the best action from the three
+    coordinator = Agent(
+        name="coordinator",
+        model="gemini-2.5-pro",
+        description="Picks the best action",
+        instruction="""You are the coordinator. You receive three suggested actions:
+
+- Aggressive: {aggressive_action}
+- Defensive: {defensive_action}
+- Explorer: {explorer_action}
+
+Evaluate which action is BEST given the current game state. Consider:
+1. Current health (if low, prefer defensive)
+2. Current wealth (if high, can take more risks)
+3. Game progress (early game = explore, late game = consolidate)
+
+Output ONLY the single best action sentence. No explanation."""
+    )
+
+    # Sequential agent: runs sub-agents then coordinator picks best
+    agent = SequentialAgent(
         name="player",
-        model="gemini-2.0-flash",
-        description="Strategic player in roguelike economy game",
-        instruction=(
-            "You are a strategic adventurer in a roguelike economy game. Your goal is to maximize wealth.\n\n"
-            "GAME RULES:\n"
-            "- You can move (north/south/east/west), explore, search, rest, or use abilities\n"
-            "- Exploring tiles reveals secrets and resources\n"
-            "- Searching finds hidden treasures\n"
-            "- Other players are competitors - you can cooperate or compete\n\n"
-            "RESPONSE FORMAT:\n"
-            "- During NEGOTIATION: Discuss strategy briefly (1-2 sentences)\n"
-            "- During ACTION: State ONE specific action (e.g., 'I move north to explore the forest')\n\n"
-            "Be strategic. Consider tile positions, other players, and your resources."
-        ),
+        description="Multi-agent ensemble player",
+        sub_agents=[aggressive_agent, defensive_agent, explorer_agent, coordinator]
     )
 
     # Use public URL if provided
     if args.card_url:
         base_url = args.card_url.rstrip('/')
-        logger.info(f"Using public URL from --card-url: {base_url}")
     else:
         base_url = f"http://{args.host}:{args.port}"
 
     player_skill = AgentSkill(
-        id="roguelike_player_action",
-        name="Roguelike Player Action",
-        description="Generate strategic actions to maximize wealth in a roguelike economy game. The agent receives game state (stats, position) and returns a single action.",
-        tags=["game", "strategy", "roguelike", "a2a"],
+        id="roguelike_player_ensemble",
+        name="Roguelike Player Ensemble",
+        description="Multi-agent ensemble: 3 strategy agents (aggressive, defensive, explorer) + coordinator that picks the best action.",
+        tags=["game", "strategy", "roguelike", "a2a", "ensemble"],
         examples=[
             "Move north to explore the unknown tile",
             "Search this area for hidden resources",
@@ -82,16 +109,13 @@ def main():
     )
 
     card = AgentCard(
-        name="player",
-        description="Roguelike economy player",
-        url=agent_url,
+        name="player_ensemble",
         description=AGENT_DESCRIPTION,
         url=base_url,
-        version="1.0.0",
+        version="2.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
         capabilities=AgentCapabilities(streaming=True),
-        skills=[],
         skills=[player_skill]
     )
 
@@ -156,38 +180,11 @@ def main():
         except Exception as e:
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-    app.routes.append(
-        Route(
-            "/", lambda request: JSONResponse({
-                "capabilities": {"streaming": True},
-                "defaultInputModes": ["text"],
-                "defaultOutputModes": ["text"],
-                "description": "Roguelike economy game judge",
-                "name": "RoguelikeJudge",
-                "preferredTransport": "JSONRPC",
-                "protocolVersion": "0.3.0",
-                "skills": [
-                    {
-                        "description": "Host a roguelike economy game to assess agent decision making.",
-                        "examples": [
-                            'Your task is to host a roguelike game to test the agents.\nYou should use the following env configuration:\n<env_config>\n{\n  "max_turns": 10,\n  "world_size": 10\n}\n</env_config>'
-                        ],
-                        "id": "host_roguelike_game",
-                        "name": "Roguelike Game Hosting",
-                        "tags": ["green agent", "roguelike", "hosting"],
-                    }
-                ],
-                "url": agent_url,
-                "version": "1.0.0",
-            }),
-        )
-    )
     app.routes.append(Route("/status", status))
     app.routes.append(Route("/reset", reset, methods=["POST"]))
     app.routes.append(Route("/.well-known/agent-card.json", agent_card_endpoint))
 
     uvicorn.run(app, host=args.host, port=args.port)
-
 
 if __name__ == "__main__":
     main()
