@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from typing_extensions import override
 from database.fileManager import Savable
 from core.settings import AIConfig, GameConfig
@@ -83,6 +83,8 @@ class Player(Savable):
     invalid_action_count: int
     total_action_count: int
     _negotiation_messages: list[str]
+    a2a_agent_id: Optional[str]
+    tool_provider: Optional[Any]
 
 
     def __init__(self, UID, position:tuple[int,int] = (0,0), player_class: str = "human", model:str = "gpt-4.1-mini", chat_id:str = "DefaultID", character_template_name: Optional[str] = None, **kwargs):
@@ -107,6 +109,8 @@ class Player(Savable):
         self.invalid_action_count = 0
         self.total_action_count = 0
         self._negotiation_messages = []
+        self.a2a_agent_id = None
+        self.tool_provider = None
 
         if character_template_name:
             try:
@@ -137,20 +141,59 @@ class Player(Savable):
         """Get a negotiation message during the planning phase. This is discussion only, not a final action."""
         if self.is_dead():
             return "This player is dead."
-        prompt = self._augment_prompt(AIConfig.negotiation_prompt)
-        response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
+
+        # Use A2A if agent_id is set
+        if self.a2a_agent_id and self.tool_provider:
+            import asyncio
+            prompt = self._augment_prompt(AIConfig.negotiation_prompt)
+            formatted_context = format_request(prompt, context)
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an async context, schedule coroutine in current loop
+                response = asyncio.run_coroutine_threadsafe(
+                    self.tool_provider.talk_to_agent(formatted_context, self.a2a_agent_id, new_conversation=False),
+                    loop
+                ).result()
+            except RuntimeError:
+                # No running loop, create one
+                response = asyncio.run(self.tool_provider.talk_to_agent(formatted_context, self.a2a_agent_id, new_conversation=False))
+        else:
+            prompt = self._augment_prompt(AIConfig.negotiation_prompt)
+            response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
+
         self._negotiation_messages.append(response)
         return response
     def get_action(self,context: dict) -> str:
         if self.is_dead():
             return "This player is dead."
-        prompt = self._augment_prompt(AIConfig.player_prompt)
-        response = ""
-        if self.character_template:
-            enriched_context = self._enrich_context_with_character_data(context)
-            response = AIWrapper.ask(format_request(prompt, enriched_context), self.model, self.UID)
+
+        # Use A2A if agent_id is set
+        if self.a2a_agent_id and self.tool_provider:
+            import asyncio
+            prompt = self._augment_prompt(AIConfig.player_prompt)
+            if self.character_template:
+                enriched_context = self._enrich_context_with_character_data(context)
+                formatted_context = format_request(prompt, enriched_context)
+            else:
+                formatted_context = format_request(prompt, context)
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an async context, schedule coroutine in current loop
+                response = asyncio.run_coroutine_threadsafe(
+                    self.tool_provider.talk_to_agent(formatted_context, self.a2a_agent_id, new_conversation=False),
+                    loop
+                ).result()
+            except RuntimeError:
+                # No running loop, create one
+                response = asyncio.run(self.tool_provider.talk_to_agent(formatted_context, self.a2a_agent_id, new_conversation=False))
         else:
-            response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
+            prompt = self._augment_prompt(AIConfig.player_prompt)
+            if self.character_template:
+                enriched_context = self._enrich_context_with_character_data(context)
+                response = AIWrapper.ask(format_request(prompt, enriched_context), self.model, self.UID)
+            else:
+                response = AIWrapper.ask(format_request(prompt, context), self.model, self.UID)
+
         self._responses.append(response)
         return response
 
