@@ -200,6 +200,17 @@ class GameConfig:
 2. Implement `ask_ai_response()`, `ask_ai_response_with_structured_output()`, `ask_isolated_ai_response()`
 3. Register in `AIWrapper.py`
 
+### Modifying AgentBeats Agents
+
+The AgentBeats agents are located in `backend/scenarios/roguelike/`.
+
+**Purple Agent (Player)**: `backend/scenarios/roguelike/purple_agent.py`
+
+To customize the player agent's behavior:
+1. **System Prompt**: Modify the `instruction` parameter in the `Agent` initialization. This controls the agent's personality and strategy.
+2. **Model**: Change the `model` parameter (e.g., to `gemini-1.5-pro`) to use a different underlying LLM.
+3. **Skills**: Update `AgentSkill` definitions to provide different examples or descriptions of capabilities to the agent.
+
 
 ## Documentation
 
