@@ -1,0 +1,196 @@
+{
+  "race": "Elf",
+  "character_class": "Mage",
+  "racial_traits": [
+    {
+      "name": "Arcane Affinity",
+      "description": "Elves have innate magical talent",
+      "mechanical_effect": "+2 to spell attack rolls"
+    }
+  ],
+  "base_attributes": {
+    "STR": 8,
+    "DEX": 14,
+    "CON": 12,
+    "INT": 18,
+    "WIS": 13,
+    "CHA": 11
+  },
+  "primary_attributes": ["INT", "WIS"],
+  "proficiencies": ["Light armor", "Daggers", "Staves", "Arcane Focus"],
+  "starting_equipment": ["Staff", "Spellbook", "Robes", "Mana Potion"],
+  "resource_pools": {
+    "spell_slots_1": 4,
+    "spell_slots_2": 2,
+    "spell_slots_3": 0,
+    "mana": 20
+  },
+  "hit_die": "1d6",
+  "skills": [
+    {
+      "name": "Magic Missile",
+      "description": "Fire unerring bolts of force",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"spell_slots_1": 1},
+      "cooldown_turns": 0,
+      "effect_description": "Fire 3 bolts that automatically hit",
+      "damage_formula": "3d4 + INT_modifier"
+    },
+    {
+      "name": "Shield Spell",
+      "description": "Create a magical barrier",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"spell_slots_1": 1},
+      "cooldown_turns": 1,
+      "effect_description": "Add +5 to AC for 1 turn",
+      "damage_formula": null
+    },
+    {
+      "name": "Detect Magic",
+      "description": "Sense magical auras",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"mana": 2},
+      "cooldown_turns": 0,
+      "effect_description": "Reveal all magical items and effects nearby",
+      "damage_formula": null
+    },
+    {
+      "name": "Fireball",
+      "description": "Explosive ball of flame",
+      "unlock_level": 3,
+      "prerequisites": ["Magic Missile"],
+      "attribute_requirements": {"INT": 15},
+      "resource_cost": {"spell_slots_2": 1},
+      "cooldown_turns": 2,
+      "effect_description": "AOE damage to all enemies in area",
+      "damage_formula": "8d6 + INT_modifier"
+    },
+    {
+      "name": "Counterspell",
+      "description": "Interrupt enemy spells",
+      "unlock_level": 3,
+      "prerequisites": [],
+      "attribute_requirements": {"INT": 16},
+      "resource_cost": {"spell_slots_2": 1},
+      "cooldown_turns": 3,
+      "effect_description": "Cancel an enemy spell",
+      "damage_formula": null
+    },
+    {
+      "name": "Teleport",
+      "description": "Instantly move to a location",
+      "unlock_level": 5,
+      "prerequisites": [],
+      "attribute_requirements": {"INT": 17},
+      "resource_cost": {"spell_slots_3": 1},
+      "cooldown_turns": 4,
+      "effect_description": "Move to any visible location",
+      "damage_formula": null
+    },
+    {
+      "name": "Lightning Bolt",
+      "description": "Chain lightning through enemies",
+      "unlock_level": 5,
+      "prerequisites": ["Fireball"],
+      "attribute_requirements": {"INT": 16},
+      "resource_cost": {"spell_slots_2": 1},
+      "cooldown_turns": 2,
+      "effect_description": "Strike multiple enemies in a line",
+      "damage_formula": "8d8 + INT_modifier"
+    },
+    {
+      "name": "Arcane Ward",
+      "description": "Create a protective magical shield",
+      "unlock_level": 7,
+      "prerequisites": ["Shield Spell"],
+      "attribute_requirements": {"INT": 17},
+      "resource_cost": {"mana": 10},
+      "cooldown_turns": 5,
+      "effect_description": "Absorb 30 damage before depleting",
+      "damage_formula": null
+    },
+    {
+      "name": "Polymorph",
+      "description": "Transform a creature",
+      "unlock_level": 9,
+      "prerequisites": [],
+      "attribute_requirements": {"INT": 18, "WIS": 14},
+      "resource_cost": {"spell_slots_3": 1},
+      "cooldown_turns": 6,
+      "effect_description": "Transform target into harmless creature for 3 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Chain Lightning",
+      "description": "Lightning that jumps between foes",
+      "unlock_level": 11,
+      "prerequisites": ["Lightning Bolt"],
+      "attribute_requirements": {"INT": 19},
+      "resource_cost": {"spell_slots_3": 1},
+      "cooldown_turns": 4,
+      "effect_description": "Strike up to 5 enemies",
+      "damage_formula": "10d8 + INT_modifier"
+    },
+    {
+      "name": "Spell Mastery",
+      "description": "Perfect spellcasting technique",
+      "unlock_level": 13,
+      "prerequisites": ["Fireball", "Lightning Bolt"],
+      "attribute_requirements": {"INT": 20},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Cast one level 1 or 2 spell per turn without using spell slots",
+      "damage_formula": null
+    },
+    {
+      "name": "Time Stop",
+      "description": "Freeze time briefly",
+      "unlock_level": 15,
+      "prerequisites": ["Teleport"],
+      "attribute_requirements": {"INT": 20, "WIS": 16},
+      "resource_cost": {"spell_slots_3": 2},
+      "cooldown_turns": 10,
+      "effect_description": "Take 2 extra turns immediately",
+      "damage_formula": null
+    },
+    {
+      "name": "Meteor Swarm",
+      "description": "Rain flaming meteors from the sky",
+      "unlock_level": 17,
+      "prerequisites": ["Fireball", "Chain Lightning"],
+      "attribute_requirements": {"INT": 20},
+      "resource_cost": {"spell_slots_3": 2},
+      "cooldown_turns": 7,
+      "effect_description": "Massive AOE damage to all enemies",
+      "damage_formula": "20d6 + INT_modifier * 2"
+    },
+    {
+      "name": "Spell Reflection",
+      "description": "Reflect spells back at caster",
+      "unlock_level": 18,
+      "prerequisites": ["Counterspell", "Arcane Ward"],
+      "attribute_requirements": {"INT": 20},
+      "resource_cost": {"mana": 15},
+      "cooldown_turns": 8,
+      "effect_description": "Automatically reflect next 2 spells",
+      "damage_formula": null
+    },
+    {
+      "name": "Arcane Ascension",
+      "description": "Become pure magical energy",
+      "unlock_level": 20,
+      "prerequisites": ["Time Stop", "Spell Mastery"],
+      "attribute_requirements": {"INT": 20, "WIS": 18},
+      "resource_cost": {"spell_slots_3": 3, "mana": 20},
+      "cooldown_turns": 20,
+      "effect_description": "All spells deal double damage, cost no resources, immune to magic for 4 turns",
+      "damage_formula": null
+    }
+  ]
+}

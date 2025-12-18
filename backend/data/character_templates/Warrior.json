@@ -1,0 +1,194 @@
+{
+  "race": "Human",
+  "character_class": "Warrior",
+  "racial_traits": [
+    {
+      "name": "Versatile Fighter",
+      "description": "Humans excel in combat through determination",
+      "mechanical_effect": "+1 to all physical combat rolls"
+    }
+  ],
+  "base_attributes": {
+    "STR": 16,
+    "DEX": 12,
+    "CON": 15,
+    "INT": 10,
+    "WIS": 11,
+    "CHA": 10
+  },
+  "primary_attributes": ["STR", "CON"],
+  "proficiencies": ["All armor", "All weapons", "Shields"],
+  "starting_equipment": ["Longsword", "Shield", "Chainmail", "Healing Potion"],
+  "resource_pools": {
+    "stamina": 10,
+    "action_surge": 1
+  },
+  "hit_die": "1d10",
+  "skills": [
+    {
+      "name": "Power Attack",
+      "description": "A devastating melee strike",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {"STR": 13},
+      "resource_cost": {"stamina": 2},
+      "cooldown_turns": 0,
+      "effect_description": "Deal heavy damage to a single target",
+      "damage_formula": "2d6 + STR_modifier"
+    },
+    {
+      "name": "Shield Bash",
+      "description": "Stun an enemy with your shield",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"stamina": 1},
+      "cooldown_turns": 1,
+      "effect_description": "Stun target for 1 turn",
+      "damage_formula": "1d6 + STR_modifier"
+    },
+    {
+      "name": "Defensive Stance",
+      "description": "Increase your defense temporarily",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"stamina": 2},
+      "cooldown_turns": 3,
+      "effect_description": "Reduce incoming damage by 50% for 2 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Cleaving Strike",
+      "description": "Attack multiple enemies at once",
+      "unlock_level": 3,
+      "prerequisites": ["Power Attack"],
+      "attribute_requirements": {"STR": 15},
+      "resource_cost": {"stamina": 4},
+      "cooldown_turns": 2,
+      "effect_description": "Attack all adjacent enemies",
+      "damage_formula": "1d8 + STR_modifier"
+    },
+    {
+      "name": "Battle Cry",
+      "description": "Inspire nearby allies",
+      "unlock_level": 3,
+      "prerequisites": [],
+      "attribute_requirements": {"CHA": 12},
+      "resource_cost": {"stamina": 3},
+      "cooldown_turns": 4,
+      "effect_description": "Allies gain +2 to attack rolls for 3 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Second Wind",
+      "description": "Recover health in combat",
+      "unlock_level": 5,
+      "prerequisites": [],
+      "attribute_requirements": {"CON": 14},
+      "resource_cost": {"action_surge": 1},
+      "cooldown_turns": 5,
+      "effect_description": "Restore 2d10 + CON_modifier health",
+      "damage_formula": null
+    },
+    {
+      "name": "Whirlwind Attack",
+      "description": "Spin and attack all nearby enemies",
+      "unlock_level": 5,
+      "prerequisites": ["Cleaving Strike"],
+      "attribute_requirements": {"STR": 16, "DEX": 13},
+      "resource_cost": {"stamina": 6},
+      "cooldown_turns": 3,
+      "effect_description": "Attack all enemies within 10 feet",
+      "damage_formula": "2d6 + STR_modifier"
+    },
+    {
+      "name": "Iron Will",
+      "description": "Resist mental effects",
+      "unlock_level": 7,
+      "prerequisites": [],
+      "attribute_requirements": {"WIS": 13},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Advantage on saves against mind control",
+      "damage_formula": null
+    },
+    {
+      "name": "Devastating Critical",
+      "description": "Land crushing critical hits",
+      "unlock_level": 9,
+      "prerequisites": ["Power Attack"],
+      "attribute_requirements": {"STR": 17},
+      "resource_cost": {"stamina": 5},
+      "cooldown_turns": 4,
+      "effect_description": "Next attack has advantage and deals triple damage on crit",
+      "damage_formula": "3d10 + STR_modifier"
+    },
+    {
+      "name": "Relentless Assault",
+      "description": "Chain multiple attacks together",
+      "unlock_level": 11,
+      "prerequisites": ["Power Attack", "Cleaving Strike"],
+      "attribute_requirements": {"STR": 18},
+      "resource_cost": {"stamina": 8},
+      "cooldown_turns": 5,
+      "effect_description": "Make 3 consecutive attacks",
+      "damage_formula": "1d12 + STR_modifier per attack"
+    },
+    {
+      "name": "Indomitable",
+      "description": "Refuse to fall in battle",
+      "unlock_level": 13,
+      "prerequisites": ["Iron Will"],
+      "attribute_requirements": {"CON": 16},
+      "resource_cost": {"action_surge": 1},
+      "cooldown_turns": 10,
+      "effect_description": "When reduced to 0 HP, stay at 1 HP instead",
+      "damage_formula": null
+    },
+    {
+      "name": "Master Strike",
+      "description": "A perfectly executed attack",
+      "unlock_level": 15,
+      "prerequisites": ["Power Attack", "Devastating Critical"],
+      "attribute_requirements": {"STR": 19},
+      "resource_cost": {"stamina": 10},
+      "cooldown_turns": 6,
+      "effect_description": "Guaranteed critical hit with maximum damage",
+      "damage_formula": "4d12 + STR_modifier * 2"
+    },
+    {
+      "name": "Titan's Strength",
+      "description": "Channel superhuman strength",
+      "unlock_level": 17,
+      "prerequisites": ["Master Strike"],
+      "attribute_requirements": {"STR": 20},
+      "resource_cost": {"stamina": 12, "action_surge": 1},
+      "cooldown_turns": 8,
+      "effect_description": "STR becomes 25 for 3 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Legendary Resistance",
+      "description": "Shrug off any effect",
+      "unlock_level": 18,
+      "prerequisites": ["Indomitable"],
+      "attribute_requirements": {"CON": 18},
+      "resource_cost": {},
+      "cooldown_turns": 15,
+      "effect_description": "Automatically succeed on any saving throw",
+      "damage_formula": null
+    },
+    {
+      "name": "Avatar of War",
+      "description": "Become an unstoppable force",
+      "unlock_level": 20,
+      "prerequisites": ["Titan's Strength", "Relentless Assault"],
+      "attribute_requirements": {"STR": 20, "CON": 18},
+      "resource_cost": {"stamina": 15, "action_surge": 1},
+      "cooldown_turns": 20,
+      "effect_description": "Double all damage, resistance to all damage, advantage on all attacks for 5 turns",
+      "damage_formula": null
+    }
+  ]
+}
