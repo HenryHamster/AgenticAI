@@ -21,25 +21,6 @@ export async function fetchGameRuns(): Promise<GameRun[]> {
   return data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function fetchGameRunById(id: string): Promise<GameRun | null> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/game/${id}?include_turns=true`);
-    
-    if (response.status === 404) {
-      return null;
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch game: ${response.statusText}`);
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching game by ID:', error);
-    return null;
-  }
-}
-
 export async function fetchTurnByNumber(gameId: string, turnNumber: number): Promise<Turn | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/game/${gameId}?include_turns=true`);

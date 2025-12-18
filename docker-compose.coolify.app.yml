@@ -36,10 +36,12 @@ services:
       dockerfile: Dockerfile.coolify
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://dnd-backend.kamalaldin.com/api/v1}
+        - NEXT_PUBLIC_SERVER_SIDE_API_URL=${NEXT_PUBLIC_SERVER_SIDE_API_URL:-https://dnd-backend.kamalaldin.com/api/v1}
     expose:
       - "3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://dnd-backend.kamalaldin.com/api/v1}
+      - NEXT_PUBLIC_SERVER_SIDE_API_URL=${NEXT_PUBLIC_SERVER_SIDE_API_URL:-https://dnd-backend.kamalaldin.com/api/v1}
       - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
     depends_on:
       backend:

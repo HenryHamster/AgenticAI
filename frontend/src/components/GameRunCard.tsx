@@ -32,12 +32,12 @@ export default function GameRunCard({ gameRun }: GameRunCardProps) {
     <Link href={`/game/${gameRun.id}`}>
       <div className="border border-gray-300 rounded-lg p-4 hover:shadow-lg hover:border-blue-400 transition-all cursor-pointer bg-white">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-bold text-gray-800">
+              <h3 className="text-lg font-bold text-gray-800 truncate" title={gameRun.name || gameRun.id}>
                 {gameRun.name || gameRun.id}
               </h3>
-              <span className={`${statusColor.bg} ${statusColor.text} px-2 py-0.5 rounded text-xs font-semibold uppercase`}>
+              <span className={`${statusColor.bg} ${statusColor.text} px-2 py-0.5 rounded text-xs font-semibold uppercase flex-shrink-0`}>
                 {status}
               </span>
             </div>
