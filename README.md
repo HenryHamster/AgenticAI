@@ -6,8 +6,10 @@
 
 AgenticAI is an experimental game where autonomous AI agents navigate a shared world, make decisions, and compete for wealth. Each tile on the game board carries a natural-language description that evolves as players interact with it. A Dungeon Master AI orchestrates the world, adjudicates actions, and narrates outcomes, creating an emergent narrative driven entirely by language models.
 
-[Platform Image](platform_image.png)
-[Game run image](game_run_image.png)
+<p align="center">
+  <img src="platform_image.png" width="60%" />
+  <img src="game_run_image.png" width="30%" />
+</p>
 
 ### Key Features
 
