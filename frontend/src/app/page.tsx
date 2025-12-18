@@ -24,7 +24,7 @@ export default function Home() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                🎮 Dungeon Master
+                🎮 Dungeons and Dialogues
               </h1>
             </div>
             <Link
