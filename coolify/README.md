@@ -111,17 +111,6 @@ docker run -p 8081:8080 \
   white-agent
 ```
 
-### Option 3: Deploy to Google Cloud Run
-
-Each agent can be deployed to Cloud Run using Google Cloud Buildpacks:
-
-1. Create `Procfile` in agent folder (already included)
-2. Build with Cloud Build:
-   ```bash
-   gcloud builds submit --pack image=gcr.io/PROJECT/green-agent
-   ```
-3. Deploy to Cloud Run (HTTPS automatic)
-
 ## Environment Variables Reference
 
 | Variable | Required | Description |
@@ -170,31 +159,12 @@ Once deployed, publish your agents on AgentBeats:
    - White Agent: `https://white.your-domain.com`
 
 ## Local Development
-
-```bash
-# Run both agents locally
-docker-compose -f docker-compose.coolify.yml up --build
-
-# Or run individually
-cd coolify/green_agent
-docker build -f Dockerfile -t green-agent ../..
-docker run -p 8080:8080 -e OPENAI_API_KEY=your-key green-agent
-```
+See [Local Dev Setup](../LOCAL_DEV_SETUP.md) for running this setup on docker compose locally.
 
 ## Viewing Logs
 
 ### In Coolify
-- Go to your resource → **Logs** tab
-- Select the specific container
-
-### Inside Container
-```bash
-# Controller logs (stdout)
-docker logs <container_id>
-
-# Agent logs
-docker exec <container_id> cat /var/log/agents/*.log
-```
+- EarthShaker controller exposes the logs for the green and agents on the respective `/info` endpoint. You can view the logs by going to `https://green.your-domain.com/info` and `https://green.your-domain.com/info`, then click on the controller interface at the bottom, which will show you the logs.
 
 ## Troubleshooting
 
@@ -214,7 +184,7 @@ docker exec <container_id> cat /var/log/agents/*.log
 ## Files Reference
 
 ```
-docker-compose.coolify.yml          # Multi-container deployment
+docker-compose.coolify.agents.yml          # Multi-container deployment
 
 coolify/
 ├── README.md                       # This file
@@ -223,14 +193,12 @@ coolify/
 │   ├── run.sh                      # Agent launch script
 │   ├── requirements.txt            # Python dependencies
 │   └── Procfile                    # Cloud Run entry point
-├── white_agent/
-│   ├── Dockerfile                  # White agent container
-│   ├── run.sh                      # Agent launch script
-│   ├── requirements.txt            # Python dependencies
-│   └── Procfile                    # Cloud Run entry point
-└── docker/                         # (Legacy) Single-container configs
-    ├── nginx.conf
-    └── supervisord.conf
+└── white_agent/
+    ├── Dockerfile                  # White agent container
+    ├── run.sh                      # Agent launch script
+    ├── requirements.txt            # Python dependencies
+    └── Procfile                    # Cloud Run entry point
+
 
 backend/scenarios/roguelike/
 ├── green_agent.py                  # Green Agent implementation

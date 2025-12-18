@@ -19,75 +19,110 @@ AgenticAI is an experimental game where autonomous AI agents navigate a shared w
 
 ```
 AgenticAI/
-├── backend/              # Python backend game engine
-│   ├── src/
-│   │   ├── app/         # Core game logic (Game, Player, DungeonMaster, Tile)
-│   │   ├── services/    # AI integration and response parsing
-│   │   ├── database/    # File-based persistence
-│   │   └── core/        # Configuration and settings
-│   ├── testing/         # Test scripts and utilities
-│   ├── data/            # Game data and design documents
-│   └── main.py          # Entry point
+├── backend/                          # Python backend
+│   ├── src/app/                      # Core game logic
+│   ├── scenarios/roguelike/          # AgentBeats agent implementations
+│   │   ├── green_agent.py            # Game Judge/Orchestrator (DM)
+│   │   ├── purple_agent.py           # Player Agent
+│   │   └── agentbeats_lib/           # A2A protocol utilities
+│   └── main.py                       # Entry point
 │
-└── frontend/            # Next.js web interface
-    ├── src/
-    │   ├── app/         # Next.js pages (game list, game detail)
-    │   ├── components/  # React components (board, timeline, stats)
-    │   ├── services/    # API integration
-    │   ├── types/       # TypeScript type definitions
-    │   └── scripts/     # Mock data generation
-    └── public/          # Static assets
+├── frontend/                         # Next.js web interface
+│   ├── src/app/                      # Next.js pages
+│   ├── src/components/               # React components
+│   └── src/services/                 # API integration
+│
+├── coolify/                          # AgentBeats deployment configs
+│   ├── green_agent/                  # Green Agent container setup
+│   │   ├── Dockerfile
+│   │   └── run.sh
+│   └── white_agent/                  # White Agent container setup
+│       ├── Dockerfile
+│       └── run.sh
+│
+├── docker-compose.yml                # Local app (backend + frontend)
+└── docker-compose.local.agents.yml   # Local AgentBeats agents
 ```
 
 ## Quick Start
 
+This project has **two separate setup options**:
+
+1. **Backend + Frontend App** - The web interface for viewing and managing games
+2. **AgentBeats Agents** - Autonomous AI agents that play the game via the A2A protocol
+
 ### Prerequisites
 
-- **Backend**: Python 3.10+
-- **Frontend**: Node.js 20+
-- API keys for at least one LLM provider:
+- Docker and Docker Compose
+- API keys for LLM providers:
   - OpenAI API key (for GPT models)
-  - Anthropic API key (for Claude models)
+  - Google API key (for Gemini models)
+  - Anthropic API key (optional, for Claude models)
 
-### Backend Setup
+---
 
-```bash
-# Navigate to backend directory
-cd backend
+### Option 1: Backend + Frontend App
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export OPENAI_API_KEY="your_openai_key"
-export CLAUDE_API_KEY="your_claude_key"
-
-# Run tests
-python testing/test_parser.py
-python testing/test_openai_integration.py
-
-# Run the game (experimental)
-python main.py
-```
-
-### Frontend Setup
+Run the web application using Docker Compose:
 
 ```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+# Start the backend and frontend
+docker compose up --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the game interface.
+This starts:
+- **Backend**: [http://localhost:8000](http://localhost:8000)
+- **Frontend**: [http://localhost:3000](http://localhost:3000)
+
+---
+
+### Option 2: AgentBeats Agents (Local Development)
+
+Run the AI agents locally with Cloudflare tunnels for public access:
+
+#### 1. Set up environment variables
+
+Create a `.env.local` file in the project root:
+
+```bash
+# API Keys
+OPENAI_API_KEY=your-openai-key
+GOOGLE_API_KEY=your-google-key
+CLAUDE_API_KEY=your-claude-key  # optional
+```
+
+#### 2. Start Cloudflare tunnels
+
+```bash
+# Make the script executable (one-time)
+chmod +x start-local-tunnels.sh
+
+# Start tunnels (keep this running)
+./start-local-tunnels.sh
+```
+
+This creates public URLs for each agent and writes them to `.env.local`.
+
+#### 3. Start the agents (in another terminal)
+
+```bash
+docker compose -f docker-compose.local.agents.yml --env-file .env.local up --build
+```
+
+This starts:
+- **Green Agent** (Game Judge): [http://localhost:8011](http://localhost:8011)
+- **White Agent 1** (Player): [http://localhost:8012](http://localhost:8012)
+- **White Agent 2** (Player): [http://localhost:8013](http://localhost:8013)
+
+#### 4. Verify the agents
+
+```bash
+curl http://localhost:8011/status  # Green Agent
+curl http://localhost:8012/status  # White Agent 1
+curl http://localhost:8013/status  # White Agent 2
+```
+
+For detailed setup instructions, see [LOCAL_DEV_SETUP.md](LOCAL_DEV_SETUP.md).
 
 ## How It Works
 
@@ -122,95 +157,11 @@ The system supports multiple LLM providers through a unified `AIWrapper`:
 - **Structured Output**: Pydantic-validated responses for reliable data extraction
 - **Chat History**: Maintains conversation context for coherent multi-turn interactions
 
-### Response Parsing
-
-LLM responses are parsed using `DnDResponseParser`:
-- Extracts JSON embedded in natural language text
-- Validates character state (money, health, position, action)
-- Validates world state (tile coordinates and descriptions)
-- Falls back to defaults gracefully when parsing fails
-
-### Persistence
-
-All game state is serializable via the `Savable` interface:
-- Game configuration and current turn
-- All player states and histories
-- Complete tile map with descriptions
-- Dungeon Master state
-
-Save/load operations use JSON format with comprehensive validation.
-
-## Architecture Highlights
-
-### Backend (Python)
-
-**Core Application Layer** (`src/app/`)
-- `Game.py`: Orchestrates turn-based loop, manages async player actions
-- `Player.py`: AI agent wrapper with stats, position, and LLM integration
-- `DungeonMaster.py`: World generation and action adjudication
-- `Tile.py`: World grid locations with natural-language descriptions
-
-**AI Service Layer** (`src/services/aiServices/`)
-- `AIWrapper.py`: Multiplexes between AI providers, manages chat contexts
-- `OpenAiService.py`: LangChain-based OpenAI integration
-- `ClaudeService.py`: LangChain-based Anthropic integration
-- `AiServicesBase.py`: Abstract interface for LLM services
-
-**Response Parsing** (`src/services/responseParser/`)
-- `parser.py`: Extracts structured data from LLM free-text
-- `schema.py`: JSON schemas for character and world state
-- `dataModels.py`: Pydantic models for validation
-
-**Configuration** (`src/core/settings.py`)
-- `GameConfig`: World size, vision radius, turn limits, wealth settings
-- `AIConfig`: API keys, model selection, temperature, token limits
-
-### Frontend (TypeScript/React)
-
-**Pages** (`src/app/`)
-- `page.tsx`: Game runs list with metadata cards
-- `game/[id]/page.tsx`: Detailed game view with turn playback
-
-**Components** (`src/components/`)
-- `GameBoard.tsx`: 10x10 tile grid with terrain and player emojis
-- `TurnTimeline.tsx`: Scrollable turn history with action details
-- `PlayerStatsPanel.tsx`: Real-time player statistics
-- `TileCell.tsx`: Individual tile rendering with hover tooltips
-
-**Services** (`src/services/`)
-- `api.ts`: API wrapper functions (currently using mock data)
-
-## Current Status
-
-### Completed
-- Modular service-oriented architecture
-- Multi-provider AI integration (OpenAI, Claude)
-- Response parsing with schema validation
-- Complete persistence system
-- Async turn-based game loop
-- Web frontend with turn-by-turn playback
-- Mock data generation for testing
-
-### In Progress
-- Game verdict handling (`Game.handle_verdict`)
-- Environment and session management
-- Error handling and retry logic
-- Comprehensive test coverage
-- Backend API endpoints for frontend integration
-
-### Roadmap
-1. Complete DM verdict application to game state
-2. Build REST API for frontend-backend communication
-3. Add real-time WebSocket updates for live game viewing
-4. Implement robust error handling and AI retry logic
-5. Expand test coverage with mocked AI services
-6. Add CLI interface for headless gameplay
-7. Support custom player classes and victory conditions
-8. Document sample scenarios and gameplay strategies
-
 ## Configuration
 
-### Game Settings (`backend/src/core/settings.py`)
+### Game Settings
+
+Adjust game parameters in `backend/src/core/settings.py`. These settings control the world size, player attributes, and game duration.
 
 ```python
 class GameConfig:
@@ -220,50 +171,6 @@ class GameConfig:
     starting_health: int = 100        # Initial player health
     player_vision: int = 2            # Visible tile radius (0 = current tile only)
     num_responses: int = 1            # DM verdicts per turn
-```
-
-### AI Settings (`backend/src/core/settings.py`)
-
-```python
-class AIConfig:
-    openai_api_key: str               # From OPENAI_API_KEY env var
-    claude_api_key: str               # From CLAUDE_API_KEY env var
-    openai_model: str = "gpt-4o"      # Default OpenAI model
-    claude_model: str = "claude-3-5-sonnet-20241022"
-    openai_temperature: float = 0.7   # Response randomness
-```
-
-## Testing
-
-### Backend Tests
-
-```bash
-# Test response parser (no API calls)
-python testing/test_parser.py
-
-# Test OpenAI integration (requires OPENAI_API_KEY)
-python testing/test_openai_integration.py
-```
-
-### Frontend Mock Data
-
-The frontend includes auto-generated mock data for testing:
-
-```bash
-# Generate custom mock data
-cd frontend
-npx tsx src/scripts/generateAndSave.ts 5  # Generate 5 game runs
-```
-
-## API Integration (Coming Soon)
-
-### Expected Endpoints
-
-```
-GET  /api/game-runs          # List all game runs
-GET  /api/game-runs/:id      # Get game run details
-POST /api/game-runs          # Create new game
-GET  /api/game-runs/:id/turn/:turnNumber  # Get specific turn state
 ```
 
 ## Development
@@ -286,9 +193,6 @@ GET  /api/game-runs/:id/turn/:turnNumber  # Get specific turn state
 2. Implement `ask_ai_response()`, `ask_ai_response_with_structured_output()`, `ask_isolated_ai_response()`
 3. Register in `AIWrapper.py`
 
-### Customizing Victory Conditions
-
-Modify `backend/src/app/Game.py` to check custom win conditions during turn processing.
 
 ## Documentation
 
