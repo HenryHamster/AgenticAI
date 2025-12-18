@@ -1,0 +1,194 @@
+{
+  "race": "Halfling",
+  "character_class": "Rogue",
+  "racial_traits": [
+    {
+      "name": "Nimble",
+      "description": "Halflings are quick and agile",
+      "mechanical_effect": "+2 to stealth and evasion rolls"
+    }
+  ],
+  "base_attributes": {
+    "STR": 10,
+    "DEX": 18,
+    "CON": 13,
+    "INT": 14,
+    "WIS": 12,
+    "CHA": 13
+  },
+  "primary_attributes": ["DEX", "INT"],
+  "proficiencies": ["Light armor", "Daggers", "Shortswords", "Thieves' tools"],
+  "starting_equipment": ["Twin Daggers", "Lockpicks", "Leather Armor", "Smoke Bomb"],
+  "resource_pools": {
+    "cunning_points": 6,
+    "stealth_charges": 3
+  },
+  "hit_die": "1d8",
+  "skills": [
+    {
+      "name": "Sneak Attack",
+      "description": "Strike from the shadows",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Deal extra damage when attacking with advantage",
+      "damage_formula": "2d6 + DEX_modifier"
+    },
+    {
+      "name": "Disengage",
+      "description": "Escape without provoking attacks",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"cunning_points": 1},
+      "cooldown_turns": 0,
+      "effect_description": "Move away without triggering opportunity attacks",
+      "damage_formula": null
+    },
+    {
+      "name": "Hide",
+      "description": "Become invisible to enemies",
+      "unlock_level": 1,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"stealth_charges": 1},
+      "cooldown_turns": 0,
+      "effect_description": "Become hidden until next attack",
+      "damage_formula": null
+    },
+    {
+      "name": "Poison Blade",
+      "description": "Coat your weapon in poison",
+      "unlock_level": 3,
+      "prerequisites": ["Sneak Attack"],
+      "attribute_requirements": {"INT": 13},
+      "resource_cost": {"cunning_points": 2},
+      "cooldown_turns": 2,
+      "effect_description": "Next attack deals poison damage over 3 turns",
+      "damage_formula": "1d6 per turn"
+    },
+    {
+      "name": "Evasion",
+      "description": "Dodge area attacks",
+      "unlock_level": 3,
+      "prerequisites": [],
+      "attribute_requirements": {"DEX": 16},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Take half damage from AOE attacks",
+      "damage_formula": null
+    },
+    {
+      "name": "Backstab",
+      "description": "Devastating attack from behind",
+      "unlock_level": 5,
+      "prerequisites": ["Sneak Attack"],
+      "attribute_requirements": {"DEX": 17},
+      "resource_cost": {"cunning_points": 3},
+      "cooldown_turns": 3,
+      "effect_description": "Triple damage when attacking from stealth",
+      "damage_formula": "6d6 + DEX_modifier"
+    },
+    {
+      "name": "Shadow Step",
+      "description": "Teleport through shadows",
+      "unlock_level": 5,
+      "prerequisites": ["Hide"],
+      "attribute_requirements": {"DEX": 16},
+      "resource_cost": {"stealth_charges": 2},
+      "cooldown_turns": 4,
+      "effect_description": "Teleport to any dark area within sight",
+      "damage_formula": null
+    },
+    {
+      "name": "Uncanny Dodge",
+      "description": "React to danger instantly",
+      "unlock_level": 7,
+      "prerequisites": ["Evasion"],
+      "attribute_requirements": {"DEX": 18},
+      "resource_cost": {"cunning_points": 2},
+      "cooldown_turns": 2,
+      "effect_description": "Halve damage from one attack",
+      "damage_formula": null
+    },
+    {
+      "name": "Assassinate",
+      "description": "Kill with a single strike",
+      "unlock_level": 9,
+      "prerequisites": ["Backstab"],
+      "attribute_requirements": {"DEX": 19, "INT": 15},
+      "resource_cost": {"cunning_points": 5},
+      "cooldown_turns": 5,
+      "effect_description": "Auto-crit on surprised target, quadruple damage",
+      "damage_formula": "8d8 + DEX_modifier * 2"
+    },
+    {
+      "name": "Smoke Bomb",
+      "description": "Create a smoke screen",
+      "unlock_level": 11,
+      "prerequisites": [],
+      "attribute_requirements": {},
+      "resource_cost": {"cunning_points": 3},
+      "cooldown_turns": 6,
+      "effect_description": "All allies gain advantage and enemies disadvantage for 2 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Master Thief",
+      "description": "Perfect theft technique",
+      "unlock_level": 13,
+      "prerequisites": [],
+      "attribute_requirements": {"DEX": 20, "INT": 16},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Automatically succeed on theft and lockpicking",
+      "damage_formula": null
+    },
+    {
+      "name": "Death Strike",
+      "description": "Lethal precision strike",
+      "unlock_level": 15,
+      "prerequisites": ["Assassinate"],
+      "attribute_requirements": {"DEX": 20},
+      "resource_cost": {"cunning_points": 6},
+      "cooldown_turns": 7,
+      "effect_description": "Target must save or die instantly",
+      "damage_formula": "12d10 + DEX_modifier * 3"
+    },
+    {
+      "name": "Cloak of Shadows",
+      "description": "Become one with darkness",
+      "unlock_level": 17,
+      "prerequisites": ["Shadow Step", "Hide"],
+      "attribute_requirements": {"DEX": 20},
+      "resource_cost": {"stealth_charges": 3},
+      "cooldown_turns": 8,
+      "effect_description": "Invisible and untargetable for 4 turns",
+      "damage_formula": null
+    },
+    {
+      "name": "Slippery Mind",
+      "description": "Resist mental intrusion",
+      "unlock_level": 18,
+      "prerequisites": ["Uncanny Dodge"],
+      "attribute_requirements": {"WIS": 15},
+      "resource_cost": {},
+      "cooldown_turns": 0,
+      "effect_description": "Advantage on all mental saving throws",
+      "damage_formula": null
+    },
+    {
+      "name": "Perfect Assassin",
+      "description": "The ultimate killer",
+      "unlock_level": 20,
+      "prerequisites": ["Death Strike", "Cloak of Shadows"],
+      "attribute_requirements": {"DEX": 20, "INT": 18},
+      "resource_cost": {"cunning_points": 8, "stealth_charges": 3},
+      "cooldown_turns": 20,
+      "effect_description": "Auto-crit all attacks, invisible, triple damage, attacks cost no resources for 5 turns",
+      "damage_formula": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "test_game",
+  "name": "Untitled Game",
+  "description": "",
+  "status": "active",
+  "game_state": {
+    "players": {},
+    "dm": {
+      "responses": []
+    },
+    "tiles": [],
+    "player_responses": {},
+    "dungeon_master_verdict": ""
+  },
+  "created_at": null,
+  "updated_at": null
+}

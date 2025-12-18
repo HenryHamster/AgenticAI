@@ -24,7 +24,7 @@ class StorageConfig:
 
     def __init__(self):
         # Get storage type from environment variable, default to file
-        self.storage_type: StorageType = os.getenv("STORAGE_TYPE", "file").lower()
+        self.storage_type: StorageType = os.getenv("STORAGE_TYPE", "supabase").lower()
 
         # File storage configuration
         self.file_data_dir = os.getenv("FILE_DATA_DIR", None)

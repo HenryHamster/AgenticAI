@@ -1,4 +1,4 @@
-import { fetchGameRunById } from '@/services/api';
+import { fetchGameRunById } from '@/services/server_side_api';
 import GameDetailClient from '@/components/GameDetailClient';
 import Link from 'next/link';
 import { GameRun } from '@/types/game';

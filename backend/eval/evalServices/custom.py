@@ -56,6 +56,19 @@ Provide a comprehensive evaluation with scores from 0.0 to 1.0 for each metric."
                 isolated=True,
                 verbose=1
             )
+        
+        if result is None:
+            # Return a default error result if AI call failed
+            error_result = EvaluationResult(
+                score=0.0,
+                reasoning="Evaluation failed: AI service returned None. Check API key and network connection.",
+                appropriateness=0.0,
+                completeness=0.0,
+                clarity=0.0,
+                creativity=0.0,
+                action_validity=0.0
+            )
+            return error_result.model_dump()
             
         return result.model_dump()
     
