@@ -87,12 +87,10 @@ def main():
         name="player",
         url=agent_url,
         description=AGENT_DESCRIPTION,
-        url=base_url,
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
         capabilities=AgentCapabilities(streaming=True),
-        skills=[],
         skills=[player_skill]
     )
 
