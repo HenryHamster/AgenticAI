@@ -44,6 +44,8 @@ def main():
     parser.add_argument("--card-url", type=str, help="Public URL for agent card")
     args = parser.parse_args()
 
+    agent_url = os.getenv("AGENT_URL")
+
     agent = Agent(
         name="player",
         model="gemini-2.0-flash",
@@ -83,7 +85,6 @@ def main():
 
     card = AgentCard(
         name="player",
-        description="Roguelike economy player",
         url=agent_url,
         description=AGENT_DESCRIPTION,
         url=base_url,

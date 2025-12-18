@@ -32,7 +32,7 @@ AgenticAI/
 │   ├── src/components/               # React components
 │   └── src/services/                 # API integration
 │
-├── coolify/                          # AgentBeats deployment configs
+├── coolify/                          # Server hosting deployment configs
 │   ├── green_agent/                  # Green Agent container setup
 │   │   ├── Dockerfile
 │   │   └── run.sh

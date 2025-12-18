@@ -2,6 +2,7 @@
 import argparse
 import uvicorn
 import json
+import os
 import httpx
 from dotenv import load_dotenv
 from starlette.responses import JSONResponse
@@ -96,6 +97,8 @@ Output ONLY the single best action sentence. No explanation."""
     else:
         base_url = f"http://{args.host}:{args.port}"
 
+    agent_url = os.getenv("AGENT_URL")
+
     player_skill = AgentSkill(
         id="roguelike_player_ensemble",
         name="Roguelike Player Ensemble",
@@ -111,7 +114,7 @@ Output ONLY the single best action sentence. No explanation."""
     card = AgentCard(
         name="player_ensemble",
         description=AGENT_DESCRIPTION,
-        url=base_url,
+        url=agent_url,
         version="2.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
@@ -168,7 +171,7 @@ Output ONLY the single best action sentence. No explanation."""
                             f"{backend_url}/agents/{agent_id}",
                             json={
                                 "ready": True,
-                                "agent_url": base_url,
+                                "agent_url": agent_url,
                                 "card_url": f"{base_url}/.well-known/agent-card.json",
                                 "card_content": card_dict
                             }
